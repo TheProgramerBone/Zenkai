@@ -182,6 +182,7 @@ final class RageChroniclePanel {
         if (e.ignoredByCooldown()) { lines.add(Component.translatable("screen.zenkai.rage.tip.cooldown")); colors.add(ZenkaiPalette.CHRONICLE_RECORDED); }
         lines.add(Component.translatable("screen.zenkai.rage.tip.via", viaName(e))); colors.add(ZenkaiPalette.TEXT_DIM);
         if (e.cinematicPlayed()) { lines.add(Component.translatable("screen.zenkai.rage.tip.cinematic")); colors.add(ZenkaiPalette.TEXT_DIM); }
+        if (e.interrupted()) { lines.add(Component.translatable("screen.zenkai.rage.tip.interrupted")); colors.add(ZenkaiPalette.TEXT_DIM); }
         lines.add(dateText(e.worldTime())); colors.add(ZenkaiPalette.TEXT_DIM);
 
         int w = 12;

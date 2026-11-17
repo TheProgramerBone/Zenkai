@@ -60,6 +60,25 @@ public final class ZenkaiTechPalette {
     public static final int LED_GREEN_MID = 0xFF43E88D;
     public static final int LED_RED       = 0xFFF48686;
 
+    // ── Tipos de ki (0.7.0, Fase 1) ──────────────────────────────────────────
+    // Los mismos tonos que los sprites de fluido (tools/gen_ki_fluids.py) y que las familias
+    // de ki de la skill zenkai-tech-textures (regla R8): solo donde se VE ki (tanque, ventana
+    // de la máquina, texto del tipo), nunca como LED de estado. El azul de Base es propio y
+    // distinto del CYAN de interfaz, para que un tanque de ki Base no se confunda con una
+    // pantalla encendida. La Divina es carmesí (~350°), separada del rojo de alerta.
+    public static final int KI_BASE           = 0xFF2D78F0;
+    public static final int KI_BASE_HI        = 0xFF78AAFF;
+    public static final int KI_BASE_DARK      = 0xFF1446B4;
+    public static final int KI_SUPER          = 0xFFE6B428;
+    public static final int KI_SUPER_HI       = 0xFFFFE68C;
+    public static final int KI_SUPER_DARK     = 0xFFA07814;
+    public static final int KI_DIVINE         = 0xFFDC283C;
+    public static final int KI_DIVINE_HI      = 0xFFFF8C96;
+    public static final int KI_DIVINE_DARK    = 0xFF96142D;
+    public static final int KI_LEGENDARY      = 0xFF6EDC3C;
+    public static final int KI_LEGENDARY_HI   = 0xFFBEFF8C;
+    public static final int KI_LEGENDARY_DARK = 0xFF3C9628;
+
     // ── Texto sobre CARCASA: oscuro, sin sombra ──────────────────────────────
     public static final int LABEL_ON_CHASSIS  = 0xFF23272E;
     public static final int BODY_ON_CHASSIS   = 0xFF3C424C;

@@ -74,6 +74,7 @@ public class ServerConfig {
     // ── Training points (3) ─────────────────────────────────────────────────────
     public static final ModConfigSpec.IntValue TRAINING_POINTS_AMOUNT;
     public static final ModConfigSpec.IntValue AWAKEN_POTENTIAL_KI_CONTROL_LEVELS;
+    public static final ModConfigSpec.DoubleValue AWAKEN_POTENTIAL_NAMEK_MASTERY;
 
     // ── Invocación: cooldown por jugador (1) + deseos por entidad (2) ───────────
     public static final ModConfigSpec.IntValue SUMMON_COOLDOWN_DAYS;
@@ -129,7 +130,7 @@ public class ServerConfig {
         BANNED_RACES_RAW = BUILDER
                 .comment("Races players CANNOT pick in the race menu (names: human, saiyan, namekian, arcosian, majin).",
                          "Only blocks choosing: characters that already have the race keep it. Majin is banned by default",
-                         "until its art direction is defined (see .claude/pendiente/pendiente-majin.md).")
+                         "until its art direction is defined (see .claude/pendiente/pendientes-0.7.0.md).")
                 .defineListAllowEmpty("banned_races",
                         List.of("majin"),
                         () -> "",
@@ -168,8 +169,12 @@ public class ServerConfig {
         BUILDER.push("awaken_potential_wish");
         AWAKEN_POTENTIAL_KI_CONTROL_LEVELS = BUILDER
                 .comment("Ki Control levels granted by EACH Awaken my potential wish (capped at the max level of the skill).",
-                         "Namekians also get their first transformation with the first wish.")
+                         "Namekians also get their first transformation (Super Namekian) with the first wish.")
                 .defineInRange("ki_control_levels", 3, 1, 10);
+        AWAKEN_POTENTIAL_NAMEK_MASTERY = BUILDER
+                .comment("Namekians who ALREADY own the Super Namekian form: percent of Super Namekian mastery granted by the wish",
+                         "(it also reveals the hidden form above it in the transformation tree). 0 = no mastery, only the reveal.")
+                .defineInRange("namek_super_mastery_percent", 10.0D, 0.0D, 100.0D);
         BUILDER.pop();
 
         BUILDER.push("summoning");
@@ -780,6 +785,167 @@ public class ServerConfig {
                     .defineInRange("energy.generator_max_extract", 1_000, 1, 1_000_000);
 
     // =====================================================================
+    // SPEC — Cables, tuberías y tanques (energía y fluidos)
+    // =====================================================================
+    // Lectura con .get() directo: las consulta un block entity cada tick, pero son enteros baratos.
+
+    private static final ModConfigSpec.IntValue ENERGY_CABLE_CAPACITY =
+            BUILDER.comment("FE each energy cable adds to the shared buffer of its network (connected cables add up, like Mekanism).")
+                    .defineInRange("transport.energy_cable_capacity", 4_000, 1, 10_000_000);
+    private static final ModConfigSpec.IntValue ENERGY_CABLE_RATE =
+            BUILDER.comment("Max FE per tick an energy cable moves through each face.")
+                    .defineInRange("transport.energy_cable_rate", 2_000, 1, 10_000_000);
+    private static final ModConfigSpec.IntValue ENERGY_TANK_CAPACITY =
+            BUILDER.comment("FE an energy tank block can store.")
+                    .defineInRange("transport.energy_tank_capacity", 2_000_000, 1, 1_000_000_000);
+    private static final ModConfigSpec.IntValue ENERGY_TANK_RATE =
+            BUILDER.comment("Max FE per tick an energy tank moves through each face.")
+                    .defineInRange("transport.energy_tank_rate", 10_000, 1, 100_000_000);
+    private static final ModConfigSpec.IntValue FLUID_PIPE_CAPACITY =
+            BUILDER.comment("mB each fluid pipe adds to the shared buffer of its network (connected pipes add up, like Mekanism).")
+                    .defineInRange("transport.fluid_pipe_capacity", 1_000, 1, 1_000_000);
+    private static final ModConfigSpec.IntValue FLUID_PIPE_RATE =
+            BUILDER.comment("Max mB per tick a fluid pipe moves through each face.")
+                    .defineInRange("transport.fluid_pipe_rate", 500, 1, 1_000_000);
+    private static final ModConfigSpec.IntValue FLUID_TANK_CAPACITY =
+            BUILDER.comment("mB a fluid tank block can store.")
+                    .defineInRange("transport.fluid_tank_capacity", 32_000, 1, 100_000_000);
+    private static final ModConfigSpec.IntValue FLUID_TANK_RATE =
+            BUILDER.comment("Max mB per tick a fluid tank moves through each face.")
+                    .defineInRange("transport.fluid_tank_rate", 2_000, 1, 10_000_000);
+
+    // =====================================================================
+    // SPEC — Cámara de contención de ki (Fase 2a de la 0.7.0)
+    // =====================================================================
+    // Opciones de baja frecuencia: las lee una máquina con un jugador dentro, no cada golpe.
+    // Por eso van con .get() directo (ver config-y-red.md) y sin copia volatile.
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_CHARGE_PERCENT =
+            BUILDER.comment("Percent of the player's MAXIMUM ki the containment chamber drains per second while charging. More ki pool = more Ki fluid.")
+                    .defineInRange("ki_chamber.charge_percent_per_second", 5.0, 0.1, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_RESERVE_PERCENT =
+            BUILDER.comment("Charging stops by itself when the player's ki falls to this percent of the maximum, and the cooldown starts.")
+                    .defineInRange("ki_chamber.reserve_percent", 20.0, 0.0, 99.0);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_COOLDOWN_SECONDS =
+            BUILDER.comment("Per-player cooldown after a charge reaches the ki reserve. Charging again before it ends is only possible with the chamber's Force setting, which drains health.")
+                    .defineInRange("ki_chamber.cooldown_seconds", 60, 0, 3600);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_FORCE_BODY_DRAIN =
+            BUILDER.comment("Forced charge: once the player's ki reaches 0 the chamber keeps going on health. Percent of maximum body converted to Ki per second in that phase. It never kills: it stops at 1.")
+                    .defineInRange("ki_chamber.force_body_drain_percent_per_second", 2.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FORCE_COOLDOWN_SECONDS =
+            BUILDER.comment("Extra cooldown seconds added after a forced charge, scaled by the share of maximum body given (100% of body = this many extra seconds).")
+                    .defineInRange("ki_chamber.force_extra_cooldown_seconds", 300, 0, 7200);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MB_PER_KI =
+            BUILDER.comment("Millibuckets of Ki fluid produced per point of ki drained.")
+                    .defineInRange("ki_chamber.mb_per_ki", 1.0, 0.001, 1000.0);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_TANK_CAPACITY =
+            BUILDER.comment("Capacity of the chamber's Ki fluid tank, in millibuckets.")
+                    .defineInRange("ki_chamber.tank_capacity_mb", 16_000, 1_000, 10_000_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_CAPACITY =
+            BUILDER.comment("FE buffer of the containment chamber.")
+                    .defineInRange("ki_chamber.fe_capacity", 100_000, 1, 10_000_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_MAX_PER_TICK =
+            BUILDER.comment("Ceiling of FE per tick the chamber converts from Ki fluid and pushes to neighbors.")
+                    .defineInRange("ki_chamber.fe_max_per_tick", 64, 1, 1_000_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_BASE =
+            BUILDER.comment("FE obtained per millibucket of Base Ki.")
+                    .defineInRange("ki_chamber.fe_per_mb_base", 1, 1, 100_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_SUPER =
+            BUILDER.comment("FE obtained per millibucket of Super Ki.")
+                    .defineInRange("ki_chamber.fe_per_mb_super", 8, 1, 100_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_DIVINE =
+            BUILDER.comment("FE obtained per millibucket of Divine Ki.")
+                    .defineInRange("ki_chamber.fe_per_mb_divine", 24, 1, 100_000);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_LEGENDARY =
+            BUILDER.comment("FE obtained per millibucket of Legendary Ki. Higher than Divine on purpose: it is the unstable one.")
+                    .defineInRange("ki_chamber.fe_per_mb_legendary", 32, 1, 100_000);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MOB_HEALTH_PERCENT =
+            BUILDER.comment("Percent of a mob's MAXIMUM health the containment chamber drains per second from a mob locked inside. It never kills: it stops at 1 health.")
+                    .defineInRange("ki_chamber.mob_health_percent_per_second", 5.0, 0.1, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MB_PER_MOB_HEALTH =
+            BUILDER.comment("Millibuckets of Base Ki produced per point of health drained from a mob (a zombie has 20).")
+                    .defineInRange("ki_chamber.mb_per_mob_health", 10.0, 0.0, 100_000.0);
+
+    // ── Fase 2b: mejoras, sobrecarga y batería ───────────────────────────────
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_SPEED_MULT =
+            BUILDER.comment("Each speed upgrade in the chamber multiplies its FE-per-tick ceiling by this (up to 3 upgrades: 64 -> 256 -> 1024 -> 4096 with the defaults).")
+                    .defineInRange("ki_chamber.speed_upgrade_multiplier", 4.0, 1.0, 64.0);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_STORAGE_PERCENT =
+            BUILDER.comment("Each storage upgrade in the chamber adds this percent of the base tank and FE capacity (up to 4 upgrades).")
+                    .defineInRange("ki_chamber.storage_upgrade_percent", 100.0, 0.0, 10_000.0);
+
+    private static final ModConfigSpec.IntValue KI_CHAMBER_OVERLOAD_SECONDS =
+            BUILDER.comment("Seconds of charging a Ki type WITHOUT its tolerance upgrade before the chamber explodes. Smoke first, alarm from 40% on.")
+                    .defineInRange("ki_chamber.overload_seconds", 12, 1, 3600);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_OVERLOAD_BODY_PERCENT =
+            BUILDER.comment("Percent of maximum body the overload explosion takes from whoever was charging. It never kills: it stops at 1.")
+                    .defineInRange("ki_chamber.overload_body_damage_percent", 50.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_CHAMBER_OVERLOAD_POWER =
+            BUILDER.comment("Explosion power of an overloaded chamber (TNT is 4). Whether it breaks blocks is the gamerule zenkai_kiOverloadGriefing.")
+                    .defineInRange("ki_chamber.overload_explosion_power", 3.0, 0.0, 16.0);
+
+    private static final ModConfigSpec.IntValue BATTERY_CAPACITY =
+            BUILDER.comment("FE capacity of the energy battery item.")
+                    .defineInRange("energy.battery_capacity", 100_000, 1, 100_000_000);
+
+    private static final ModConfigSpec.IntValue BATTERY_MAX_TRANSFER =
+            BUILDER.comment("FE per tick the battery accepts or gives through its energy capability (chargers and machines of any mod).")
+                    .defineInRange("energy.battery_max_transfer", 1_000, 1, 10_000_000);
+
+    public static double kiChamberSpeedMult()          { return KI_CHAMBER_SPEED_MULT.get(); }
+    public static double kiChamberStoragePercent()     { return KI_CHAMBER_STORAGE_PERCENT.get(); }
+    public static int    kiChamberOverloadSeconds()    { return KI_CHAMBER_OVERLOAD_SECONDS.get(); }
+    public static double kiChamberOverloadBodyPercent() { return KI_CHAMBER_OVERLOAD_BODY_PERCENT.get(); }
+    public static double kiChamberOverloadPower()      { return KI_CHAMBER_OVERLOAD_POWER.get(); }
+    // Las dos de la batería las lee su tooltip, que puede pintarse sin mundo cargado (lista de
+    // recetas, pantalla de un mod): con el config de servidor sin cargar .get() lanza, así que
+    // caen al valor por defecto.
+    public static int batteryCapacity()    { return SPEC.isLoaded() ? BATTERY_CAPACITY.get() : 100_000; }
+    public static int batteryMaxTransfer() { return SPEC.isLoaded() ? BATTERY_MAX_TRANSFER.get() : 1_000; }
+
+    public static double kiChamberMobHealthPercent() { return KI_CHAMBER_MOB_HEALTH_PERCENT.get(); }
+    public static double kiChamberMbPerMobHealth()   { return KI_CHAMBER_MB_PER_MOB_HEALTH.get(); }
+    public static double kiChamberChargePercent()   { return KI_CHAMBER_CHARGE_PERCENT.get(); }
+    public static double kiChamberReservePercent()  { return KI_CHAMBER_RESERVE_PERCENT.get(); }
+    public static int    kiChamberCooldownSeconds() { return KI_CHAMBER_COOLDOWN_SECONDS.get(); }
+    public static double kiChamberForceBodyDrain()  { return KI_CHAMBER_FORCE_BODY_DRAIN.get(); }
+    public static int    kiChamberForceExtraCooldownSeconds() { return KI_CHAMBER_FORCE_COOLDOWN_SECONDS.get(); }
+    public static int energyCableCapacity() { return ENERGY_CABLE_CAPACITY.get(); }
+    public static int energyCableRate()     { return ENERGY_CABLE_RATE.get(); }
+    public static int energyTankCapacity()  { return ENERGY_TANK_CAPACITY.get(); }
+    public static int energyTankRate()      { return ENERGY_TANK_RATE.get(); }
+    public static int fluidPipeCapacity()   { return FLUID_PIPE_CAPACITY.get(); }
+    public static int fluidPipeRate()       { return FLUID_PIPE_RATE.get(); }
+    public static int fluidTankCapacity()   { return FLUID_TANK_CAPACITY.get(); }
+    public static int fluidTankRate()       { return FLUID_TANK_RATE.get(); }
+    public static double kiChamberMbPerKi()         { return KI_CHAMBER_MB_PER_KI.get(); }
+    public static int    kiChamberTankCapacity()    { return KI_CHAMBER_TANK_CAPACITY.get(); }
+    public static int    kiChamberFeCapacity()      { return KI_CHAMBER_FE_CAPACITY.get(); }
+    public static int    kiChamberFeMaxPerTick()    { return KI_CHAMBER_FE_MAX_PER_TICK.get(); }
+    public static int    kiChamberFePerMbBase()      { return KI_CHAMBER_FE_PER_MB_BASE.get(); }
+    public static int    kiChamberFePerMbSuper()     { return KI_CHAMBER_FE_PER_MB_SUPER.get(); }
+    public static int    kiChamberFePerMbDivine()    { return KI_CHAMBER_FE_PER_MB_DIVINE.get(); }
+    public static int    kiChamberFePerMbLegendary() { return KI_CHAMBER_FE_PER_MB_LEGENDARY.get(); }
+
+    // =====================================================================
     // SPEC — Entidades sin stats propias
     // =====================================================================
 
@@ -1145,19 +1311,19 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue ARC_LEGEND_PERCENT_RAW =
             BUILDER.comment("Arcosian Legendary form (Broken Restraint): FIXED stat percent while it is worn (14.0 = +1400%). It does not grow with TP or mastery; God Ki resonance (legendary.divine_resonance_mult) still multiplies it.")
-                    .defineInRange("arcosian_legendary.stat_percent", 14.0D, 0.0D, 1000.0D);
+                    .defineInRange("arcosian.legendary.stat_percent", 14.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_RAW =
             BUILDER.comment("Arcosian Legendary form: seconds of TENSION once transformed. When it runs out the form collapses (back to Base with ki and stamina at zero) and a long cooldown starts. No continuous ki drain.")
-                    .defineInRange("arcosian_legendary.tension_seconds", 45.0D, 1.0D, 3600.0D);
+                    .defineInRange("arcosian.legendary.tension_seconds", 45.0D, 1.0D, 3600.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_MASTERY_RAW =
             BUILDER.comment("Arcosian Legendary form: extra tension from the shared mastery (1.0 = up to x2 of the tension at 100% mastery of the form it starts from).")
-                    .defineInRange("arcosian_legendary.tension_mastery_bonus", 1.0D, 0.0D, 10.0D);
+                    .defineInRange("arcosian.legendary.tension_mastery_bonus", 1.0D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_LEGEND_COOLDOWN_RAW =
             BUILDER.comment("Arcosian Legendary form: cooldown in seconds after a collapse. Leaving on your own earlier gives a cooldown proportional to the tension used.")
-                    .defineInRange("arcosian_legendary.cooldown_seconds", 600.0D, 0.0D, 86400.0D);
+                    .defineInRange("arcosian.legendary.cooldown_seconds", 600.0D, 0.0D, 86400.0D);
 
     private static final ModConfigSpec.DoubleValue HUMAN_LEGEND_DEFENSE_RAW =
             BUILDER.comment("Human Legendary form (Reckless): extra damage taken while it is worn, as a fraction (0.25 = takes +25% damage). The price of its power: whoever hits first wins.")
@@ -1173,19 +1339,27 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue ARC_GOD_PP_CAP_RAW =
             BUILDER.comment("Arcosian God (divine tank): multiplier on the Power Point tank capacity once the form is UNLOCKED (the tank charges in Base, so it must apply there too). A bigger tank lasts longer because the Power Points are spent in absolute amounts per second.")
-                    .defineInRange("arcosian_god.pp_capacity_mult", 1.5D, 1.0D, 20.0D);
+                    .defineInRange("arcosian.god.pp_capacity_mult", 1.5D, 1.0D, 20.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_GOD_PP_DRAIN_RAW =
             BUILDER.comment("Arcosian God (divine tank): multiplier on how fast the Power Point tank drains while the form is WORN (0.5 = half as fast).")
-                    .defineInRange("arcosian_god.pp_drain_mult", 0.5D, 0.0D, 10.0D);
+                    .defineInRange("arcosian.god.pp_drain_mult", 0.5D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_GOD_PP_STAT_RAW =
             BUILDER.comment("Arcosian God (divine tank): multiplier on the stat bonus the Power Point tank grants while the form is WORN.")
-                    .defineInRange("arcosian_god.pp_stat_mult", 1.5D, 0.0D, 20.0D);
+                    .defineInRange("arcosian.god.pp_stat_mult", 1.5D, 0.0D, 20.0D);
 
     private static final ModConfigSpec.DoubleValue LEGENDARY_STATE_BONUS_RAW =
             BUILDER.comment("Stat bonus fraction for being Legendary (the Shenlong wish), whatever the race and form worn (0.10 = +10%). It opens more paths, so it is smaller than the Majin bonus.")
                     .defineInRange("legendary.state_stat_bonus", 0.10D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_BIRTH_CHANCE_RAW =
+            BUILDER.comment("Percent chance (0-100) of being BORN Legendary: rolled once when a character is created and again on every reincarnation, for any race. It grants the Legendary STATE (the same one as the Shenlong wish), not a transformation. 0 = off.")
+                    .defineInRange("legendary.birth_chance_percent", 5.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_ENV_FIRE_RAW =
+            BUILDER.comment("Arcosian (hostile environments): fraction of FIRE damage ignored (fire, burning, lava, magma; 0.2 = takes 20% less). Cold immunity is the race passive and is not configured here.")
+                    .defineInRange("arcosian.environment.fire_damage_reduction", 0.2D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.BooleanValue MAJIN_LEGENDARY_EXCLUSIVE_RAW =
             BUILDER.comment("If true, the Majin effect and being Legendary are mutually exclusive: a Majin cannot make the Legendary wish and a Legendary cannot be put under the Majin effect.")
@@ -1359,7 +1533,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue ARC_GOD_REFILL_RAW =
             BUILDER.comment("Arcosian God: Power Points refilled per hit you deal, at any power level (the divine tank keeps feeding itself in combat).")
-                    .defineInRange("arcosian_god.pp_refill_per_hit", 2.0D, 0.0D, 1000.0D);
+                    .defineInRange("arcosian.god.pp_refill_per_hit", 2.0D, 0.0D, 1000.0D);
 
     // =====================================================================
     // SPEC — Majin: absorción innata y masa (feature/race/MajinAbsorption)
@@ -1901,6 +2075,8 @@ public class ServerConfig {
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
     private static volatile double MAJIN_STAT_BONUS = 0.20D;
     private static volatile double LEGENDARY_STATE_BONUS = 0.10D;
+    private static volatile double LEGENDARY_BIRTH_CHANCE = 5.0D;
+    private static volatile double ARC_ENV_FIRE = 0.2D;
     private static volatile double ARC_GOD_PP_CAP = 1.5D;
     private static volatile double ARC_GOD_PP_DRAIN = 0.5D;
     private static volatile double ARC_GOD_PP_STAT = 1.5D;
@@ -2189,6 +2365,8 @@ public class ServerConfig {
         M_TECH_CAST      = MASTERY_TECH_CAST_RAW.get();
         MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
         LEGENDARY_STATE_BONUS = LEGENDARY_STATE_BONUS_RAW.get();
+        LEGENDARY_BIRTH_CHANCE = LEGENDARY_BIRTH_CHANCE_RAW.get();
+        ARC_ENV_FIRE = ARC_ENV_FIRE_RAW.get();
         ARC_GOD_PP_CAP = ARC_GOD_PP_CAP_RAW.get();
         ARC_GOD_PP_DRAIN = ARC_GOD_PP_DRAIN_RAW.get();
         ARC_GOD_PP_STAT = ARC_GOD_PP_STAT_RAW.get();
@@ -2419,6 +2597,7 @@ public class ServerConfig {
     // ── Helpers de balance ──────────────────────────────────────────────────────
     public static int trainingPointsAmount()    { return TRAINING_POINTS_AMOUNT.get(); }
     public static int awakenPotentialKiControlLevels() { return AWAKEN_POTENTIAL_KI_CONTROL_LEVELS.get(); }
+    public static double awakenPotentialNamekMastery() { return AWAKEN_POTENTIAL_NAMEK_MASTERY.get(); }
     public static long summonCooldownTicks()     { return (long) SUMMON_COOLDOWN_DAYS.get() * 24000L; }
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
     public static int namekDragonWishCount()     { return NAMEK_DRAGON_WISHES.get(); }
@@ -2619,6 +2798,10 @@ public class ServerConfig {
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
     public static double legendaryStateStatBonus()   { return LEGENDARY_STATE_BONUS; }
+    /** Probabilidad (0-100) de nacer Legendario al crear el personaje y en cada reencarnación; 0 = apagado. */
+    public static double legendaryBirthChancePercent() { return LEGENDARY_BIRTH_CHANCE; }
+    /** Arcosiano «Mundo»: fracción del daño de fuego que ignora. */
+    public static double arcosianFireDamageReduction() { return ARC_ENV_FIRE; }
     public static double arcosianGodPpCapacityMult() { return ARC_GOD_PP_CAP; }
     public static double arcosianGodPpDrainMult()    { return ARC_GOD_PP_DRAIN; }
     public static double arcosianGodPpStatMult()     { return ARC_GOD_PP_STAT; }

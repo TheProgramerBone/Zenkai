@@ -137,6 +137,17 @@ public final class SkillTreeMigration {
                 sk.setLevel(SuperForms.SKILL, lvl - 1);
             }
         }
+        // v3 → v4 (0.7.0): el Súper Namekiano pasa a ser el primer peldaño de la cadena y Naranja el segundo. Quien ya tenía
+        // Naranja (super_forms >= 2) la CONSERVA y recibe el Súper Namekiano: sube un nivel. Si un nivel estaba exento de MIND
+        // (deseo de potencial), la exención se corre con él para no dejar la MIND libre en negativo.
+        if (version < 4 && att.isRaceChosen() && att.getRace() == Race.NAMEKIAN) {
+            int lvl = sk.level(SuperForms.SKILL);
+            if (lvl >= 2) {
+                int waived = sk.mindWaivedUpTo(SuperForms.SKILL);
+                if (waived >= 2) sk.grantWaived(SuperForms.SKILL, waived + 1);
+                sk.setLevel(SuperForms.SKILL, lvl + 1);
+            }
+        }
         refresh(att);
         att.skillTree().setVersion(com.hmc.zenkai.feature.player.PlayerSkillTree.VERSION);
     }

@@ -111,7 +111,9 @@ addon ya tiene nodo sin escribir nada más. El JSON del árbol solo AÑADE cosas
 ```
 
 Banderas disponibles en `flag`: `ssj4_ritual`, `reached_super_oozaru`, `beast_fury`, `divine`,
-`legendary`, `immortal`, `god_ki_audience`, `tail` (una desconocida da false). La pista se lee de
+`legendary`, `immortal`, `god_ki_audience`, `tail`, `namek_orange_hinted` (una desconocida da false).
+`"acquisition": ["mastery"]` en un peldaño de la cadena de `super_forms` (como `zenkai:namek_orange`) hace que NO se compre:
+despierta solo cuando el jugador posee el peldaño anterior y cumple sus `requirements`. La pista se lee de
 `skill_tree.<ns>.<ruta>.hint` (o de la clave que diga `"hint"`). Las formas baneadas en
 `banned_forms.json` no tienen nodo. Un archivo roto se ignora con un error en el log.
 

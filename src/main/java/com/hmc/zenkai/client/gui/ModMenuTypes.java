@@ -33,6 +33,10 @@ public class ModMenuTypes {
             MENUS.register("player_body",
                     () -> IMenuTypeExtension.create(PlayerBodyMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.KiChamberMenu>> KI_CHAMBER =
+            MENUS.register("ki_chamber",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.KiChamberMenu::new));
+
     public static void register(IEventBus bus) {
         MENUS.register(bus);
     }

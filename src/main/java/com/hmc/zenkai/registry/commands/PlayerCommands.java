@@ -152,6 +152,9 @@ public final class PlayerCommands {
         att.setFlyEnabled(false);
         att.setImmortal(false);
         att.setLegendary(false);
+        // Personaje nuevo: vuelve a tener su tirada de nacer Legendario y pierde el indicio del deseo de potencial.
+        att.flags().setLegendaryRolled(false);
+        att.flags().setNamekOrangeHinted(false);
         att.setDivine(false);
         // "Majin" no tiene flag propio en PlayerStatsAttachment (ese campo se eliminó por
         // vestigial, no representaba nada) — el estado real es

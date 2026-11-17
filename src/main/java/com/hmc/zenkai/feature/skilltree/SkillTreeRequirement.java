@@ -131,6 +131,7 @@ public sealed interface SkillTreeRequirement {
             case "immortal" -> att.isImmortal();
             case "god_ki_audience" -> att.hasGodKiAudience();
             case "tail" -> att.hasTail();
+            case "namek_orange_hinted" -> att.flags().isNamekOrangeHinted();
             default -> false;
         };
     }

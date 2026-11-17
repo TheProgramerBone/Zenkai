@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": {
+      "item": "zenkai:energy_crystal"
+    },
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "R": {
+      "tag": "c:storage_blocks/redstone"
+    }
+  },
+  "pattern": [
+    "IGI",
+    "GEG",
+    "IRI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:ki_containment_chamber"
+  }
+}

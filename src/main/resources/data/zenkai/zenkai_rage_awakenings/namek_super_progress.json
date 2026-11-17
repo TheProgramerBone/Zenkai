@@ -1,0 +1,11 @@
+{
+  "form": "zenkai:namek_super",
+  "race": "namekian",
+  "triggers": [
+    "ally_rescued",
+    "critical_survival",
+    "ally_death"
+  ],
+  "min_intensity": "high",
+  "awakens": false
+}

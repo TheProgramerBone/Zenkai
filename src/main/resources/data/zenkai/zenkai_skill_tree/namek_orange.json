@@ -1,0 +1,19 @@
+{
+  "node": "zenkai:namek_orange",
+  "secret": true,
+  "reveal": [
+    {
+      "type": "any_of",
+      "of": [
+        { "type": "mastery", "form": "zenkai:namek_super", "min": 50 },
+        { "type": "flag", "flag": "namek_orange_hinted" }
+      ]
+    }
+  ],
+  "requirements": [
+    { "type": "mastery", "form": "zenkai:namek_super", "min": 50 }
+  ],
+  "acquisition": [
+    "mastery"
+  ]
+}

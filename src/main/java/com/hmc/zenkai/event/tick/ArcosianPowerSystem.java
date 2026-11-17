@@ -21,14 +21,14 @@ import java.util.Set;
  *   también cuenta) y desde la Forma Final: Final x1, Golden/Black x1,5, 5th x2, Golden/Black 5th x2,75. Como el gasto es
  *   absoluto, un tanque grande DURA MÁS (antes era un % del tanque y subir de nivel solo alargaba la carga).
  * - BONO de stats proporcional a la fracción llena del tanque ({@link #statBonus}), con un multiplicador por forma
- *   (Golden/Black x1,25, 5th x1,5, 5th Golden/Black x1,75, Arcosian God x{@code arcosian_god.pp_stat_mult}).
+ *   (Golden/Black x1,25, 5th x1,5, 5th Golden/Black x1,75, Arcosian God x{@code arcosian.god.pp_stat_mult}).
  * Mecánicas propias de las formas (lo que la propuesta B de la auditoría dejó en manos de cada forma):
  *  - Segunda y Tercera forma (contención): GANAN PP también peleando, por golpe dado y por golpe recibido, mientras el poder
  *    está por debajo del 100 % ({@link #onCombatHit}).
- *  - Arcosian God («Tanque divino»): tanque x{@code arcosian_god.pp_capacity_mult} una vez desbloqueada, gasto x
- *    {@code arcosian_god.pp_drain_mult}, bono x{@code arcosian_god.pp_stat_mult} y el tanque se REPONE con cada golpe dado.
+ *  - Arcosian God («Tanque divino»): tanque x{@code arcosian.god.pp_capacity_mult} una vez desbloqueada, gasto x
+ *    {@code arcosian.god.pp_drain_mult}, bono x{@code arcosian.god.pp_stat_mult} y el tanque se REPONE con cada golpe dado.
  *  - Contención Rota (Legendario): no usa PP; al colapsar vacía el tanque (ArcosianContainment.collapse).
- * Los números de balance viven en ServerConfig (arcosian.* / arcosian_god.*) y en la curva pp_max de la skill.
+ * Los números de balance viven en ServerConfig (arcosian.* / arcosian.god.*) y en la curva pp_max de la skill.
  */
 public final class ArcosianPowerSystem {
     private ArcosianPowerSystem() {}

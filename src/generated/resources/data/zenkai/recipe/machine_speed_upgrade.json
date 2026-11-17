@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "R": {
+      "tag": "c:dusts/redstone"
+    },
+    "U": {
+      "tag": "c:ingots/copper"
+    }
+  },
+  "pattern": [
+    " R ",
+    "RCR",
+    " U "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:machine_speed_upgrade"
+  }
+}

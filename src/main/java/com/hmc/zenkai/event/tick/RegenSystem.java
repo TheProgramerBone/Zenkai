@@ -75,7 +75,8 @@ public final class RegenSystem {
 
         // El regen pasivo de ki existe siempre (mínimo vital); Meditación lo multiplica.
         int kiCur = att.getEnergy(), kiMax = att.getEnergyMax();
-        if (kiCur < kiMax) {
+        // Sujeto en una cámara de contención no hay regen pasivo de ki: la máquina se lo está sacando.
+        if (kiCur < kiMax && !com.hmc.zenkai.feature.kichamber.KiChamberSessions.isInside(p)) {
             int gain = accrue(carry, 2, kiMax * (ServerConfig.baseRegenEnergy() / 100.0)
                     * SkillEffects.kiRegenFactor(p));
             if (gain > 0) att.addEnergy(gain);

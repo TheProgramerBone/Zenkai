@@ -758,6 +758,12 @@ public class PlayerFormAttachment {
         addRawMastery(form, scaled);
     }
 
+    /** Suma puntos de maestría (en %) TAL CUAL, sin el mastery_gain de la forma: regalos de valor fijo (deseo de potencial). */
+    public void addFormMasteryPoints(ResourceLocation form, float points) {
+        if (form == null || points <= 0) return;
+        addRawMastery(form, points);
+    }
+
     private void addRawMastery(ResourceLocation form, float scaled) {
         String k = form.toString();
         formMastery.merge(k, scaled, Float::sum);

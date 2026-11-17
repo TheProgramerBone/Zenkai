@@ -155,6 +155,8 @@ public class ModCreativeModeTabs {
         Item bubble = ModBlocks.HFIL_JANEMBA_BUBBLE.get().asItem();
         for (Item item : items) {
             output.accept(item);
+            // Batería: además de la vacía, una cargada al máximo.
+            if (item == ModItems.ENERGY_BATTERY.get()) output.accept(fullBattery());
             // Gelatina: además de la rosa, un ítem por cada color de tinte (el color viaja en el
             // componente BLOCK_STATE, ver JanembaBubbleBlock).
             if (item == bubble) {
@@ -165,6 +167,13 @@ public class ModCreativeModeTabs {
                 }
             }
         }
+    }
+
+    /** Batería con la carga al tope (la capacidad sale de la config del servidor). */
+    private static ItemStack fullBattery() {
+        ItemStack stack = new ItemStack(ModItems.ENERGY_BATTERY.get());
+        stack.set(ModDataComponents.STORED_ENERGY.get(), com.hmc.zenkai.config.ServerConfig.batteryCapacity());
+        return stack;
     }
 
     // ── Orden ────────────────────────────────────────────────────────────────

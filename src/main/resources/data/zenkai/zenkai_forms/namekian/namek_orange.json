@@ -3,7 +3,8 @@
   "races": [
     "namekian"
   ],
-  "kind": "super",
+  "kind": "extension",
+  "parent": "zenkai:namek_super",
   "tp_cost": 11000,
   "hold_ticks": 60,
   "mastery_gain": 0.8,

@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-07T19:01:06.7088688	Item Models: zenkai
+// 1.21.1	2026-11-16T18:19:56.7364784	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -57,6 +57,7 @@ a9b51103f161b3eef77d29a93de6b85e65eb7b5f assets/zenkai/models/item/cut_katchin_s
 9b881ba4f96466161b54c784e47f70d5a5f06e78 assets/zenkai/models/item/cut_katchin_wall.json
 c52731eb08f625e4de3fd0b76e868898577177e9 assets/zenkai/models/item/dirty_raw_katchin.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
+b9266967f9e42e12efe38b8ac902fe76362c545e assets/zenkai/models/item/energy_battery.json
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 b3483a3b592995f3901669b8a260cde0e5b6a537 assets/zenkai/models/item/energy_generator.json
 f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/hair.json
@@ -101,7 +102,12 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_le
 4773d6a28dcbc680c3ed76a73308e83d3cb92b7e assets/zenkai/models/item/katchin_pillar.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
+df2136b2fa8ad5993655fa501a38abf66c48cd84 assets/zenkai/models/item/ki_tolerance_divine.json
+7cd8cc6986c40fd9a2d12bc3f8d19e5281dbce22 assets/zenkai/models/item/ki_tolerance_legendary.json
+1ff09fd53e6182b5777cc27ad28e72e0e0950fa1 assets/zenkai/models/item/ki_tolerance_super.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/korin_spawn_egg.json
+d94a33356d7a5a96167ad6a41d62e546a2398766 assets/zenkai/models/item/machine_speed_upgrade.json
+7331d10cd2a50093c201147353945905bf7bc634 assets/zenkai/models/item/machine_storage_upgrade.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/majin_race_boots.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/majin_race_boots_female.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/majin_race_chestplate.json

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "U": {
+      "tag": "c:ingots/copper"
+    }
+  },
+  "pattern": [
+    " I ",
+    "ICI",
+    " U "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:machine_storage_upgrade"
+  }
+}

@@ -47,7 +47,17 @@ public final class ServerActionContext {
                 st.elapsed(now),
                 st.inClash(),
                 com.hmc.zenkai.feature.combat.StunState.isStunned(sp),
-                com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(sp));
+                handsBusy(sp));
+    }
+
+    /**
+     * «Manos ocupadas»: lleva un cuerpo en brazos o está dentro de una cámara de contención de ki.
+     * Las dos situaciones bloquean lo mismo (pelear, bloquear, lanzar técnicas), así que comparten
+     * el booleano carryingBody del contexto en vez de abrir otro campo con reglas idénticas.
+     */
+    private static boolean handsBusy(ServerPlayer sp) {
+        return com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(sp)
+                || com.hmc.zenkai.feature.kichamber.KiChamberSessions.isInside(sp);
     }
 
     /** Contexto con un ActionState dado en vez del actual. Lo usa el release de ki, que ya
@@ -68,6 +78,6 @@ public final class ServerActionContext {
                 st.elapsed(now),
                 st.inClash(),
                 com.hmc.zenkai.feature.combat.StunState.isStunned(sp),
-                com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(sp));
+                handsBusy(sp));
     }
 }

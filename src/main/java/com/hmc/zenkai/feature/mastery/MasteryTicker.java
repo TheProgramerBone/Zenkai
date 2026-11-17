@@ -45,6 +45,8 @@ public final class MasteryTicker {
             if (transformed) {
                 form.addFormMastery(form.getFormId(),
                         (float) (ServerConfig.formMasteryPerMinute() / 60.0));
+                // Peldaños que despiertan por maestría (Namekiano Naranja): se miran al ritmo al que sube la maestría.
+                com.hmc.zenkai.feature.skilltree.MasteryAwakening.check(sp);
             }
             // Capas independientes: transformado CON kaioken entrena las dos a la vez.
             if (tier.isOn()) {

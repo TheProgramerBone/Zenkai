@@ -478,6 +478,8 @@ public class CombatZenkaiHooks {
             // Cuerpo elástico del Majin (RacePassives.mitigate): solo lo físico, por nivel de pasiva.
             if (e.getEntity() instanceof ServerPlayer majin) {
                 finalDamage = com.hmc.zenkai.feature.race.RacePassives.mitigate(majin, e.getSource(), (float) finalDamage);
+                // Arcosiano: resistencia ligera al fuego (RacePassives.mitigateEnvironment).
+                finalDamage = com.hmc.zenkai.feature.race.RacePassives.mitigateEnvironment(majin, e.getSource(), (float) finalDamage);
             }
 
             // «Temerario» (forma Legendaria del humano): su poder se paga con defensa, recibe más daño.

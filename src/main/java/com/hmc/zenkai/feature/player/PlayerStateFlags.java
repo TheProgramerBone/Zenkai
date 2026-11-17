@@ -105,6 +105,17 @@ public class PlayerStateFlags {
     private boolean godKiAudience = false;
 
     /**
+     * Ya se hizo la tirada de «nacer Legendario» de ESTE personaje (ver LegendaryBirth). Una por vida: la reencarnación crea
+     * un attachment nuevo y por eso vuelve a false. Sin él, volver a elegir raza o estilo repetiría la tirada.
+     */
+    private boolean legendaryRolled = false;
+    /**
+     * El deseo de potencial ya le dio al Namekiano el indicio del poder que hay por encima del Súper Namekiano: su nodo oculto
+     * (Naranja) pasa a verse en el árbol. Persistente; viaja al cliente por este mismo save()/load().
+     */
+    private boolean namekOrangeHinted = false;
+
+    /**
      * Cola de saiyan: una de las tres condiciones de Oozaru (junto con raza y luna llena, ver
      * OozaruConditions). PENDIENTE: hoy no existe ninguna pieza de GeckoLibArmor de cola
      * todavía, así que el valor por defecto es true (todo saiyan la tiene) para no bloquear el
@@ -165,6 +176,11 @@ public class PlayerStateFlags {
     /** gameTime en que expira el estado "en combate". Ver InCombatState: es un instante
      *  futuro y no un contador para no tener que decrementarlo cada tick. */
     private long inCombatUntil = 0L;
+    /** Game time hasta el que dura el cooldown de la cámara de contención de ki (ver
+     *  KiContainmentChamberBlockEntity). Es POR JUGADOR y no por máquina: si fuera de la cámara,
+     *  bastaría cambiar de cámara para saltárselo. Viaja en save()/load() porque la HUD del dueño
+     *  enseña los segundos que faltan (en esta clase «no persistir» y «no sincronizar» son lo mismo). */
+    private long kiChamberCooldownUntil = 0L;
 
     /** gameTime hasta el que el jugador está EN el ritual de God Ki (candidato o participante): el
      *  cliente oculta el gauge de carga de ki (el texto del ritual se solapaba con él). Instante futuro,
@@ -196,6 +212,8 @@ public class PlayerStateFlags {
     public void setGodKiRitualUntil(long t) { this.godKiRitualUntil = t; }
     public long getInCombatUntil()  { return inCombatUntil; }
     public void setInCombatUntil(long t) { this.inCombatUntil = t; }
+    public long getKiChamberCooldownUntil() { return kiChamberCooldownUntil; }
+    public void setKiChamberCooldownUntil(long t) { this.kiChamberCooldownUntil = Math.max(0L, t); }
     public boolean isHardcoreDeath() { return hardcoreDeath; }
     public void setHardcoreDeath(boolean v) { this.hardcoreDeath = v; }
     public boolean hasTail() { return hasTail; }
@@ -236,6 +254,10 @@ public class PlayerStateFlags {
         while (rageEventIds.size() > RAGE_EVENT_IDS_CAP) rageEventIds.removeFirst();
     }
     public boolean hasGodKiAudience() { return godKiAudience; }
+    public boolean isLegendaryRolled() { return legendaryRolled; }
+    public void setLegendaryRolled(boolean v) { this.legendaryRolled = v; }
+    public boolean isNamekOrangeHinted() { return namekOrangeHinted; }
+    public void setNamekOrangeHinted(boolean v) { this.namekOrangeHinted = v; }
     public void setGodKiAudience(boolean v) { this.godKiAudience = v; }
     public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
     public void setReceivedKaioWeights(boolean v) { this.receivedKaioWeights = v; }
@@ -276,6 +298,7 @@ public class PlayerStateFlags {
         tag.putBoolean("downed", downed);
         tag.putLong("downedUntil", downedUntil);
         tag.putLong("inCombatUntil", inCombatUntil);
+        tag.putLong("kiChamberCooldownUntil", kiChamberCooldownUntil);
         tag.putLong("godKiRitualUntil", godKiRitualUntil);
         tag.putBoolean("hardcoreDeath", hardcoreDeath);
         tag.putBoolean("hasBrokenOverdriveOnce", hasBrokenOverdriveOnce);
@@ -294,6 +317,8 @@ public class PlayerStateFlags {
         for (String id : rageEventIds) rage.add(net.minecraft.nbt.StringTag.valueOf(id));
         tag.put("rageEventIds", rage);
         tag.putBoolean("godKiAudience", godKiAudience);
+        tag.putBoolean("legendaryRolled", legendaryRolled);
+        tag.putBoolean("namekOrangeHinted", namekOrangeHinted);
         tag.putDouble("arcosianPp", arcosianPp);
         tag.putInt("absorbMass", absorbMass);
         tag.putLong("absorbMassUntil", absorbMassUntil);
@@ -324,6 +349,9 @@ public class PlayerStateFlags {
         net.minecraft.nbt.ListTag rage = tag.getList("rageEventIds", net.minecraft.nbt.Tag.TAG_STRING);
         for (int i = 0; i < rage.size(); i++) rageEventIds.add(rage.getString(i));
         this.godKiAudience = tag.getBoolean("godKiAudience");
+        // Sin la clave = partida anterior a la 0.7.0: PlayerStatsAttachment.load decide (un personaje ya creado no tira).
+        this.legendaryRolled = tag.getBoolean("legendaryRolled");
+        this.namekOrangeHinted = tag.getBoolean("namekOrangeHinted");
         this.arcosianPp = tag.getDouble("arcosianPp");
         this.absorbMass = tag.getInt("absorbMass");
         this.absorbMassUntil = tag.getLong("absorbMassUntil");
@@ -344,6 +372,7 @@ public class PlayerStateFlags {
         this.downed = tag.getBoolean("downed");
         this.downedUntil = tag.getLong("downedUntil");
         this.inCombatUntil = tag.getLong("inCombatUntil");
+        this.kiChamberCooldownUntil = tag.getLong("kiChamberCooldownUntil");
         this.godKiRitualUntil = tag.getLong("godKiRitualUntil");
         this.hardcoreDeath = tag.getBoolean("hardcoreDeath");
         this.hasBrokenOverdriveOnce = tag.getBoolean("hasBrokenOverdriveOnce");

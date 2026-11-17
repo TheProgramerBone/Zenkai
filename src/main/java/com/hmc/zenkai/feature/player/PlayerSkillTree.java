@@ -31,11 +31,18 @@ public final class PlayerSkillTree {
      * Versión actual. 1: espejo de F1. 2: nodos propios; god_ki pasa a nivel máximo 1 y las
      * formas divinas a nodos propios (SkillTreeMigration.migrateToV2).
      */
-    public static final int VERSION = 3;
+    // 3: Gigante Namekiano como interruptor. 4 (0.7.0): Súper Namekiano delante de Naranja (SkillTreeMigration.migrate).
+    public static final int VERSION = 4;
 
     private final Map<ResourceLocation, Integer> derived = new LinkedHashMap<>();
     private final Map<ResourceLocation, Integer> owned = new LinkedHashMap<>();
-    private int version = 0;
+    /**
+     * Un attachment NUEVO nace al día (personaje recién creado o reencarnado): no tiene nada que migrar. Antes nacía en 0 y,
+     * como la versión solo se sellaba al migrar en la carga, el primer reingreso de un personaje nuevo pasaba por las
+     * migraciones de partidas viejas (a un Namekiano le movían los niveles de super_forms sin motivo). Las partidas
+     * anteriores al árbol (sin la clave) las pone a 0 PlayerStatsAttachment.load.
+     */
+    private int version = VERSION;
 
     public int level(ResourceLocation id) {
         return Math.max(derived.getOrDefault(id, 0), owned.getOrDefault(id, 0));

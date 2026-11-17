@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.rage;
 
 /**
- * Acontecimientos que reconoce el sistema (tabla de pendiente/rage-forms.md §12.1). Es un enum y no datos: cada uno es un
+ * Acontecimientos que reconoce el sistema (tabla de archivo/2026-11-08-rage-forms-diseno-v2.md §12.1). Es un enum y no datos: cada uno es un
  * DETECTOR de código (un evento del mod) y la tabla es corta y fija; el datapack solo decide qué despertar cuelga de cuál.
  * {@code consumesCooldown}: las filas que gastan el enfriamiento por aliado (rage.ally_event_cooldown).
  */

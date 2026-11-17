@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * Rage Forms, lado servidor: evalúa UN acontecimiento para UN beneficiario y concede el resultado (flujo de
- * pendiente/rage-forms.md §4.1). Es autoritativo: el cliente solo presenta. Los detectores ({@link RageListeners}) solo
+ * archivo/2026-11-08-rage-forms-diseno-v2.md §4.1). Es autoritativo: el cliente solo presenta. Los detectores ({@link RageListeners}) solo
  * dicen «pasó X a Y»; aquí se decide todo lo demás.
  *
  * Reglas:

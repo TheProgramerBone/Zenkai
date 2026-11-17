@@ -115,6 +115,81 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('K',ModItems.KATCHIN_INGOT)
                 .unlockedBy("has_scouter",has(Blocks.FURNACE)).save(recipeOutput);
 
+        // Mejoras de máquina y batería (Fase 2b). Recetas PROVISIONALES: el coste sube con el tipo
+        // de Ki, y la Legendaria es la más cara a propósito (katchin + circuito de élite).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KI_TOLERANCE_SUPER.get(), 1)
+                .pattern(" G ").pattern("GCG").pattern(" E ")
+                .define('G', Tags.Items.INGOTS_GOLD)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KI_TOLERANCE_DIVINE.get(), 1)
+                .pattern(" D ").pattern("DCD").pattern(" E ")
+                .define('D', Tags.Items.GEMS_DIAMOND)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KI_TOLERANCE_LEGENDARY.get(), 1)
+                .pattern(" K ").pattern("KCK").pattern(" E ")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('C', ModItems.ELITE_CIRCUIT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .unlockedBy("has_elite_circuit", has(ModItems.ELITE_CIRCUIT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MACHINE_SPEED_UPGRADE.get(), 1)
+                .pattern(" R ").pattern("RCR").pattern(" U ")
+                .define('R', Tags.Items.DUSTS_REDSTONE)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .define('U', Tags.Items.INGOTS_COPPER)
+                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MACHINE_STORAGE_UPGRADE.get(), 1)
+                .pattern(" I ").pattern("ICI").pattern(" U ")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .define('U', Tags.Items.INGOTS_COPPER)
+                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ENERGY_BATTERY.get(), 1)
+                .pattern(" U ").pattern("IEI").pattern("IRI")
+                .define('U', Tags.Items.INGOTS_COPPER)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .define('R', Tags.Items.DUSTS_REDSTONE)
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
+
+        // Transporte (provisional, como el resto de la 0.7.0): cables y tuberías salen de seis en seis.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ENERGY_CABLE.get(), 6)
+                .pattern("III").pattern("CRC").pattern("III")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('C', Tags.Items.INGOTS_COPPER)
+                .define('R', Tags.Items.DUSTS_REDSTONE)
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.FLUID_PIPE.get(), 6)
+                .pattern("III").pattern("GGG").pattern("III")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G', Tags.Items.GLASS_BLOCKS)
+                .unlockedBy("has_iron", has(Tags.Items.INGOTS_IRON)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ENERGY_TANK.get(), 1)
+                .pattern("ICI").pattern("CEC").pattern("ICI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('C', Tags.Items.INGOTS_COPPER)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.FLUID_TANK.get(), 1)
+                .pattern("IGI").pattern("G G").pattern("IGI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G', Tags.Items.GLASS_BLOCKS)
+                .unlockedBy("has_iron", has(Tags.Items.INGOTS_IRON)).save(recipeOutput);
+
+        // Cámara de contención de ki. Receta PROVISIONAL de la Fase 2a (se revisa con el katchin en la 5a).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.KI_CONTAINMENT_CHAMBER.get(), 1)
+                .pattern("IGI")
+                .pattern("GEG")
+                .pattern("IRI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G', Tags.Items.GLASS_BLOCKS)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
                 .pattern("Y Y")

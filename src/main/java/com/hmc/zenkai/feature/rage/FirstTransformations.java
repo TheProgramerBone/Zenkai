@@ -62,13 +62,34 @@ public final class FirstTransformations {
         return a != null && a.form().equals(target) && sp.level().getGameTime() - a.at() <= ANNOUNCE_TTL_TICKS;
     }
 
-    public static void forget(UUID id) { ANNOUNCED.remove(id); }
+    public static void forget(UUID id) { ANNOUNCED.remove(id); INTERRUPTED.remove(id); }
+
+    /** Jugadores que cortaron la presentación ANTES de que existiera su entrada de crónica (carga con la tecla): gameTime del aviso. */
+    private static final Map<UUID, Long> INTERRUPTED = new ConcurrentHashMap<>();
+
+    /**
+     * El cliente avisó de que cortó la presentación y la entrada aún no existe. Solo se apunta si de verdad hay una secuencia
+     * larga anunciada para él (ver {@link LongTransformInterruptedPacket}); la recoge {@link #onFormChanged} al escribir la entrada.
+     */
+    static void noteInterrupted(ServerPlayer sp) {
+        Announced a = ANNOUNCED.get(sp.getUUID());
+        long now = sp.level().getGameTime();
+        if (a == null || now - a.at() > ANNOUNCE_TTL_TICKS) return;
+        INTERRUPTED.put(sp.getUUID(), now);
+    }
+
+    /** ¿Cortó la presentación de la carga que acaba de completarse? Consume la marca. */
+    private static boolean consumeInterrupted(ServerPlayer sp) {
+        Long at = INTERRUPTED.remove(sp.getUUID());
+        return at != null && sp.level().getGameTime() - at <= LongTransformInterruptedPacket.WINDOW_TICKS;
+    }
 
     /**
      * La carga se cortó sin completarse (soltó la tecla, perdió la condición, fue vetada): si había una secuencia larga avisada, se
      * cancela en los clientes. Barato (un acceso al mapa), así que se llama cada tick en que no hay carga en marcha.
      */
     public static void cancelIfAnnounced(ServerPlayer sp) {
+        INTERRUPTED.remove(sp.getUUID());   // sin transformación no hay entrada que marcar
         if (ANNOUNCED.remove(sp.getUUID()) == null) return;
         try {
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
@@ -84,6 +105,7 @@ public final class FirstTransformations {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         boolean alreadyAnnounced = longAnnounced(sp, e.to());
         ANNOUNCED.remove(sp.getUUID());
+        boolean interrupted = consumeInterrupted(sp);
         boolean first = att.flags().markLongCinematicSeen(e.to().toString());
         if (!first) {
             // «Siempre la larga» (opción del propio jugador): el aviso se manda igual, SIN la protección de la escena ni la crónica.
@@ -102,7 +124,7 @@ public final class FirstTransformations {
         if (!alreadyAnnounced) sendLong(sp, e, true);
         if (Boolean.TRUE.equals(RageSystem.AWAKENING_IN_PROGRESS.get())) return;   // la entrada de la crónica la escribe RageSystem
         RageChronicle.get(sp).add(new RageChronicle.Entry("", RageChronicle.FORM_FIRST, e.to().toString(),
-                RageResult.RECORDED.name(), "other", "", sp.level().getGameTime(), -1f, -1f, true, false, false));
+                RageResult.RECORDED.name(), "other", "", sp.level().getGameTime(), -1f, -1f, true, interrupted, false));
     }
 
     /** Avisa de la secuencia larga a quien se transforma y a quienes lo ven. Solo presentación: un fallo se traga (sin aviso, se ve la corta). */

@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "active=false,facing=north,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=north,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=north,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=north,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=south,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=south,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=south,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=south,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=west,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=west,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=west,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=west,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=east,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=east,half=lower": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=false,facing=east,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    },
+    "active=true,facing=east,half=upper": {
+      "model": "zenkai:block/ki_containment_chamber_particle"
+    }
+  }
+}

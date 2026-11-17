@@ -76,7 +76,7 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
 
     /** Huecos del ContainerData: progreso, duración, trabajo, motivo de pausa, energía,
      *  capacidad. Un único número para los dos lados, para que no se separen otra vez. */
-    public static final int DATA_SLOTS = 6;
+    public static final int DATA_SLOTS = 8;
 
     /** Cliente: contenedor y datos ficticios; el servidor los rellena por sincronización.
      *  EL TAMAÑO TIENE QUE COINCIDIR con ScouterBenchBlockEntity.data.getCount(). Si el
@@ -166,8 +166,19 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     public int progress()       { return data.get(0); }
     public int duration()       { return Math.max(1, data.get(1)); }
     public int job()            { return data.get(2); }
-    public int energy()         { return data.get(4); }
-    public int energyCapacity() { return Math.max(1, data.get(5)); }
+    public int energy()         { return wide(4, 6); }
+    public int energyCapacity() { return Math.max(1, wide(5, 7)); }
+
+    /**
+     * Recompone una cifra que viaja partida en dos huecos (mitad baja y mitad alta).
+     * El paquete de ContainerData de vanilla manda cada valor como un SHORT (16 bits). En un
+     * mundo de un jugador no se nota, porque la conexión local pasa el objeto sin serializarlo,
+     * pero en un servidor dedicado 100 000 FE llegaban al cliente como un número negativo y la
+     * barra se quedaba vacía con el búfer lleno (arreglado el 2026-11-16).
+     */
+    private int wide(int lo, int hi) {
+        return ((data.get(hi) & 0xFFFF) << 16) | (data.get(lo) & 0xFFFF);
+    }
 
     public PauseReason pauseReason() { return PauseReason.byId(data.get(3)); }
     public boolean isPaused()        { return pauseReason().isPaused(); }

@@ -85,6 +85,21 @@ public class ModItems {
 
     /** El metal más duro del Universo 7. No es un tier de herramienta: es material
      *  estructural y de equipo. Ver PowerMining para por qué no se pica con un pico. */
+    // ── Mejoras de máquina y batería (0.7.0, Fase 2b) ────────────────────────
+    // La tolerancia a Ki Base viene de serie en las máquinas: solo hay mejora para los otros tres tipos.
+    public static final DeferredItem<Item> KI_TOLERANCE_SUPER = ITEMS.registerItem("ki_tolerance_super",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> KI_TOLERANCE_DIVINE = ITEMS.registerItem("ki_tolerance_divine",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> KI_TOLERANCE_LEGENDARY = ITEMS.registerItem("ki_tolerance_legendary",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16).rarity(Rarity.RARE));
+    public static final DeferredItem<Item> MACHINE_SPEED_UPGRADE = ITEMS.registerItem("machine_speed_upgrade",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> MACHINE_STORAGE_UPGRADE = ITEMS.registerItem("machine_storage_upgrade",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> ENERGY_BATTERY = ITEMS.registerItem("energy_battery",
+            com.hmc.zenkai.content.item.EnergyBatteryItem::new, new Item.Properties());
+
     public static final DeferredItem<Item> KATCHIN_INGOT = ITEMS.registerItem("katchin_ingot",
             Item::new, new Item.Properties().rarity(Rarity.RARE));
 

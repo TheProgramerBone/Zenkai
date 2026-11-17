@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Legendario de las demás razas (diseño en .claude/pendiente/skill-tree.md §1): el MISMO deseo y el mismo flag
+ * Legendario de las demás razas (diseño en .claude/docs/jugador-razas-formas.md): el MISMO deseo y el mismo flag
  * {@code isLegendary} que el del Saiyan, pero cada raza recibe UNA forma propia. Esta clase reúne lo común:
  * qué forma es de qué raza, el porcentaje de stats acoplado al TP y la «resonancia divina».
  *

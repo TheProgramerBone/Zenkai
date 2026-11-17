@@ -685,6 +685,12 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.rage.RageChronicleRequestPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.rage.RageChronicleRequestPacket::handle);
 
+        // Rage Forms: el jugador cortó la presentación de su primera transformación (abrió una pantalla) -> crónica «interrumpida».
+        registrar.playToServer(
+                com.hmc.zenkai.feature.rage.LongTransformInterruptedPacket.TYPE,
+                com.hmc.zenkai.feature.rage.LongTransformInterruptedPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.LongTransformInterruptedPacket::handle);
+
         // Rage Forms: primera transformación de una forma -> el aura de ese jugador reproduce la secuencia larga (solo presentación).
         registrar.playToClient(
                 com.hmc.zenkai.feature.rage.LongTransformPacket.TYPE,

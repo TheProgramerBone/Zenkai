@@ -35,6 +35,40 @@ public final class CharacterResetGameTests {
         helper.succeed();
     }
 
+    /** Nacer Legendario (0.7.0): una tirada por personaje; la reencarnación la rearma y un personaje anterior a la 0.7.0 no tira. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void legendaryBirthRollsOncePerLife(GameTestHelper helper) {
+        ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        att.setLegendary(false);
+        att.flags().setLegendaryRolled(false);
+        var rng = net.minecraft.util.RandomSource.create(42L);
+
+        helper.assertTrue(!com.hmc.zenkai.feature.forms.LegendaryBirth.roll(att, rng, false, 0.0) && !att.isLegendary(),
+                "Con 0 % nunca nace Legendario");
+        helper.assertTrue(att.flags().isLegendaryRolled(), "La tirada queda hecha aunque no salga");
+        helper.assertTrue(!com.hmc.zenkai.feature.forms.LegendaryBirth.roll(att, rng, false, 100.0) && !att.isLegendary(),
+                "Con la tirada ya hecha no se repite, ni al 100 %");
+
+        CharacterReset.resetData(sp);
+        PlayerStatsAttachment fresh = PlayerStatsAttachment.get(sp);
+        helper.assertTrue(!fresh.flags().isLegendaryRolled() && !fresh.isLegendary(), "Reencarnar rearma la tirada y quita el estado");
+        helper.assertTrue(com.hmc.zenkai.feature.forms.LegendaryBirth.roll(fresh, rng, false, 100.0) && fresh.isLegendary(),
+                "Con 100 % la vida nueva nace Legendaria");
+
+        // Partida anterior a la 0.7.0: la clave no existe y el personaje ya estaba creado -> no recibe tirada después.
+        PlayerStatsAttachment old = new PlayerStatsAttachment();
+        old.setRace(com.hmc.zenkai.feature.Race.SAIYAN);
+        old.setRaceChosen(true);
+        old.setStyleChosen(true);
+        net.minecraft.nbt.CompoundTag tag = old.save();
+        tag.getCompound("flags").remove("legendaryRolled");
+        PlayerStatsAttachment loaded = new PlayerStatsAttachment();
+        loaded.load(tag);
+        helper.assertTrue(loaded.flags().isLegendaryRolled(), "Un personaje ya creado antes de la 0.7.0 se da por tirado");
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void reincarnationKeepsOnlyWhatTheSoulRemembers(GameTestHelper helper) {
         ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);

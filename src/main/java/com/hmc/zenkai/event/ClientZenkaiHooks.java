@@ -74,6 +74,8 @@ public final class ClientZenkaiHooks {
 
     public static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
     public static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
+    /** Cifra del cooldown de la cámara de contención de ki (== ZenkaiTechPalette.KI_BASE_HI). */
+    public static final int C_KI_CHAMBER_COOLDOWN = 0xFF78AAFF;
     /** Body crítico sin ningún otro estado activo: mismo lenguaje (lavado de color sobre el
      *  relleno) que Kaioken/strain, pero pulsando en vez de fijo para que llame la atención. */
     public static final int C_BODY_CRITICAL = 0xFFFF2A2A;
@@ -351,6 +353,13 @@ public final class ClientZenkaiHooks {
             out.add(new Badge(ICON_KAIOKEN, tier.label(), 0xFFFF8866));
         } else if (strained) {
             out.add(new Badge(ICON_STRAIN, Math.round(form.strainSecondsLeft(now)) + "s", C_BODY_STRAIN));
+        }
+
+        // Cooldown de la cámara de contención de ki: segundos que faltan para poder cargar sin forzar.
+        // Icono PROVISIONAL (el de agotamiento, con la cifra en azul de ki): falta uno propio en icons.png.
+        long chamberLeft = stats.flags().getKiChamberCooldownUntil() - now;
+        if (chamberLeft > 0L) {
+            out.add(new Badge(ICON_STRAIN, ((chamberLeft + 19L) / 20L) + "s", C_KI_CHAMBER_COOLDOWN));
         }
 
         // Formas Legendarias: su icono del atlas del árbol y debajo el número que importa de cada una.

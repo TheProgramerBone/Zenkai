@@ -217,6 +217,16 @@ public final class RacePassives {
         return source.is(ModDamageTypes.KI_DAMAGE_TAG);
     }
 
+    /**
+     * Arcosiano «Mundo» (0.7.0): aguanta mejor los entornos hostiles. Hoy es solo una resistencia ligera al FUEGO (la etiqueta
+     * vanilla IS_FIRE: fuego, arder, lava, magma), {@code arcosian.environment.fire_damage_reduction}. El frío no pasa por
+     * aquí: la inmunidad es de la pasiva de raza ({@link #immuneToCold}). Se aplica sobre el daño YA mitigado, como el Majin.
+     */
+    public static float mitigateEnvironment(Player p, DamageSource source, float amount) {
+        if (!is(p, Race.ARCOSIAN) || !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) return amount;
+        return amount * (1.0f - (float) ServerConfig.arcosianFireDamageReduction());
+    }
+
     /** ¿Esta raza ignora el daño y la ralentización por frío? */
     public static boolean immuneToCold(Player p) {
         return is(p, Race.ARCOSIAN);

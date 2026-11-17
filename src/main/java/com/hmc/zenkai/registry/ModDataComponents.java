@@ -8,7 +8,10 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.fluids.SimpleFluidContent;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.List;
 
 import java.util.function.Supplier;
 
@@ -53,6 +56,29 @@ public final class ModDataComponents {
             COMPONENTS.register("scouter_upgrades", () -> DataComponentType.<ScouterUpgrades>builder()
                     .persistent(ScouterUpgrades.CODEC)
                     .networkSynchronized(ScouterUpgrades.STREAM_CODEC)
+                    .build());
+
+    /** FE guardada en una batería (EnergyBatteryItem). Ausente = 0. Es el componente que lee
+     *  la ComponentEnergyStorage de NeoForge, así que cualquier cargador de otro mod lo rellena. */
+    public static final Supplier<DataComponentType<Integer>> STORED_ENERGY =
+            COMPONENTS.register("stored_energy", () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
+    /** Fluido que lleva un tanque de transporte roto (TransportBlockItem). Ausente = vacío. */
+    public static final Supplier<DataComponentType<SimpleFluidContent>> TRANSPORT_FLUID =
+            COMPONENTS.register("transport_fluid", () -> DataComponentType.<SimpleFluidContent>builder()
+                    .persistent(SimpleFluidContent.CODEC)
+                    .networkSynchronized(SimpleFluidContent.STREAM_CODEC)
+                    .build());
+
+    /** Modos de las seis caras (ordinal de SideMode, orden de Direction.get3DDataValue) de un tanque
+     *  de transporte roto. Ausente = todas en Normal. */
+    public static final Supplier<DataComponentType<List<Integer>>> TRANSPORT_MODES =
+            COMPONENTS.register("transport_modes", () -> DataComponentType.<List<Integer>>builder()
+                    .persistent(Codec.INT.listOf())
+                    .networkSynchronized(ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list()))
                     .build());
 
     /** Scouter reventado. El stack NO se destruye: conserva nivel y tinte para la reparación. */

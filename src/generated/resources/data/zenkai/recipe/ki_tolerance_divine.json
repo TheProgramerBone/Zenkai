@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "D": {
+      "tag": "c:gems/diamond"
+    },
+    "E": {
+      "item": "zenkai:energy_crystal"
+    }
+  },
+  "pattern": [
+    " D ",
+    "DCD",
+    " E "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:ki_tolerance_divine"
+  }
+}

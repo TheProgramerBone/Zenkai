@@ -40,7 +40,7 @@ import java.util.UUID;
 /**
  * El CUERPO que deja un jugador al morir: una entidad (no un bloque, no un mob) con su inventario.
  * Existe SIEMPRE, también con la muerte permanente apagada: las rage forms (#6) y la visita de Uranai
- * Baba se apoyan en ella. Plan en {@code .claude/pendiente/plan-muerte-permanente.md}.
+ * Baba se apoyan en ella. Plan en {@code .claude/docs/combate-y-muerte.md}.
  *
  * Extiende {@link Entity} y no LivingEntity/Mob a propósito: ningún mob la apunta ni la ataca y no hay
  * IA que mantener. Es inmune a daño (salvo lo que salta la invulnerabilidad: vacío y /kill, y el vacío

@@ -178,6 +178,189 @@ public final class ScreenShots {
         PLAN.add(() -> { capture(mc, "82_wish_stack"); mc.setScreen(null); wait = 5; });
     }
 
+    /**
+     * Cámara de contención de ki (modo «chamber», con mundo «new:»): el bloque apagado visto desde fuera, encendido con
+     * cada uno de los cuatro tipos de ki (el brillo se fuerza a mano: una carga real exige la pantalla abierta, que
+     * taparía el modelo) y la pantalla con el tanque a medias, cargando y convirtiendo a FE.
+     */
+    private static void chamberPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos pos = sp.blockPosition().offset(3, 0, 0);
+            at[0] = pos;
+            var lower = com.hmc.zenkai.registry.ModBlocks.KI_CONTAINMENT_CHAMBER.get().defaultBlockState()
+                    .setValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.FACING, net.minecraft.core.Direction.WEST);
+            level.setBlock(pos, lower, 3);
+            level.setBlock(pos.above(), lower.setValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.HALF,
+                    net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 3);
+            sp.getInventory().setItem(0, new net.minecraft.world.item.ItemStack(
+                    com.hmc.zenkai.registry.ModBlocks.KI_CONTAINMENT_CHAMBER.get()));
+            sp.teleportTo(level, sp.getX(), sp.getY(), sp.getZ(), -90f, 0f);
+        }));
+        PLAN.add(() -> wait = 40);
+        PLAN.add(() -> { capture(mc, "90_ki_chamber_idle"); wait = 5; });
+        // Las seis caras: los dos lados, la espalda, desde arriba y desde abajo (en diagonal), y dos
+        // vistas desde dentro (sin sesión: solo se coloca al jugador). Columnas: dx, dy, dz, yaw, pitch.
+        float[][] views = { {0.5f, 0f, 3.5f, 180f, 0f}, {0.5f, 0f, -2.5f, 0f, 0f}, {3.5f, 0f, 0.5f, 90f, 0f},
+                {-1.2f, 2.6f, -1.2f, -45f, 50f}, {2.2f, 2.6f, 2.2f, 135f, 50f},
+                {0.5f, 0f, 0.5f, 0f, 0f}, {0.5f, 0f, 0.5f, 90f, 0f} };
+        String[] names = { "side_south", "side_north", "back", "top_front", "top_back", "inside_a", "inside_b" };
+        for (int v = 0; v < views.length; v++) {
+            final float[] view = views[v];
+            final String name = names[v];
+            PLAN.add(() -> {
+                onServer(mc, sp -> {
+                    if (view[1] > 1f) { sp.getAbilities().flying = true; sp.onUpdateAbilities(); }
+                    sp.teleportTo(sp.serverLevel(), at[0].getX() + view[0], at[0].getY() + view[1],
+                            at[0].getZ() + view[2], view[3], view[4]);
+                });
+                wait = 15;
+            });
+            PLAN.add(() -> { capture(mc, "90_ki_chamber_" + name); wait = 3; });
+        }
+        // Puerta abierta, de frente y en diagonal.
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                sp.getAbilities().flying = false;
+                sp.onUpdateAbilities();
+                sp.teleportTo(sp.serverLevel(), at[0].getX() - 2.5, at[0].getY(), at[0].getZ() + 0.5, -90f, 0f);
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) be.toggleDoor();
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "90_ki_chamber_door_open"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() - 1.5, at[0].getY() + 0.5, at[0].getZ() - 1.5, -45f, 10f));
+            wait = 15;
+        });
+        PLAN.add(() -> { capture(mc, "90_ki_chamber_door_open_diag"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) be.toggleDoor();
+            });
+            wait = 20;
+        });
+        PLAN.add(() -> {
+            onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() - 2.5, at[0].getY(), at[0].getZ() + 0.5, -90f, 0f));
+            wait = 15;
+        });
+        for (com.hmc.zenkai.feature.kichamber.KiEnergyType type : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
+            PLAN.add(() -> {
+                onServer(mc, sp -> {
+                    var st = sp.serverLevel().getBlockState(at[0]);
+                    sp.serverLevel().setBlock(at[0], st.setValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE, true), 3);
+                });
+                wait = 23;
+            });
+            PLAN.add(() -> {
+                if (mc.level != null && mc.level.getBlockEntity(at[0])
+                        instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) be.devSetGlow(type.ordinal());
+                wait = 4;
+            });
+            PLAN.add(() -> { capture(mc, "91_ki_chamber_glow_" + type.fluidName()); wait = 3; });
+        }
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                var level = sp.serverLevel();
+                var st = level.getBlockState(at[0]);
+                level.setBlock(at[0], st.setValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE, false), 3);
+                if (level.getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    be.tank().fill(new net.neoforged.neoforge.fluids.FluidStack(
+                            com.hmc.zenkai.registry.ModFluids.KI_BASE.source().get(), 8000),
+                            net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+                    be.toggleConvert();     // apagado: el tanque se queda a medias para la captura
+                    // Ranuras de la Fase 2b: Divina y Legendaria toleradas (Súper NO, para la captura de
+                    // sobrecarga), dos de velocidad, una de almacenamiento y una batería.
+                    var up = be.upgradeHandler();
+                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOL_DIVINE,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get()));
+                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOL_LEGENDARY,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_LEGENDARY.get()));
+                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_SPEED,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.MACHINE_SPEED_UPGRADE.get(), 2));
+                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_STORAGE,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.MACHINE_STORAGE_UPGRADE.get()));
+                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_BATTERY,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+                    sp.getInventory().setItem(1, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_SUPER.get()));
+                    sp.getInventory().setItem(2, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+                    PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+                    att.addKi(att.getKiPool());
+                    be.openMenuFor(sp);
+                }
+            });
+            wait = 40;
+        });
+        PLAN.add(() -> { capture(mc, "92_ki_chamber_gui_ready"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    // Entrar de verdad: puerta abierta y el jugador dentro; el ticker lo atrapa y arranca.
+                    be.toggleDoor();
+                    sp.teleportTo(sp.serverLevel(), at[0].getX() + 0.5, at[0].getY(), at[0].getZ() + 0.5, 90f, 0f);
+                }
+            });
+            wait = 60;
+        });
+        PLAN.add(() -> { capture(mc, "93_ki_chamber_inside_charging"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    be.openMenuFor(sp);
+                }
+            });
+            wait = 20;
+        });
+        PLAN.add(() -> { capture(mc, "93_ki_chamber_gui_charging"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    be.toggleConvert();
+                }
+            });
+            wait = 40;
+        });
+        PLAN.add(() -> { capture(mc, "94_ki_chamber_gui_converting"); wait = 3; });
+        // Sobrecarga: en SSJ1 y sin la tolerancia de Súper. Se limpia el cooldown y el tanque (tenía Ki Base)
+        // para poder cargar otra vez, y se captura pasado el 40 % de calor, con la alarma ya sonando.
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    if (!be.isFree()) be.toggleDoor();   // libera al jugador y deja la puerta abierta
+                    be.toggleDoor();                     // cerrada, para que no lo atrape antes de tiempo
+                    be.tank().setFluid(net.neoforged.neoforge.fluids.FluidStack.EMPTY);
+                    PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+                    att.flags().setKiChamberCooldownUntil(0L);
+                    att.addKi(att.getKiPool());
+                    sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get())
+                            .setFormId(com.hmc.zenkai.feature.forms.FormIds.SSJ1);
+                    PlayerLifeCycle.syncForm(sp);
+                    PlayerLifeCycle.sync(sp);
+                }
+            });
+            wait = 20;
+        });
+        PLAN.add(() -> { capture(mc, "96_ki_chamber_gui_no_tolerance"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity be) {
+                    be.toggleDoor();                     // abierta: el jugador sigue dentro y vuelve a ser atrapado
+                }
+            });
+            wait = 125;
+        });
+        PLAN.add(() -> { capture(mc, "97_ki_chamber_gui_overload"); mc.player.closeContainer(); wait = 30; });
+        PLAN.add(() -> { capture(mc, "95_ki_chamber_after_exit"); wait = 3; });
+    }
+
+    private static void onServer(Minecraft mc, java.util.function.Consumer<net.minecraft.server.level.ServerPlayer> action) {
+        var server = mc.getSingleplayerServer();
+        if (server == null) return;
+        server.execute(() -> action.accept(server.getPlayerList().getPlayers().get(0)));
+    }
+
     private static void containerShot(Minecraft mc, String name, net.minecraft.world.level.block.Block block) {
         PLAN.add(() -> {
             var server = mc.getSingleplayerServer();
@@ -193,6 +376,58 @@ public final class ScreenShots {
             wait = 40;
         });
         PLAN.add(() -> { capture(mc, name); mc.setScreen(null); wait = 5; });
+    }
+
+    /**
+     * Tanques multibloque (modo «tanks», con mundo «new:»): un tanque de energía 2x2x3, uno de fluidos 3x3x2
+     * con agua, uno suelto con una placa de salida y otro con una de entrada, vistos desde las cuatro
+     * esquinas y desde arriba. Sirve para ver que la textura conectada empalma y que el marco va por FUERA
+     * del grupo en cada cara (si la izquierda y la derecha de una cara estuvieran cambiadas, saldría por dentro).
+     */
+    private static void tanksPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos o = sp.blockPosition().offset(4, 0, -4);
+            at[0] = o;
+            var energy = com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK.get().defaultBlockState();
+            var fluid = com.hmc.zenkai.registry.ModBlocks.FLUID_TANK.get().defaultBlockState();
+            for (int y = 0; y < 3; y++) for (int x = 0; x < 2; x++) for (int z = 0; z < 2; z++) level.setBlock(o.offset(x, y, z), energy, 3);
+            for (int y = 0; y < 2; y++) for (int x = 0; x < 3; x++) for (int z = 0; z < 3; z++) level.setBlock(o.offset(x, y, z + 4), fluid, 3);
+            level.setBlock(o.offset(0, 0, 9), energy, 3);
+            level.setBlock(o.offset(0, 0, 11), fluid, 3);
+            if (level.getBlockEntity(o.offset(0, 0, 4)) instanceof com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity t) {
+                var h = t.fluidAt(null);
+                for (int i = 0; i < 20; i++) h.fill(new net.neoforged.neoforge.fluids.FluidStack(
+                        net.minecraft.world.level.material.Fluids.WATER, 2_000), net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+            }
+            if (level.getBlockEntity(o.offset(0, 0, 9)) instanceof com.hmc.zenkai.content.blockentity.TransportBlockEntity t) {
+                t.cycleMode(net.minecraft.core.Direction.WEST);   // salida
+            }
+            if (level.getBlockEntity(o.offset(0, 0, 11)) instanceof com.hmc.zenkai.content.blockentity.TransportBlockEntity t) {
+                t.cycleMode(net.minecraft.core.Direction.WEST);
+                t.cycleMode(net.minecraft.core.Direction.WEST);   // entrada
+            }
+            sp.getAbilities().flying = true;
+            sp.onUpdateAbilities();
+        }));
+        PLAN.add(() -> wait = 40);
+        // dx, dy, dz desde la esquina del grupo de energía, yaw, pitch.
+        float[][] views = { {-4.5f, 2.5f, -3.5f, -45f, 20f}, {6.5f, 2.5f, -3.5f, 45f, 20f},
+                {-5.5f, 2.5f, 13.5f, -135f, 20f}, {7.5f, 2.5f, 13.5f, 135f, 20f},
+                {-6f, 1.5f, 6f, -90f, 10f}, {1.5f, 9f, 4.5f, 0f, 89f} };
+        String[] names = { "nw", "ne", "sw", "se", "west", "top" };
+        for (int v = 0; v < views.length; v++) {
+            final float[] view = views[v];
+            final String name = names[v];
+            PLAN.add(() -> {
+                onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() + view[0], at[0].getY() + view[1],
+                        at[0].getZ() + view[2], view[3], view[4]));
+                wait = 20;
+            });
+            PLAN.add(() -> { capture(mc, "98_tanks_" + name); wait = 3; });
+        }
     }
 
     private static void wishesPlan(Minecraft mc) {
@@ -217,7 +452,12 @@ public final class ScreenShots {
     }
 
     private static void buildPlan(Minecraft mc) {
-        if (world.startsWith("new:")) { containersPlan(mc); return; }
+        if (world.startsWith("new:")) {
+            if ("chamber".equals(mode)) chamberPlan(mc);
+            else if ("tanks".equals(mode)) tanksPlan(mc);
+            else containersPlan(mc);
+            return;
+        }
         PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
         if ("wishes".equals(mode)) { wishesPlan(mc); return; }
         if ("training".equals(mode)) { trainingPlan(mc); return; }

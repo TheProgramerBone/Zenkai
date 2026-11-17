@@ -28,6 +28,12 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.SCISSORS.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
+        basicItem(ModItems.KI_TOLERANCE_SUPER.get());
+        basicItem(ModItems.KI_TOLERANCE_DIVINE.get());
+        basicItem(ModItems.KI_TOLERANCE_LEGENDARY.get());
+        basicItem(ModItems.MACHINE_SPEED_UPGRADE.get());
+        basicItem(ModItems.MACHINE_STORAGE_UPGRADE.get());
+        basicItem(ModItems.ENERGY_BATTERY.get());
         basicItem(ModItems.ELITE_CIRCUIT.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
         basicItem(ModItems.KINTOUN_ITEM.get());

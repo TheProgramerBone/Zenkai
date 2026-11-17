@@ -16,7 +16,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
- * Migración de partidas anteriores a Rage Forms (pendiente/rage-forms.md §12.4): cada forma que el jugador ya posee, y la que lleve
+ * Migración de partidas anteriores a Rage Forms (archivo/2026-11-08-rage-forms-diseno-v2.md §12.4): cada forma que el jugador ya posee, y la que lleve
  * activa, se marca como secuencia larga YA vista. NO concede recompensas, desbloqueos ni maestría: solo las formas que consiga
  * después tendrán su primera secuencia larga. Se hace una vez, al entrar: la clave {@code rageMigrated} no existe en esas partidas
  * (PlayerStateFlags la lee como false) y toda partida nueva la guarda a true.

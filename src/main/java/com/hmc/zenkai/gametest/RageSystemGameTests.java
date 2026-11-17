@@ -403,14 +403,101 @@ public final class RageSystemGameTests {
 
         ServerPlayer nam = player(helper, Race.NAMEKIAN);
         PlayerStatsAttachment n = PlayerStatsAttachment.get(nam);
-        helper.assertTrue(!SuperForms.unlocked(nam, orange), "Antes no tiene Naranja");
-        helper.assertTrue(com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n), "Se concede al Namekiano");
+        ResourceLocation superNamek = com.hmc.zenkai.feature.wishes.WishPotentialPayload.NAMEK_SUPER;
+        helper.assertTrue(!SuperForms.unlocked(nam, superNamek), "Antes no tiene el Súper Namekiano");
+        var first = com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n, forms(nam));
+        helper.assertTrue(first == com.hmc.zenkai.feature.wishes.WishPotentialPayload.Outcome.NAMEK_FIRST_FORM, "El primer deseo le da su primera forma; fue " + first);
         helper.assertTrue(n.skills().level(SkillEffects.KI_CONTROL) == step, "Ki Control sube " + step + " niveles");
-        helper.assertTrue(SuperForms.unlocked(nam, orange), "Y Naranja desbloqueada");
+        helper.assertTrue(SuperForms.unlocked(nam, superNamek), "Súper Namekiano desbloqueado");
+        helper.assertTrue(!SuperForms.unlocked(nam, orange), "El deseo NUNCA regala Naranja");
+        helper.assertTrue(!n.flags().isNamekOrangeHinted(), "Y el primer deseo aún no revela su nodo");
 
-        // Con Naranja ya dada, los siguientes deseos solo suben Ki Control y al llegar al tope no se gastan.
+        // 0.7.0: con el Súper Namekiano ya poseído, el deseo da maestría de esa forma y revela el nodo de Naranja.
+        float before = forms(nam).getFormMastery(superNamek);
+        var second = com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n, forms(nam));
+        helper.assertTrue(second == com.hmc.zenkai.feature.wishes.WishPotentialPayload.Outcome.NAMEK_REVEAL, "El segundo deseo revela; fue " + second);
+        helper.assertTrue(n.flags().isNamekOrangeHinted(), "Naranja deja de ser oculta");
+        float gift = (float) ServerConfig.awakenPotentialNamekMastery();
+        helper.assertTrue(Math.abs(forms(nam).getFormMastery(superNamek) - before - gift) < 0.01f,
+                "Suma " + gift + " puntos de maestría; ahora " + forms(nam).getFormMastery(superNamek));
+        helper.assertTrue(!SuperForms.unlocked(nam, orange), "Revelar no es desbloquear");
+
+        // Después solo sube Ki Control y al llegar al tope no se gasta.
         for (int i = 0; i < max; i++) com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n);
         helper.assertTrue(!com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n), "Completo: no se gasta");
+        helper.succeed();
+    }
+
+    /**
+     * Cadena del Namekiano (0.7.0): Súper Namekiano es el primer peldaño y Naranja el segundo. Naranja no se compra: despierta
+     * sola al cumplir la maestría que pide su nodo ({@code MasteryAwakening}), y nunca antes de tener el Súper Namekiano.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void namekOrangeAwakensByMasteryOfSuperNamekian(GameTestHelper helper) {
+        ResourceLocation superNamek = com.hmc.zenkai.feature.wishes.WishPotentialPayload.NAMEK_SUPER;
+        ResourceLocation orange = ResourceLocation.parse("zenkai:namek_orange");
+        helper.assertTrue(SuperForms.depthOf(Race.NAMEKIAN, superNamek) == 1, "Súper Namekiano es el 1er peldaño; depth=" + SuperForms.depthOf(Race.NAMEKIAN, superNamek));
+        helper.assertTrue(SuperForms.depthOf(Race.NAMEKIAN, orange) == 2, "Naranja es el 2º; depth=" + SuperForms.depthOf(Race.NAMEKIAN, orange));
+        helper.assertTrue(SuperForms.maxLevel(Race.NAMEKIAN) == 3, "Base + 2 formas mortales; max=" + SuperForms.maxLevel(Race.NAMEKIAN));
+
+        ServerPlayer sp = player(helper, Race.NAMEKIAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        setMastery(sp, superNamek, 100);
+        helper.assertTrue(com.hmc.zenkai.feature.skilltree.MasteryAwakening.evaluate(sp) == null && !SuperForms.unlocked(sp, orange),
+                "Sin el Súper Namekiano no despierta nada (nunca saltos), ni con la maestría puesta");
+
+        ServerPlayer sp2 = player(helper, Race.NAMEKIAN);
+        PlayerStatsAttachment att2 = PlayerStatsAttachment.get(sp2);
+        att2.skills().grantAdmin(SuperForms.SKILL, 2);
+        var node = com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.NAMEKIAN, orange);
+        helper.assertTrue(node != null && !com.hmc.zenkai.feature.skilltree.SkillTreeNodes.revealed(sp2, node), "Naranja es un nodo oculto");
+        helper.assertTrue(com.hmc.zenkai.feature.skilltree.SkillTreeNodes.evaluate(sp2, node).state()
+                != com.hmc.zenkai.feature.skilltree.SkillTreeNodes.State.AVAILABLE, "Y no se compra con TP");
+        setMastery(sp2, superNamek, 10);
+        helper.assertTrue(com.hmc.zenkai.feature.skilltree.MasteryAwakening.evaluate(sp2) == null, "Con poca maestría aún no despierta");
+        setMastery(sp2, superNamek, 100);
+        helper.assertTrue(com.hmc.zenkai.feature.skilltree.SkillTreeNodes.revealed(sp2, node), "La maestría la revela");
+        helper.assertTrue(orange.equals(com.hmc.zenkai.feature.skilltree.MasteryAwakening.evaluate(sp2)), "Y Naranja despierta");
+        helper.assertTrue(SuperForms.unlocked(sp2, orange) && att2.skills().level(SuperForms.SKILL) == 3, "Queda desbloqueada (nivel 3)");
+        helper.assertTrue(com.hmc.zenkai.feature.skilltree.MasteryAwakening.evaluate(sp2) == null, "Y no sigue concediendo peldaños");
+        helper.assertTrue(att.skills().level(SuperForms.SKILL) == 1, "El otro jugador sigue en Base");
+        helper.succeed();
+    }
+
+    /** Partidas anteriores a la 0.7.0: quien ya tenía Naranja (nivel 2) la conserva y recibe el Súper Namekiano (nivel 3). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void oldNamekianSavesKeepOrange(GameTestHelper helper) {
+        PlayerStatsAttachment old = new PlayerStatsAttachment();
+        old.setRace(Race.NAMEKIAN);
+        old.setRaceChosen(true);
+        old.skills().grantAdmin(SuperForms.SKILL, 2);
+        net.minecraft.nbt.CompoundTag tag = old.save();
+        tag.getCompound("skillTree").putInt("version", 3);
+        PlayerStatsAttachment now = new PlayerStatsAttachment();
+        now.load(tag);
+        helper.assertTrue(now.skills().level(SuperForms.SKILL) == 3, "Sube un nivel; nivel=" + now.skills().level(SuperForms.SKILL));
+        helper.assertTrue(now.skillTree().owns(ResourceLocation.parse("zenkai:namek_orange"))
+                && now.skillTree().owns(com.hmc.zenkai.feature.wishes.WishPotentialPayload.NAMEK_SUPER), "Posee las dos formas");
+        // Ya migrada: volver a cargar no sube otro nivel.
+        PlayerStatsAttachment again = new PlayerStatsAttachment();
+        again.load(now.save());
+        helper.assertTrue(again.skills().level(SuperForms.SKILL) == 3, "La migración no se repite; nivel=" + again.skills().level(SuperForms.SKILL));
+        helper.succeed();
+    }
+
+    /** Arcosiano «Mundo» (0.7.0): el fuego le hace menos daño; a otras razas y a otros daños, el de siempre. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void arcosianTakesLessFireDamage(GameTestHelper helper) {
+        ServerPlayer arc = player(helper, Race.ARCOSIAN);
+        ServerPlayer human = player(helper, Race.HUMAN);
+        DamageSource fire = arc.damageSources().inFire();
+        DamageSource fall = arc.damageSources().fall();
+        float expected = 10f * (1f - (float) ServerConfig.arcosianFireDamageReduction());
+        float got = com.hmc.zenkai.feature.race.RacePassives.mitigateEnvironment(arc, fire, 10f);
+        helper.assertTrue(Math.abs(got - expected) < 0.001f && got < 10f, "Fuego reducido: " + got + " (esperado " + expected + ")");
+        helper.assertTrue(com.hmc.zenkai.feature.race.RacePassives.mitigateEnvironment(arc, arc.damageSources().lava(), 10f) < 10f, "La lava también es fuego");
+        helper.assertTrue(com.hmc.zenkai.feature.race.RacePassives.mitigateEnvironment(arc, fall, 10f) == 10f, "Otros daños, intactos");
+        helper.assertTrue(com.hmc.zenkai.feature.race.RacePassives.mitigateEnvironment(human, fire, 10f) == 10f, "Otras razas, intactas");
         helper.succeed();
     }
 

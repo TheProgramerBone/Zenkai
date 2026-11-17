@@ -86,6 +86,50 @@ public final class ModFluids {
                 .bucket(ModItems.HFIL_BOILING_WATER_BUCKET);
     }
 
+    // ── Fluidos de Ki (Fase 2a de la 0.7.0) ──────────────────────────────────────────────
+    // Cuatro tipos de energía (ver feature.kichamber.KiEnergyType). NO tienen bloque ni cubo: solo
+    // viven en tanques y puertos, como los gases de Mekanism. BaseFlowingFluid lo admite sin más:
+    // sin .block() createLegacyBlock devuelve aire y sin .bucket() getBucket devuelve Items.AIR, así
+    // que nadie puede derramarlos en el mundo ni sacarlos con un cubo. Sus sprites son
+    // textures/block/ki_<tipo>_still|flow.png (tools/gen_ki_fluids.py).
+
+    /** Un fluido de Ki registrado: su tipo y sus dos estados. */
+    public record KiFluid(DeferredHolder<FluidType, FluidType> type,
+                          DeferredHolder<Fluid, BaseFlowingFluid.Source> source,
+                          DeferredHolder<Fluid, BaseFlowingFluid.Flowing> flowing) {}
+
+    public static final KiFluid KI_BASE      = kiFluid("ki_base");
+    public static final KiFluid KI_SUPER     = kiFluid("ki_super");
+    public static final KiFluid KI_DIVINE    = kiFluid("ki_divine");
+    public static final KiFluid KI_LEGENDARY = kiFluid("ki_legendary");
+
+    private static KiFluid kiFluid(String name) {
+        DeferredHolder<FluidType, FluidType> type = FLUID_TYPES.register(name,
+                () -> new FluidType(FluidType.Properties.create()
+                        .descriptionId("fluid.zenkai." + name)
+                        .canSwim(false)
+                        .canDrown(false)
+                        .canExtinguish(false)
+                        .canConvertToSource(false)
+                        .lightLevel(12)      // es energía: los tanques de otros mods lo pintan luminoso
+                        .density(-100)       // más ligero que el aire: los mods lo tratan como gas
+                        .viscosity(500)
+                        .temperature(300)));
+        // Los dos estados se refieren el uno al otro: el array hace de caja para la referencia
+        // circular, y ninguno se resuelve fuera de la lambda de registro.
+        KiFluid[] self = new KiFluid[1];
+        DeferredHolder<Fluid, BaseFlowingFluid.Source> source = FLUIDS.register(name,
+                () -> new BaseFlowingFluid.Source(kiProperties(self[0])));
+        DeferredHolder<Fluid, BaseFlowingFluid.Flowing> flowing = FLUIDS.register("flowing_" + name,
+                () -> new BaseFlowingFluid.Flowing(kiProperties(self[0])));
+        self[0] = new KiFluid(type, source, flowing);
+        return self[0];
+    }
+
+    private static BaseFlowingFluid.Properties kiProperties(KiFluid f) {
+        return new BaseFlowingFluid.Properties(f.type(), f.source(), f.flowing());
+    }
+
     public static void register(IEventBus bus) {
         FLUID_TYPES.register(bus);
         FLUIDS.register(bus);

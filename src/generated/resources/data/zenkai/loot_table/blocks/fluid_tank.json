@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "include": [
+                "zenkai:stored_energy",
+                "zenkai:transport_fluid",
+                "zenkai:transport_modes"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "zenkai:fluid_tank"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "zenkai:blocks/fluid_tank"
+}

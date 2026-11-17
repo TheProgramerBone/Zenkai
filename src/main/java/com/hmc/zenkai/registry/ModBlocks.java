@@ -550,6 +550,46 @@ public class ModBlocks {
                     // La luz sale del blockstate: apagado no ilumina, encendido sí.
                     .lightLevel(s -> s.getValue(EnergyGeneratorBlock.LIT) ? 13 : 0)));
 
+    // ── Transporte: cables, tuberías y tanques (0.7.0). Una sola clase, ver TransportBlock ──
+    public static final DeferredBlock<Block> ENERGY_CABLE = registerBlock("energy_cable",
+            () -> new com.hmc.zenkai.content.block.TransportBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL).sound(SoundType.METAL)
+                    .strength(1.5f, 6f).requiresCorrectToolForDrops().noOcclusion(),
+                    com.hmc.zenkai.content.block.TransportBlock.Kind.ENERGY, true));
+    public static final DeferredBlock<Block> FLUID_PIPE = registerBlock("fluid_pipe",
+            () -> new com.hmc.zenkai.content.block.TransportBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL).sound(SoundType.METAL)
+                    .strength(1.5f, 6f).requiresCorrectToolForDrops().noOcclusion(),
+                    com.hmc.zenkai.content.block.TransportBlock.Kind.FLUID, true));
+    public static final DeferredBlock<Block> ENERGY_TANK = registerBlock("energy_tank",
+            () -> new com.hmc.zenkai.content.block.TransportBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL).sound(SoundType.METAL)
+                    .strength(3.5f, 6f).requiresCorrectToolForDrops(),
+                    com.hmc.zenkai.content.block.TransportBlock.Kind.ENERGY, false),
+            b -> new com.hmc.zenkai.content.item.TransportBlockItem(
+                    (com.hmc.zenkai.content.block.TransportBlock) b.get(), new Item.Properties()));
+    public static final DeferredBlock<Block> FLUID_TANK = registerBlock("fluid_tank",
+            () -> new com.hmc.zenkai.content.block.TransportBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL).sound(SoundType.METAL)
+                    .strength(3.5f, 6f).requiresCorrectToolForDrops(),
+                    com.hmc.zenkai.content.block.TransportBlock.Kind.FLUID, false),
+            b -> new com.hmc.zenkai.content.item.TransportBlockItem(
+                    (com.hmc.zenkai.content.block.TransportBlock) b.get(), new Item.Properties()));
+
+    /** Cámara de contención de ki (0.7.0, Fase 2a): dos bloques de alto, modelo GeckoLib.
+     *  noOcclusion por el cristal; la luz sale del blockstate ACTIVE (apagada no ilumina). */
+    public static final DeferredBlock<Block> KI_CONTAINMENT_CHAMBER = registerBlock("ki_containment_chamber",
+            () -> new com.hmc.zenkai.content.block.KiContainmentChamberBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()
+                    .isSuffocating((s, l, p) -> false)
+                    .isViewBlocking((s, l, p) -> false)
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE) ? 10 : 0)),
+            b -> new com.hmc.zenkai.content.item.KiChamberBlockItem(b.get(), new Item.Properties()));
+
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)

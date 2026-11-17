@@ -170,6 +170,25 @@ public final class RageChronicleGameTests {
         helper.succeed();
     }
 
+    /** Crónica «interrumpida» (0.7.0): solo se marca la entrada reciente con secuencia larga; la historia vieja no se reescribe. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void interruptedMarksOnlyTheRecentCinematicEntry(GameTestHelper helper) {
+        RageChronicle c = new RageChronicle();
+        c.add(entry("vieja", 100));
+        c.add(entry("nueva", 1000));
+        helper.assertTrue(!c.markRecentInterrupted(5000, 166), "Fuera de la ventana no marca nada");
+        helper.assertTrue(c.entries().stream().noneMatch(RageChronicle.Entry::interrupted), "Y deja las entradas intactas");
+        helper.assertTrue(c.markRecentInterrupted(1100, 166), "Dentro de la ventana marca la más reciente");
+        helper.assertTrue(c.entries().get(1).interrupted() && !c.entries().get(0).interrupted(),
+                "Solo la reciente queda interrumpida; la anterior no");
+        helper.assertTrue(c.entries().get(1).eventId().equals("nueva") && c.size() == 2, "Sin perder ni reordenar entradas");
+        helper.assertTrue(!c.markRecentInterrupted(1100, 166), "Una entrada ya marcada no se vuelve a marcar");
+        RageChronicle back = new RageChronicle();
+        back.load(c.save());
+        helper.assertTrue(back.entries().get(1).interrupted(), "La marca sobrevive a guardar y cargar");
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void chronicleSurvivesReincarnationButSeenFormsDoNot(GameTestHelper helper) {
         ServerPlayer sp = player(helper, Race.SAIYAN);

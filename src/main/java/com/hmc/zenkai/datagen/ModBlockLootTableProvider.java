@@ -120,6 +120,15 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         add(ModBlocks.CUT_KATCHIN_SLAB.get(), this::createSlabItemTable);
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
         dropSelf(ModBlocks.ENERGY_GENERATOR.get());
+        dropSelf(ModBlocks.ENERGY_CABLE.get());
+        dropSelf(ModBlocks.FLUID_PIPE.get());
+        // Los tanques sueltan su contenido y los modos de cara dentro del ítem.
+        add(ModBlocks.ENERGY_TANK.get(), this::transportTankTable);
+        add(ModBlocks.FLUID_TANK.get(), this::transportTankTable);
+        // Dos mitades, un solo ítem: suelta solo la inferior (como las puertas de vanilla).
+        add(ModBlocks.KI_CONTAINMENT_CHAMBER.get(), b -> createSinglePropConditionTable(b,
+                com.hmc.zenkai.content.block.KiContainmentChamberBlock.HALF,
+                net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER));
 
         for (var fam : ModBlocks.buildingFamilies()) {
             dropSelf(fam.block().get());
@@ -272,5 +281,17 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected @NotNull Iterable<Block> getKnownBlocks() {
         return ModBlocks.MOD_BLOCKS.getEntries().stream().map(Holder::value)::iterator;
+    }
+
+    /** Tabla de un tanque de transporte: él mismo, con los componentes que escribe su block entity. */
+    private LootTable.Builder transportTankTable(Block block) {
+        return LootTable.lootTable().withPool(applyExplosionCondition(block, LootPool.lootPool()
+                .setRolls(ConstantValue.exactly(1.0f))
+                .add(LootItem.lootTableItem(block).apply(
+                        net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction
+                                .copyComponents(net.minecraft.world.level.storage.loot.functions.CopyComponentsFunction.Source.BLOCK_ENTITY)
+                                .include(com.hmc.zenkai.registry.ModDataComponents.STORED_ENERGY.get())
+                                .include(com.hmc.zenkai.registry.ModDataComponents.TRANSPORT_FLUID.get())
+                                .include(com.hmc.zenkai.registry.ModDataComponents.TRANSPORT_MODES.get())))));
     }
 }

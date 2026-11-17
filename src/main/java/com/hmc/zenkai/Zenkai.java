@@ -197,6 +197,33 @@ public class Zenkai {
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntities.ENERGY_GENERATOR.get(),
                 (be, side) -> be.automationHandler());
+
+        // Cables, tuberías y tanques: la capability por cara solo existe si la cara está en modo NORMAL.
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ENERGY_TRANSPORT.get(), (be, side) -> be.energyAt(side));
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.FLUID_TRANSPORT.get(), (be, side) -> be.fluidAt(side));
+
+        // Batería: capability ESTÁNDAR de energía de ítem, para que la cargue cualquier mod.
+        event.registerItem(Capabilities.EnergyStorage.ITEM,
+                (stack, ctx) -> com.hmc.zenkai.content.item.EnergyBatteryItem.storage(stack),
+                com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get());
+
+        // Cámara de contención de ki: fluido (solo extracción) y FE por las seis caras de las DOS
+        // mitades. El block entity vive en la inferior; la superior no tiene, así que se registra
+        // por BLOQUE y cada mitad busca el block entity de abajo.
+        event.registerBlock(Capabilities.FluidHandler.BLOCK,
+                (level, pos, state, be, side) -> level.getBlockEntity(
+                        com.hmc.zenkai.content.block.KiContainmentChamberBlock.lowerPos(state, pos))
+                        instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity chamber
+                        ? chamber.fluidHandler() : null,
+                ModBlocks.KI_CONTAINMENT_CHAMBER.get());
+        event.registerBlock(Capabilities.EnergyStorage.BLOCK,
+                (level, pos, state, be, side) -> level.getBlockEntity(
+                        com.hmc.zenkai.content.block.KiContainmentChamberBlock.lowerPos(state, pos))
+                        instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity chamber
+                        ? chamber.energyHandler() : null,
+                ModBlocks.KI_CONTAINMENT_CHAMBER.get());
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────
@@ -208,6 +235,7 @@ public class Zenkai {
             event.register(ModMenuTypes.STACK_WISH.get(), StackWishScreen::new);
             event.register(ModMenuTypes.SCOUTER_BENCH.get(), ScouterBenchScreen::new);
             event.register(ModMenuTypes.ENERGY_GENERATOR.get(), EnergyGeneratorScreen::new);
+            event.register(ModMenuTypes.KI_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.KiChamberScreen::new);
             event.register(ModMenuTypes.PLAYER_BODY.get(), com.hmc.zenkai.client.gui.screens.PlayerBodyScreen::new);
         }
 
@@ -249,6 +277,11 @@ public class Zenkai {
             BlockEntityRenderers.register(
                     ModBlockEntities.SCOUTER_BENCH.get(),
                     ScouterBenchRenderer::new
+            );
+
+            BlockEntityRenderers.register(
+                    ModBlockEntities.KI_CONTAINMENT_CHAMBER.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.blockentity.KiChamberRenderer::new
             );
 
             // Entidades
@@ -459,6 +492,11 @@ public class Zenkai {
             event.registerFluidType(HealingWaterFluidClientExtensions.INSTANCE, ModFluids.HEALING_WATER_TYPE.get());
             event.registerFluidType(com.hmc.zenkai.client.fluid.HfilBoilingWaterFluidClientExtensions.INSTANCE,
                     ModFluids.HFIL_BOILING_WATER_TYPE.get());
+            // Fluidos de Ki: sprite propio por tipo, sin tinte (ver KiFluidClientExtensions).
+            for (com.hmc.zenkai.feature.kichamber.KiEnergyType t : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
+                event.registerFluidType(new com.hmc.zenkai.client.fluid.KiFluidClientExtensions(t.fluidName()),
+                        t.fluid().type().get());
+            }
         }
     }
 }

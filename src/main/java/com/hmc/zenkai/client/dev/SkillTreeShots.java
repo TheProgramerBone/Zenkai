@@ -408,7 +408,7 @@ public final class SkillTreeShots {
         PLAN.add(() -> capture(mc, "training_tutorial_4"));
         PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); wait = 5; });
         PLAN.add(() -> { mc.setScreen(null); wait = 5; });
-        // Namekiano: Gigante como interruptor bajo la Base y Naranja como primera forma de la cadena.
+        // Namekiano: Gigante como interruptor bajo la Base; Súper Namekiano primero y Naranja (oculta) después.
         scene(mc, Race.NAMEKIAN, 2, false, false, false, sp -> {}, "zenkai:node/namek_giant", "namek",
                 null, new String[]{"zenkai:namek_orange", "zenkai:node/namek_giant"});
         // Saiyan divino: Evolution de Blue (la hermana Rosé no se dibuja).

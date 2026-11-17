@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ul>
  *   <li>Durante la visita {@code inOtherworld} SIGUE puesto: el jugador sigue muerto (halo, Esferas, Yemma al volver). Lo que
  *       lo distingue es {@code earthVisitTicksLeft > 0}. Por eso la semántica de {@code isInOtherworld} no cambia y cada uso
- *       decide por separado (auditoría en {@code plan-muerte-permanente.md}).</li>
+ *       decide por separado (auditoría en {@code docs/combate-y-muerte.md}).</li>
  *   <li>El reloj cuenta ticks del jugador, o sea solo con él conectado; {@code doDaylightCycle} y {@code /time set} no lo tocan.</li>
  *   <li>Al empezar, lo que guarda su cuerpo más reciente pasa al jugador. Al acabar el tiempo vuelve al Otherworld con ello.
  *       Si muere durante la visita, el cuerpo NUEVO se queda con lo que lleve y la visita termina

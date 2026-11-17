@@ -78,6 +78,25 @@ public final class RageChronicle {
         while (entries.size() > CAP) entries.removeFirst();
     }
 
+    /**
+     * Marca como «interrumpida» la entrada MÁS RECIENTE con secuencia larga, si es de hace {@code windowTicks} como mucho y aún
+     * no lo estaba. Devuelve false sin tocar nada si no hay ninguna así (la historia vieja no se reescribe).
+     */
+    public boolean markRecentInterrupted(long now, long windowTicks) {
+        Entry[] all = entries.toArray(new Entry[0]);
+        for (int i = all.length - 1; i >= 0; i--) {
+            Entry e = all[i];
+            if (now - e.worldTime() > windowTicks) return false;   // van en orden: las anteriores son aún más viejas
+            if (!e.cinematicPlayed() || e.interrupted()) continue;
+            all[i] = new Entry(e.eventId(), e.trigger(), e.targetForm(), e.result(), e.acquisition(), e.related(),
+                    e.worldTime(), e.masteryBefore(), e.masteryAfter(), true, true, e.ignoredByCooldown());
+            entries.clear();
+            entries.addAll(java.util.Arrays.asList(all));
+            return true;
+        }
+        return false;
+    }
+
     /** Copia en orden cronológico (la más antigua primero). */
     public List<Entry> entries() { return Collections.unmodifiableList(new ArrayList<>(entries)); }
 

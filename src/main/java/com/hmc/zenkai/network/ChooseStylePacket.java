@@ -52,10 +52,17 @@ public record ChooseStylePacket(Style style) implements CustomPacketPayload {
             att.setStyleChosen(true);
             // Termina una reencarnación: ya hay raza (ChooseRacePacket llega antes) y estilo.
             if (att.isRaceChosen()) att.setReincarnating(false);
+            // Personaje completo (raza + estilo): su única tirada de nacer Legendario (creación y cada reencarnación).
+            boolean bornLegendary = att.isRaceChosen() && com.hmc.zenkai.feature.forms.LegendaryBirth.roll(att,
+                    sp.getRandom(), com.hmc.zenkai.content.effect.MajinEffect.isActive(sp));
             ZenkaiTriggers.RACE_CHOSEN.get().trigger(sp,
                     att.getRace().name().toLowerCase(Locale.ROOT),
                     pkt.style().name().toLowerCase(Locale.ROOT));
             PlayerLifeCycle.sync(sp);
+            if (bornLegendary) {
+                sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.zenkai.legendary_born")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN), false);
+            }
         });
     }
 }

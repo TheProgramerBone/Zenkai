@@ -1,0 +1,19 @@
+{
+  "long_scene": { "pose": "flex" },
+  "races": [
+    "namekian"
+  ],
+  "kind": "super",
+  "tp_cost": 4000,
+  "hold_ticks": 60,
+  "mastery_gain": 1.0,
+  "stat_percent_untrained": 1.5,
+  "stat_percent_mastered": 2.0,
+  "ki_drain_untrained": 0.9,
+  "ki_drain_mastered": 0.25,
+  "spi_req": 35,
+  "body_items": {},
+  "aura_type": "spirit",
+  "aura_rgb": "0xC8E650",
+  "scale": 1.0
+}

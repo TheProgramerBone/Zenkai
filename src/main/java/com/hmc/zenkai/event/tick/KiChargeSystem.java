@@ -29,6 +29,15 @@ public final class KiChargeSystem {
             return;
         }
 
+        // Sujeto en una cámara de contención: isChargingKi lo pone la propia cámara SOLO para la pose
+        // y el aura. Ni recupera ki (con Meditación igualaba al drenaje y la carga no acababa
+        // nunca) ni sube el % de poder.
+        if (com.hmc.zenkai.feature.kichamber.KiChamberSessions.isInside(p)) {
+            PlayerTickState.resetCharge(p.getUUID());
+            PlayerTickState.resetForce(p.getUUID());
+            return;
+        }
+
         // Sin Meditación se puede concentrar (el % de poder sube) pero NO se recupera ki.
         double chargeMul = SkillEffects.kiChargeFactor(p);
         if (chargeMul > 0.0) {

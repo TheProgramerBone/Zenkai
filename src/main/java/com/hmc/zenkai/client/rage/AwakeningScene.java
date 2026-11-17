@@ -81,6 +81,8 @@ public final class AwakeningScene {
         LongTransformMode mode;
         long start;
         boolean heartbeat, rise, burst;
+        /** Ya se avisó al servidor de que el jugador cortó la presentación (crónica «interrumpida»): una vez por escena. */
+        boolean interruptedSent;
         double x, y, z;
     }
 
@@ -174,6 +176,12 @@ public final class AwakeningScene {
             } else if (age < LENGTH_TICKS) {
                 it.remove();   // el jugador salió del rango: sin él no hay escena
                 continue;
+            }
+            // Abrir una pantalla durante la escena propia de una primera vez corta las capas visuales: la crónica lo anota.
+            if (s.self && s.first && !s.interruptedSent && mc.screen != null && age < LENGTH_TICKS) {
+                s.interruptedSent = true;
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                        new com.hmc.zenkai.feature.rage.LongTransformInterruptedPacket());
             }
             if (!s.heartbeat) { s.heartbeat = true; sound(mc, s, ModSounds.RAGE_HEARTBEAT.get(), s.self ? 1.0f : 1.4f, 1.0f); }
             if (!s.rise && age >= T_RISE) { s.rise = true; sound(mc, s, ModSounds.RAGE_RISE.get(), s.self ? 1.0f : 1.4f, 1.0f); }

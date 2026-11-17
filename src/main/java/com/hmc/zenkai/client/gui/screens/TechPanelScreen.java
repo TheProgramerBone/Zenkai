@@ -133,6 +133,52 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
         if (filled > 0) g.fill(x, y + h - filled, x + w, y + h, fill);
     }
 
+    /** Cristal del tanque de ki: 16x26 con alfa (reflejo y marcas). tools/gen_ki_fluids.py. */
+    protected static final ResourceLocation TANK_GLASS =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/tech_tank.png");
+    protected static final int TANK_GLASS_W = 16, TANK_GLASS_H = 26;
+
+    /**
+     * Tanque de fluido de Ki: hermano de drawVBar (mismo marco y fondo), con el sprite del fluido
+     * dentro y el cristal encima. Especificación en .claude/docs/gui.md («Tanque de fluido de Ki»).
+     * Tres capas: marco y fondo; el sprite still del fluido repetido en celdas de 16 px desde
+     * abajo, SIN tinte (el color ya viene en el sprite); y el cristal tech_tank.png repetido de
+     * abajo arriba, de modo que con 104 px de alto las marcas mayores caen en 1/4, 1/2 y 3/4.
+     * El tanque vacío se dibuja igual: uno que aparece y desaparece mueve la lectura.
+     * El recorte del fluido va con scissor, que trabaja en coordenadas ABSOLUTAS aunque la matriz
+     * de renderLabels esté trasladada: por eso se le suma leftPos/topPos aquí dentro.
+     *
+     * @param stillSprite sprite del fluido en el atlas de bloques (zenkai:block/ki_base_still…),
+     *                    o null con el tanque vacío
+     */
+    protected void drawKiTank(GuiGraphics g, int x, int y, int w, int h, float fraction,
+                              @Nullable ResourceLocation stillSprite) {
+        g.fill(x - 1, y - 1, x + w + 1, y + h + 1, ZenkaiTechPalette.BAR_FRAME);
+        g.fill(x, y, x + w, y + h, ZenkaiTechPalette.BAR_BG);
+
+        int filled = Math.round(h * Math.max(0f, Math.min(1f, fraction)));
+        if (filled > 0 && stillSprite != null && minecraft != null) {
+            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = minecraft
+                    .getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS).apply(stillSprite);
+            g.enableScissor(leftPos + x, topPos + y + h - filled, leftPos + x + w, topPos + y + h);
+            for (int cy = y + h - 16; cy > y + h - filled - 16; cy -= 16) {
+                for (int cx = x; cx < x + w; cx += 16) {
+                    g.blit(cx, cy, 0, 16, 16, sprite);
+                }
+            }
+            g.disableScissor();
+        }
+
+        RenderSystem.enableBlend();
+        g.setColor(1f, 1f, 1f, 1f);
+        for (int gy = y + h - TANK_GLASS_H; gy >= y; gy -= TANK_GLASS_H) {
+            // La repetición de arriba se pinta sin su fila 0: ahí la marca mayor caería sobre el borde.
+            int skip = gy == y ? 1 : 0;
+            g.blit(TANK_GLASS, x, gy + skip, 0, skip, Math.min(w, TANK_GLASS_W), TANK_GLASS_H - skip,
+                    TANK_GLASS_W, TANK_GLASS_H);
+        }
+    }
+
     /**
      * Indicador de carga por segmentos: celdas pegadas con 1 px de separación.
      * `max` = 1 sale como un solo segmento sin ningún caso especial — una mejora binaria es

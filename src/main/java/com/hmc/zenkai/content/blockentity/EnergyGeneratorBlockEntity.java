@@ -71,6 +71,30 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
     };
 
     /**
+     * Hueco de carga: cualquier ítem con capability de FE que acepte energía (batería, herramienta,
+     * armadura de otro mod…). Se llena desde el búfer a la misma tasa máxima que se empuja a los
+     * vecinos. Va aparte de la cola de combustible, y la automatización no lo ve.
+     */
+    private final ItemStackHandler charge = new ItemStackHandler(1) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            return acceptsEnergy(stack);
+        }
+    };
+
+    /** ¿Es un ítem al que se le puede meter FE? Lo usan el hueco, el menú y el shift-clic. */
+    public static boolean acceptsEnergy(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        return cell != null && cell.canReceive();
+    }
+
+    /**
      * Lo que ve la pantalla. UNA sola constante para el número de huecos, compartida con el
      * menú: si el cliente y el servidor discrepan en cuántos hay, el array se lee fuera de
      * rango y el crash aparece al abrir la GUI, no al compilar.
@@ -79,11 +103,15 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         @Override
         public int get(int index) {
             return switch (index) {
-                case 0 -> energy.get();
-                case 1 -> energy.capacity();
+                // Energía y capacidad viajan partidas en dos mitades de 16 bits (0/5 y 1/6):
+                // el paquete manda shorts. Ver EnergyGeneratorMenu.wide().
+                case 0 -> energy.get() & 0xFFFF;
+                case 1 -> energy.capacity() & 0xFFFF;
                 case 2 -> burnTicks;
                 case 3 -> burnTicksTotal;
                 case 4 -> burnFePerTick;
+                case 5 -> energy.get() >>> 16;
+                case 6 -> energy.capacity() >>> 16;
                 default -> 0;
             };
         }
@@ -105,6 +133,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
     public IEnergyStorage energyHandler() { return energy; }
     public GeneratorEnergy energyBuffer() { return energy; }
     public ItemStackHandler fuelHandler()  { return fuel; }
+    public ItemStackHandler chargeHandler() { return charge; }
     public ContainerData containerData()   { return data; }
     public boolean isBurning() { return burnTicks > 0; }
 
@@ -165,6 +194,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         // intacta: quemar carbón para tirarlo es lo que un jugador no le perdona a una máquina.
         if (be.burnTicks <= 0 && !be.energy.isFull()) be.igniteNext();
 
+        be.chargeItem();
         be.pushToNeighbours(level, pos);
 
         if (wasBurning != be.isBurning()) {
@@ -221,6 +251,20 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         }
     }
 
+    /** Carga el ítem del hueco con el búfer, antes de repartir a los vecinos (lo que tiene delante manda). */
+    private void chargeItem() {
+        ItemStack stack = charge.getStackInSlot(0);
+        if (stack.isEmpty() || energy.getEnergyStored() <= 0) return;
+        IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        if (cell == null || !cell.canReceive()) return;
+        int offered = Math.min(ServerConfig.energyGeneratorMaxExtract(), energy.getEnergyStored());
+        int accepted = cell.receiveEnergy(offered, false);
+        if (accepted > 0) {
+            energy.extractEnergy(accepted, false);
+            setChanged();
+        }
+    }
+
     /** Reparte a las seis caras. Se para en cuanto el búfer se vacía. */
     private void pushToNeighbours(Level level, BlockPos pos) {
         if (energy.getEnergyStored() <= 0) return;
@@ -263,6 +307,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         burnTicksTotal = tag.getInt("BurnTicksTotal");
         burnFePerTick  = tag.getInt("BurnFePerTick");
         if (tag.contains("Fuel")) fuel.deserializeNBT(reg, tag.getCompound("Fuel"));
+        if (tag.contains("Charge")) charge.deserializeNBT(reg, tag.getCompound("Charge"));
     }
 
     @Override
@@ -273,6 +318,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         tag.putInt("BurnTicksTotal", burnTicksTotal);
         tag.putInt("BurnFePerTick", burnFePerTick);
         tag.put("Fuel", fuel.serializeNBT(reg));
+        tag.put("Charge", charge.serializeNBT(reg));
     }
 
     /** Suelta la cola al romper el bloque. Lo llama EnergyGeneratorBlock#onRemove.
@@ -285,6 +331,11 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
                 net.minecraft.world.level.block.Block.popResource(level, pos, stack);
                 fuel.setStackInSlot(i, ItemStack.EMPTY);
             }
+        }
+        ItemStack held = charge.getStackInSlot(0);
+        if (!held.isEmpty()) {
+            net.minecraft.world.level.block.Block.popResource(level, pos, held);
+            charge.setStackInSlot(0, ItemStack.EMPTY);
         }
     }
 }

@@ -103,7 +103,8 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     @Nullable private UUID viewer = null;
 
     /** Lo que ve la GUI. Índices: 0 progreso, 1 duración, 2 trabajo, 3 motivo de pausa,
-     *  4 energía, 5 capacidad. */
+     *  4 energía, 5 capacidad (mitades bajas), 6 y 7 sus mitades altas: el paquete manda
+     *  shorts, ver ScouterBenchMenu.wide(). */
     private final ContainerData data = new ContainerData() {
         @Override public int get(int i) {
             return switch (i) {
@@ -111,8 +112,10 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
                 case 1 -> WORK_TICKS;
                 case 2 -> job;
                 case 3 -> pause.ordinal();
-                case 4 -> energy.get();
-                case 5 -> energy.capacity();
+                case 4 -> energy.get() & 0xFFFF;
+                case 5 -> energy.capacity() & 0xFFFF;
+                case 6 -> energy.get() >>> 16;
+                case 7 -> energy.capacity() >>> 16;
                 default -> 0;
             };
         }

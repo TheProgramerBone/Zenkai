@@ -44,6 +44,9 @@ public record KiChargePacket(boolean charging) implements CustomPacketPayload {
             // Con un cuerpo en brazos no se carga ki (apagarlo sí se permite).
             if (pkt.charging() && com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(sp)) return;
 
+            // Sujeto en una cámara de contención de ki: la tecla no manda (ni encender ni apagar la pose).
+            if (com.hmc.zenkai.feature.kichamber.KiChamberSessions.isInside(sp)) return;
+
             PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
             att.setChargingKi(pkt.charging());
         });

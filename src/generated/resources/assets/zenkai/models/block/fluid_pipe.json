@@ -1,0 +1,2073 @@
+{
+  "children": {
+    "core": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                6.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            5
+          ],
+          "to": [
+            11,
+            11,
+            11
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "down_normal": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            0,
+            5
+          ],
+          "to": [
+            11,
+            5,
+            11
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "down_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            2,
+            5
+          ],
+          "to": [
+            11,
+            5,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            4,
+            0,
+            4
+          ],
+          "to": [
+            12,
+            2,
+            12
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "down_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            2,
+            5
+          ],
+          "to": [
+            11,
+            5,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            6,
+            0,
+            6
+          ],
+          "to": [
+            10,
+            2,
+            10
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "east_normal": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            11,
+            5,
+            5
+          ],
+          "to": [
+            16,
+            11,
+            11
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "east_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            11,
+            5,
+            5
+          ],
+          "to": [
+            14,
+            11,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            14,
+            4,
+            4
+          ],
+          "to": [
+            16,
+            12,
+            12
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "east_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            11,
+            5,
+            5
+          ],
+          "to": [
+            14,
+            11,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            14,
+            6,
+            6
+          ],
+          "to": [
+            16,
+            10,
+            10
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "north_normal": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            0
+          ],
+          "to": [
+            11,
+            11,
+            5
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "north_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            2
+          ],
+          "to": [
+            11,
+            11,
+            5
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            4,
+            4,
+            0
+          ],
+          "to": [
+            12,
+            12,
+            2
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "north_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            2
+          ],
+          "to": [
+            11,
+            11,
+            5
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            6,
+            6,
+            0
+          ],
+          "to": [
+            10,
+            10,
+            2
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "south_normal": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            11
+          ],
+          "to": [
+            11,
+            11,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "south_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            11
+          ],
+          "to": [
+            11,
+            11,
+            14
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            4,
+            4,
+            14
+          ],
+          "to": [
+            12,
+            12,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "south_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            5,
+            11
+          ],
+          "to": [
+            11,
+            11,
+            14
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            6,
+            6,
+            14
+          ],
+          "to": [
+            10,
+            10,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "up_normal": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            11,
+            5
+          ],
+          "to": [
+            11,
+            16,
+            11
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "up_pull": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            11,
+            5
+          ],
+          "to": [
+            11,
+            14,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            4,
+            14,
+            4
+          ],
+          "to": [
+            12,
+            16,
+            12
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "up_push": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            5,
+            11,
+            5
+          ],
+          "to": [
+            11,
+            14,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            6,
+            14,
+            6
+          ],
+          "to": [
+            10,
+            16,
+            10
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "west_normal": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            5,
+            5
+          ],
+          "to": [
+            5,
+            11,
+            11
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "west_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            2,
+            5,
+            5
+          ],
+          "to": [
+            5,
+            11,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "east": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            4,
+            4
+          ],
+          "to": [
+            2,
+            12,
+            12
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    },
+    "west_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                6.0,
+                0.0,
+                12.0,
+                6.0
+              ]
+            }
+          },
+          "from": [
+            2,
+            5,
+            5
+          ],
+          "to": [
+            5,
+            11,
+            11
+          ]
+        },
+        {
+          "faces": {
+            "down": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "north": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "south": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "up": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            },
+            "west": {
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            6,
+            6
+          ],
+          "to": [
+            2,
+            10,
+            10
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/fluid_pipe",
+        "particle": "zenkai:block/fluid_pipe"
+      }
+    }
+  },
+  "item_render_order": [
+    "core",
+    "down_normal",
+    "down_push",
+    "down_pull",
+    "up_normal",
+    "up_push",
+    "up_pull",
+    "north_normal",
+    "north_push",
+    "north_pull",
+    "south_normal",
+    "south_push",
+    "south_pull",
+    "west_normal",
+    "west_push",
+    "west_pull",
+    "east_normal",
+    "east_push",
+    "east_pull"
+  ],
+  "loader": "neoforge:composite",
+  "textures": {
+    "particle": "zenkai:block/fluid_pipe"
+  }
+}

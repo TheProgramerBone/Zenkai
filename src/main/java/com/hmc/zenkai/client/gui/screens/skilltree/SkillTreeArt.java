@@ -162,7 +162,7 @@ final class SkillTreeArt {
             "node_arcosian_power", "node_ultra_instinct", "node_ultra_ego", "unknown", "arcosian_god",
             "ssj_blue_evolution", "ssj_rose_evolution", "human_flow",
             "ikari", "ssj_green", "ssj_green_max", "human_legendary", "namek_legendary", "arcosian_legendary",
-            "majin_legendary");
+            "majin_legendary", "namek_super");
     // Sin cabezas *_base (borradas 2026-11-12): el nodo raíz dibuja la cara de la skin del jugador.
 
     static final int UNKNOWN_ICON = ICON_ORDER.indexOf("unknown");

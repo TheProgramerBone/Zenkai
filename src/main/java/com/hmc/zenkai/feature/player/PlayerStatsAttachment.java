@@ -461,10 +461,17 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (tag.contains("race"))       raceStats.load(tag.getCompound("race"));
         if (tag.contains("pools"))      pools.load(tag.getCompound("pools"));
         if (tag.contains("flags"))      flags.load(tag.getCompound("flags"));
+        // Nacer Legendario (0.7.0): un personaje creado ANTES de que existiera la tirada no la recibe después. La clave falta
+        // solo en esas partidas; con raza y estilo ya elegidos se da por hecha.
+        if (tag.contains("flags") && !tag.getCompound("flags").contains("legendaryRolled")
+                && raceStats.isRaceChosen() && raceStats.isStyleChosen()) {
+            flags.setLegendaryRolled(true);
+        }
         if (tag.contains("skills"))     skills.load(tag.getCompound("skills"));
         // Partidas anteriores al skill tree (sin "skillTree") o con una regla de derivación vieja:
         // se migran desde las skills. El resto confía en lo guardado/sincronizado.
         if (tag.contains("skillTree")) skillTree.load(tag.getCompound("skillTree"));
+        else if (tag.contains("race")) skillTree.setVersion(0);   // guardado real anterior al árbol: migrar desde el principio
         if (skillTree.version() < PlayerSkillTree.VERSION) {
             com.hmc.zenkai.feature.skilltree.SkillTreeMigration.migrate(this);
         }

@@ -1,0 +1,3664 @@
+{
+  "children": {
+    "down_none": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            -0.02,
+            0
+          ],
+          "to": [
+            16,
+            -0.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "down_pull": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            -0.02,
+            0
+          ],
+          "to": [
+            16,
+            -0.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "down_push": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            -0.02,
+            0
+          ],
+          "to": [
+            16,
+            -0.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "east_none": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            16.02,
+            0,
+            0
+          ],
+          "to": [
+            16.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "east_pull": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            16.02,
+            0,
+            0
+          ],
+          "to": [
+            16.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "east_push": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            16.02,
+            0,
+            0
+          ],
+          "to": [
+            16.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_0": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_1": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_10": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_11": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_12": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_13": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_14": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_15": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_2": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_3": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_4": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_5": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_6": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_7": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_8": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_down_9": {
+      "elements": [
+        {
+          "faces": {
+            "down": {
+              "cullface": "down",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_0": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_1": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_10": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_11": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_12": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_13": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_14": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_15": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_2": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_3": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_4": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_5": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_6": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_7": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_8": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_east_9": {
+      "elements": [
+        {
+          "faces": {
+            "east": {
+              "cullface": "east",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_0": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_1": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_10": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_11": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_12": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_13": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_14": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_15": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_2": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_3": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_4": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_5": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_6": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_7": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_8": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_north_9": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "cullface": "north",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_0": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_1": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_10": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_11": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_12": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_13": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_14": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_15": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_2": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_3": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_4": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_5": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_6": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_7": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_8": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_south_9": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "cullface": "south",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_0": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_1": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_10": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_11": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_12": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_13": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_14": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_15": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_2": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_3": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_4": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_5": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_6": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_7": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_8": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_up_9": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "cullface": "up",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_top",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_0": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                0.0,
+                4.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_1": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                0.0,
+                8.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_10": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                8.0,
+                12.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_11": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                8.0,
+                16.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_12": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                12.0,
+                4.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_13": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                12.0,
+                8.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_14": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                12.0,
+                12.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_15": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                12.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_2": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                0.0,
+                12.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_3": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                0.0,
+                16.0,
+                4.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_4": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                4.0,
+                4.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_5": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                4.0,
+                8.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_6": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                8.0,
+                4.0,
+                12.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_7": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                12.0,
+                4.0,
+                16.0,
+                8.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_8": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                0.0,
+                8.0,
+                4.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "face_west_9": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "cullface": "west",
+              "texture": "#all",
+              "uv": [
+                4.0,
+                8.0,
+                8.0,
+                12.0
+              ]
+            }
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            16,
+            16,
+            16
+          ]
+        }
+      ],
+      "textures": {
+        "all": "zenkai:block/energy_tank_side",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "north_none": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            -0.02
+          ],
+          "to": [
+            16,
+            16,
+            -0.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "north_pull": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            -0.02
+          ],
+          "to": [
+            16,
+            16,
+            -0.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "north_push": {
+      "elements": [
+        {
+          "faces": {
+            "north": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            -0.02
+          ],
+          "to": [
+            16,
+            16,
+            -0.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "south_none": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            16.02
+          ],
+          "to": [
+            16,
+            16,
+            16.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "south_pull": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            16.02
+          ],
+          "to": [
+            16,
+            16,
+            16.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "south_push": {
+      "elements": [
+        {
+          "faces": {
+            "south": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            0,
+            16.02
+          ],
+          "to": [
+            16,
+            16,
+            16.02
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "up_none": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            16.02,
+            0
+          ],
+          "to": [
+            16,
+            16.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "up_pull": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            16.02,
+            0
+          ],
+          "to": [
+            16,
+            16.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "up_push": {
+      "elements": [
+        {
+          "faces": {
+            "up": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            0,
+            16.02,
+            0
+          ],
+          "to": [
+            16,
+            16.02,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "west_none": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            -0.02,
+            0,
+            0
+          ],
+          "to": [
+            -0.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_none",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "west_pull": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            -0.02,
+            0,
+            0
+          ],
+          "to": [
+            -0.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_pull",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    },
+    "west_push": {
+      "elements": [
+        {
+          "faces": {
+            "west": {
+              "texture": "#all"
+            }
+          },
+          "from": [
+            -0.02,
+            0,
+            0
+          ],
+          "to": [
+            -0.02,
+            16,
+            16
+          ]
+        }
+      ],
+      "render_type": "minecraft:cutout",
+      "textures": {
+        "all": "zenkai:block/energy_tank_io_push",
+        "particle": "zenkai:block/energy_tank_particle"
+      }
+    }
+  },
+  "item_render_order": [
+    "face_down_0",
+    "face_down_1",
+    "face_down_2",
+    "face_down_3",
+    "face_down_4",
+    "face_down_5",
+    "face_down_6",
+    "face_down_7",
+    "face_down_8",
+    "face_down_9",
+    "face_down_10",
+    "face_down_11",
+    "face_down_12",
+    "face_down_13",
+    "face_down_14",
+    "face_down_15",
+    "face_up_0",
+    "face_up_1",
+    "face_up_2",
+    "face_up_3",
+    "face_up_4",
+    "face_up_5",
+    "face_up_6",
+    "face_up_7",
+    "face_up_8",
+    "face_up_9",
+    "face_up_10",
+    "face_up_11",
+    "face_up_12",
+    "face_up_13",
+    "face_up_14",
+    "face_up_15",
+    "face_north_0",
+    "face_north_1",
+    "face_north_2",
+    "face_north_3",
+    "face_north_4",
+    "face_north_5",
+    "face_north_6",
+    "face_north_7",
+    "face_north_8",
+    "face_north_9",
+    "face_north_10",
+    "face_north_11",
+    "face_north_12",
+    "face_north_13",
+    "face_north_14",
+    "face_north_15",
+    "face_south_0",
+    "face_south_1",
+    "face_south_2",
+    "face_south_3",
+    "face_south_4",
+    "face_south_5",
+    "face_south_6",
+    "face_south_7",
+    "face_south_8",
+    "face_south_9",
+    "face_south_10",
+    "face_south_11",
+    "face_south_12",
+    "face_south_13",
+    "face_south_14",
+    "face_south_15",
+    "face_west_0",
+    "face_west_1",
+    "face_west_2",
+    "face_west_3",
+    "face_west_4",
+    "face_west_5",
+    "face_west_6",
+    "face_west_7",
+    "face_west_8",
+    "face_west_9",
+    "face_west_10",
+    "face_west_11",
+    "face_west_12",
+    "face_west_13",
+    "face_west_14",
+    "face_west_15",
+    "face_east_0",
+    "face_east_1",
+    "face_east_2",
+    "face_east_3",
+    "face_east_4",
+    "face_east_5",
+    "face_east_6",
+    "face_east_7",
+    "face_east_8",
+    "face_east_9",
+    "face_east_10",
+    "face_east_11",
+    "face_east_12",
+    "face_east_13",
+    "face_east_14",
+    "face_east_15",
+    "down_push",
+    "up_push",
+    "north_push",
+    "south_push",
+    "west_push",
+    "east_push",
+    "down_pull",
+    "up_pull",
+    "north_pull",
+    "south_pull",
+    "west_pull",
+    "east_pull",
+    "down_none",
+    "up_none",
+    "north_none",
+    "south_none",
+    "west_none",
+    "east_none"
+  ],
+  "loader": "neoforge:composite",
+  "textures": {
+    "particle": "zenkai:block/energy_tank_particle"
+  }
+}

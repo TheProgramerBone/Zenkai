@@ -45,6 +45,24 @@ public class ModBlockEntities {
                     .of(EnergyGeneratorBlockEntity::new, ModBlocks.ENERGY_GENERATOR.get())
                     .build(null));
 
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity>> KI_CONTAINMENT_CHAMBER =
+            BLOCK_ENTITIES.register("ki_containment_chamber", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity::new,
+                            ModBlocks.KI_CONTAINMENT_CHAMBER.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity>> ENERGY_TRANSPORT =
+            BLOCK_ENTITIES.register("energy_transport", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity::new,
+                            ModBlocks.ENERGY_CABLE.get(), ModBlocks.ENERGY_TANK.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity>> FLUID_TRANSPORT =
+            BLOCK_ENTITIES.register("fluid_transport", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity::new,
+                            ModBlocks.FLUID_PIPE.get(), ModBlocks.FLUID_TANK.get())
+                    .build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

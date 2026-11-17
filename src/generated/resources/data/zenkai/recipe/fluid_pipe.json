@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    }
+  },
+  "pattern": [
+    "III",
+    "GGG",
+    "III"
+  ],
+  "result": {
+    "count": 6,
+    "id": "zenkai:fluid_pipe"
+  }
+}

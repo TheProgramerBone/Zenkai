@@ -45,6 +45,12 @@ public final class ModGameRules {
             GameRules.register("zenkai_keepStructureNpcs", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
+    /** Si false, una cámara de contención de ki que explota por sobrecarga no rompe bloques
+     *  (sigue dañando). Interruptor de funcionalidad; la potencia va en ServerConfig. */
+    public static final GameRules.Key<GameRules.BooleanValue> KI_OVERLOAD_GRIEFING =
+            GameRules.register("zenkai_kiOverloadGriefing", GameRules.Category.MISC,
+                    GameRules.BooleanValue.create(true));
+
     /** Si false, las técnicas explosivas no rompen bloques (solo daño/partículas). */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_KI_GRIEFING =
             GameRules.register("zenkai_enableKiGriefing", GameRules.Category.MISC,
@@ -92,6 +98,11 @@ public final class ModGameRules {
 
     public static boolean keepStructureNpcs(MinecraftServer server) {
         return !server.getGameRules().getBoolean(KEEP_STRUCTURE_NPCS);
+    }
+
+    /** ¿La explosión de una cámara de contención sobrecargada rompe bloques? El daño es aparte. */
+    public static boolean kiOverloadGriefing(MinecraftServer server) {
+        return server.getGameRules().getBoolean(KI_OVERLOAD_GRIEFING);
     }
 
     public static boolean enableKiGriefing(MinecraftServer server) {
