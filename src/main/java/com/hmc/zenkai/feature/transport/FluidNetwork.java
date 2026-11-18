@@ -56,6 +56,12 @@ public final class FluidNetwork extends TransportNetwork {
     public FluidStack fluid() { return fluid; }
     public int amount() { return fluid.getAmount(); }
 
+    @Override protected double fillFraction() { return capacity > 0 ? (double) fluid.getAmount() / capacity : 0; }
+
+    @Override protected String displayFluidId() {
+        return fluid.isEmpty() ? "" : net.minecraft.core.registries.BuiltInRegistries.FLUID.getKey(fluid.getFluid()).toString();
+    }
+
     private static boolean compatible(FluidStack a, FluidStack b) {
         return a.isEmpty() || b.isEmpty() || FluidStack.isSameFluidSameComponents(a, b);
     }

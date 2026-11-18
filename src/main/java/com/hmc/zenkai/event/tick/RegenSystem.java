@@ -15,6 +15,8 @@ public final class RegenSystem {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
         if (p.tickCount % 20 != 0) return;
+        // Sobrecarga del ki Legendario: se desvanece aunque el hambre corte el resto del regen.
+        att.pools().tickOvercharge();
 
         var food = p.getFoodData();
 

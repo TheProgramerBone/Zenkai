@@ -93,6 +93,39 @@ public abstract class TransportNetwork {
         writeShares();
     }
 
+    /** Fracción llena del búfer (0..1), para el nivel que enseña el cristal de un grupo de tanques. */
+    protected abstract double fillFraction();
+
+    /** Id del fluido que se ve en el cristal ("" en energía o vacío). */
+    protected String displayFluidId() { return ""; }
+
+    /** Ticks entre repasos del nivel visible (solo se manda al cliente si cambia el escalón). */
+    private static final int FILL_EVERY = 10;
+    private int fillCooldown;
+
+    /**
+     * Nivel del cristal de cada bloque de un grupo de tanques: el contenido sube DE ABAJO ARRIBA por
+     * el grupo entero (como en Create), así que cada bloque recibe solo cuánto de SU altura está lleno,
+     * en escalones de 1/32 (un píxel de la textura a 2x). Las cuotas reales siguen siendo proporcionales:
+     * esto es solo lo que se ve.
+     */
+    public void updateFillDisplay() {
+        if (!tankGroup || members.isEmpty()) return;
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+        for (TransportBlockEntity m : members) {
+            minY = Math.min(minY, m.getBlockPos().getY());
+            maxY = Math.max(maxY, m.getBlockPos().getY());
+        }
+        double filled = fillFraction() * (maxY - minY + 1);
+        String fluid = displayFluidId();
+        for (TransportBlockEntity m : members) {
+            double local = Math.max(0, Math.min(1, filled - (m.getBlockPos().getY() - minY)));
+            int steps = (int) Math.round(local * TransportBlockEntity.FILL_STEPS);
+            if (steps == 0 && local > 0) steps = 1;   // un poco de contenido se ve aunque no llegue al escalón
+            m.setFillDisplay(steps, fluid);
+        }
+    }
+
     /** Reparte el búfer en las cuotas de cada miembro, en proporción a su capacidad. */
     protected abstract void writeShares();
 
@@ -102,6 +135,10 @@ public abstract class TransportNetwork {
     public final void tick(Level level) {
         if (!valid) return;
         tickTransfer(level);
+        if (tankGroup && valid && ++fillCooldown >= FILL_EVERY) {
+            fillCooldown = 0;
+            updateFillDisplay();
+        }
         // Sin avisar al chunk, una red que solo se mueve no se guardaría al descargar. Cada 20 ticks
         // como mucho: avisar a mil cables en cada tick costaría más que el propio transporte.
         if (changedSinceSave && ++saveCooldown >= SAVE_EVERY) {

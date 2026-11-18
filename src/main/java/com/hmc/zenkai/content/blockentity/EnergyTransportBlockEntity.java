@@ -1,5 +1,10 @@
 package com.hmc.zenkai.content.blockentity;
 
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.ItemStackHandler;
+
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.block.TransportBlock;
 import com.hmc.zenkai.feature.transport.EnergyNetwork;
@@ -61,6 +66,70 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
         @Override public boolean canReceive() { return true; }
     };
 
+    // ── Ranuras del tanque (pantalla TankScreen, 0.7.0) ───────────────────────
+    /** Tres ranuras que se CARGAN desde el tanque (0-2) y tres que se DESCARGAN hacia él (3-5). Solo los
+     *  tanques las usan. Eran una y una hasta el 2026-11-17; el usuario pidió aprovechar el hueco. */
+    public static final int SLOT_CHARGE = 0, SLOT_DISCHARGE = 3, ROW = 3, SLOTS = 6;
+
+    private final ItemStackHandler items = new ItemStackHandler(SLOTS) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public boolean isItemValid(int slot, @NotNull ItemStack stack) { return validFor(stack); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+    };
+
+    /** Solo ítems con energía (baterías, herramientas de otros mods con FE). */
+    public static boolean validFor(ItemStack stack) {
+        return stack.getCapability(Capabilities.EnergyStorage.ITEM) != null;
+    }
+
+    public ItemStackHandler items() { return items; }
+
+    /**
+     * Carga y descarga de ítems, una vez por tick y con el caudal del tanque. Habla con el GRUPO
+     * directamente (net.receive/extract), no con la vista de una cara.
+     */
+    private void processSlots() {
+        EnergyNetwork net = energyNetwork();
+        if (net == null) return;
+        int rate = rate();
+        for (int i = 0; i < ROW; i++) {
+            IEnergyStorage charge = items.getStackInSlot(SLOT_CHARGE + i).getCapability(Capabilities.EnergyStorage.ITEM);
+            if (charge != null && charge.canReceive()) {
+                int can = net.extract(rate, rate, true);
+                int took = charge.receiveEnergy(can, false);
+                if (took > 0) net.extract(took, rate, false);
+            }
+            IEnergyStorage discharge = items.getStackInSlot(SLOT_DISCHARGE + i).getCapability(Capabilities.EnergyStorage.ITEM);
+            if (discharge != null && discharge.canExtract()) {
+                int room = net.receive(rate, rate, true);
+                int got = discharge.extractEnergy(room, false);
+                if (got > 0) net.receive(got, rate, false);
+            }
+        }
+    }
+
+    /** Cifras para el menú, partidas en 16 bits (ContainerData viaja como short). */
+    public ContainerData containerData() {
+        return new ContainerData() {
+            @Override public int get(int i) {
+                EnergyNetwork net = energyNetwork();
+                long e = net != null ? net.energy() : energy;
+                long c = net != null ? net.capacity() : capacity();
+                int ei = (int) Math.min(e, Integer.MAX_VALUE), ci = (int) Math.min(c, Integer.MAX_VALUE);
+                return switch (i) {
+                    case 0 -> ei & 0xFFFF;
+                    case 1 -> ei >>> 16;
+                    case 2 -> ci & 0xFFFF;
+                    case 3 -> ci >>> 16;
+                    case 4 -> net != null ? net.size() : 1;
+                    default -> 0;
+                };
+            }
+            @Override public void set(int i, int v) { }
+            @Override public int getCount() { return 5; }
+        };
+    }
+
     public EnergyTransportBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ENERGY_TRANSPORT.get(), pos, state);
     }
@@ -106,6 +175,7 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
         be.housekeeping();
         EnergyNetwork net = be.energyNetwork();
         if (net != null && net.isLeader(be)) net.tick(level);
+        if (!be.isCable()) be.processSlots();
     }
 
     // ── Componentes del ítem ──
@@ -135,11 +205,13 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
         super.saveAdditional(tag, reg);
         syncShare();
         tag.putInt("Energy", energy);
+        if (!isCable()) tag.put("Items", items.serializeNBT(reg));
     }
 
     @Override
     protected void loadAdditional(@NotNull CompoundTag tag, @NotNull HolderLookup.Provider reg) {
         super.loadAdditional(tag, reg);
         energy = Math.max(0, tag.getInt("Energy"));
+        if (tag.contains("Items")) com.hmc.zenkai.util.ItemHandlers.loadKeepingSize(items, reg, tag.getCompound("Items"));
     }
 }

@@ -27,10 +27,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
  * solo por su nombre, así que basta con pedirla por ese nombre.
  *
  * Gestos, copiados de los transmisores de Mekanism:
- *  - Configurator en modo CONFIGURAR: agachado + clic = siguiente modo de la cara apuntada; clic solo =
- *    enseña el contenido (en Mekanism alterna la sensibilidad a redstone, que aquí no existe).
- *  - Configurator en modo LLAVE o cualquier llave del tag: clic = siguiente modo de la cara; agachado +
- *    clic = desmontar, con el bloque (y el contenido de un tanque) directo al inventario.
+ *  - Clic sin agacharse, con cualquiera de ellas: siguiente modo de la cara apuntada (por el punto
+ *    golpeado: sobre un brazo de cable, ese brazo).
+ *  - Configurator en modo CONFIGURAR + agachado: modo anterior.
+ *  - Configurator en modo LLAVE o cualquier llave del tag + agachado: desmontar, con el bloque (y el
+ *    contenido de un tanque) directo al inventario.
  *
  * POR QUÉ UN EVENTO Y NO useItemOn: con el Configurator en modo configurar, doesSneakBypassUse()
  * devuelve false, así que agachado Minecraft se SALTA el clic del bloque y solo llama al useOn del
@@ -60,22 +61,20 @@ public final class TransportWrench {
         // el paquete de uso (se crea antes de disparar el evento).
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
-        if (level.isClientSide || !(level.getBlockEntity(pos) instanceof TransportBlockEntity be)) return;
-
         Player player = event.getEntity();
         boolean sneaking = player.isShiftKeyDown();
-        if (configure) {
-            if (sneaking) TransportBlock.configureSide(be, event.getHitVec(), player);
-            else player.displayClientMessage(be.info(), true);
-        } else if (sneaking) {
-            dismantle((ServerLevel) level, pos, state, be, player, stack);
-        } else {
-            TransportBlock.configureSide(be, event.getHitVec(), player);
-        }
+
+        if (level.isClientSide || !(level.getBlockEntity(pos) instanceof TransportBlockEntity be)) return;
+        // Clic sin agacharse (llave o Configurator): cambia el modo de la cara apuntada, como Mekanism.
+        // El 2026-11-17 se probó a abrir una pantalla de caras en cruz con este clic y el usuario prefirió
+        // el clic directo en el puerto (con el sombreado de modos que pinta WrenchOverlay al llevar la llave).
+        if (!sneaking) TransportBlock.configureSide(be, event.getHitVec(), player);
+        else if (configure) TransportBlock.configureSideBack(be, event.getHitVec(), player);   // Configurator: modo anterior
+        else dismantle((ServerLevel) level, pos, state, be, player, stack);
     }
 
-    /** Quita el bloque y mete sus drops en el inventario (lo que no quepa cae al suelo). */
-    private static void dismantle(ServerLevel level, BlockPos pos, BlockState state, TransportBlockEntity be,
+    /** Quita el bloque y mete sus drops en el inventario (lo que no quepa cae al suelo). Lo usa también la llave de Zenkai. */
+    public static void dismantle(ServerLevel level, BlockPos pos, BlockState state, @org.jetbrains.annotations.Nullable net.minecraft.world.level.block.entity.BlockEntity be,
                                   Player player, ItemStack tool) {
         // Los drops ANTES de quitar el bloque: la tabla de botín de un tanque copia contenido y modos
         // del block entity, que deja de existir al quitarlo.

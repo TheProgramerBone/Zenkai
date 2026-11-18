@@ -1,5 +1,12 @@
 package com.hmc.zenkai.content.blockentity;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidActionResult;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.items.ItemStackHandler;
+
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.block.TransportBlock;
 import com.hmc.zenkai.feature.transport.FluidNetwork;
@@ -38,6 +45,118 @@ public class FluidTransportBlockEntity extends TransportBlockEntity {
     private final FluidTank tank = new FluidTank(1000) {
         @Override protected void onContentsChanged() { setChanged(); }
     };
+
+    // ── Ranuras del tanque (pantalla TankScreen, 0.7.0) ───────────────────────
+    /**
+     * Dos parejas entrada -> salida, como el tanque de Mekanism: LLENAR (entra un recipiente vacío y
+     * sale lleno del tanque) y VACIAR (entra uno lleno, sale vacío y su fluido pasa al tanque). Cubos
+     * de cualquier fluido, también los de Ki, y cualquier ítem con la capability de fluido.
+     */
+    public static final int SLOT_FILL_IN = 0, SLOT_FILL_OUT = 1, SLOT_DRAIN_IN = 2, SLOT_DRAIN_OUT = 3, SLOTS = 4;
+
+    private final ItemStackHandler items = new ItemStackHandler(SLOTS) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            return (slot == SLOT_FILL_IN || slot == SLOT_DRAIN_IN) && validFor(stack);
+        }
+    };
+
+    public static boolean validFor(ItemStack stack) {
+        return FluidUtil.getFluidHandler(stack).isPresent();
+    }
+
+    public ItemStackHandler items() { return items; }
+
+    /**
+     * El grupo entero SIN límite de caudal: un cubo son 1000 mB de golpe y la cara del tanque solo deja
+     * pasar su caudal por tick. Lo usan las ranuras.
+     */
+    private final IFluidHandler groupView = new IFluidHandler() {
+        @Override public int getTanks() { return 1; }
+        @Override public @NotNull FluidStack getFluidInTank(int i) { return pipeView.getFluidInTank(i); }
+        @Override public int getTankCapacity(int i) { return pipeView.getTankCapacity(i); }
+        @Override public boolean isFluidValid(int i, @NotNull FluidStack stack) { return true; }
+        @Override public int fill(@NotNull FluidStack r, @NotNull FluidAction a) {
+            FluidNetwork net = fluidNetwork();
+            return net != null ? net.fill(r, Integer.MAX_VALUE, a) : 0;
+        }
+        @Override public @NotNull FluidStack drain(@NotNull FluidStack r, @NotNull FluidAction a) {
+            FluidNetwork net = fluidNetwork();
+            return net != null ? net.drain(r, Integer.MAX_VALUE, a) : FluidStack.EMPTY;
+        }
+        @Override public @NotNull FluidStack drain(int max, @NotNull FluidAction a) {
+            FluidNetwork net = fluidNetwork();
+            return net != null ? net.drain(max, Integer.MAX_VALUE, a) : FluidStack.EMPTY;
+        }
+    };
+
+    /** Una operación por pareja y tick, solo si la salida admite el resultado entero. */
+    private void processSlots() {
+        if (fluidNetwork() == null) return;
+        transfer(SLOT_FILL_IN, SLOT_FILL_OUT, true);
+        transfer(SLOT_DRAIN_IN, SLOT_DRAIN_OUT, false);
+    }
+
+    private void transfer(int in, int out, boolean fillContainer) {
+        ItemStack src = items.getStackInSlot(in);
+        if (src.isEmpty()) return;
+        ItemStack one = src.copyWithCount(1);
+        FluidActionResult sim = fillContainer
+                ? FluidUtil.tryFillContainer(one, groupView, Integer.MAX_VALUE, null, false)
+                : FluidUtil.tryEmptyContainer(one, groupView, Integer.MAX_VALUE, null, false);
+        if (!sim.isSuccess()) return;
+        // Primero se comprueba que la salida admite el producto ENTERO; si no, no se toca nada.
+        if (!fitsOutput(out, sim.getResult())) return;
+        FluidActionResult done = fillContainer
+                ? FluidUtil.tryFillContainer(one, groupView, Integer.MAX_VALUE, null, true)
+                : FluidUtil.tryEmptyContainer(one, groupView, Integer.MAX_VALUE, null, true);
+        if (!done.isSuccess()) return;
+        putOutput(out, done.getResult());
+        items.extractItem(in, 1, false);
+    }
+
+    /*
+     * La salida se escribe A MANO, no con insertItem: el handler rechaza cualquier ítem en las salidas
+     * (isItemValid) para que el jugador no las use de entrada, y insertItem pasa por ese filtro. Con
+     * insertItem el propio tanque no podía dejar el cubo lleno y la ranura nunca se movía (lo vieron
+     * las capturas del 2026-11-17).
+     */
+    private boolean fitsOutput(int out, ItemStack product) {
+        if (product.isEmpty()) return true;
+        ItemStack cur = items.getStackInSlot(out);
+        return cur.isEmpty() || (ItemStack.isSameItemSameComponents(cur, product)
+                && cur.getCount() + product.getCount() <= Math.min(cur.getMaxStackSize(), items.getSlotLimit(out)));
+    }
+
+    private void putOutput(int out, ItemStack product) {
+        if (product.isEmpty()) return;
+        ItemStack cur = items.getStackInSlot(out);
+        if (cur.isEmpty()) items.setStackInSlot(out, product.copy());
+        else items.setStackInSlot(out, cur.copyWithCount(cur.getCount() + product.getCount()));
+    }
+
+    /** Cifras para el menú, partidas en 16 bits (ContainerData viaja como short); el fluido por id de registro. */
+    public ContainerData containerData() {
+        return new ContainerData() {
+            @Override public int get(int i) {
+                FluidNetwork net = fluidNetwork();
+                FluidStack fs = net != null ? net.fluid() : tank.getFluid();
+                long c = net != null ? net.capacity() : capacity();
+                int ai = fs.getAmount(), ci = (int) Math.min(c, Integer.MAX_VALUE);
+                return switch (i) {
+                    case 0 -> ai & 0xFFFF;
+                    case 1 -> ai >>> 16;
+                    case 2 -> ci & 0xFFFF;
+                    case 3 -> ci >>> 16;
+                    case 4 -> net != null ? net.size() : 1;
+                    case 5 -> fs.isEmpty() ? -1 : BuiltInRegistries.FLUID.getId(fs.getFluid());
+                    default -> 0;
+                };
+            }
+            @Override public void set(int i, int v) { }
+            @Override public int getCount() { return 6; }
+        };
+    }
 
     public FluidTransportBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.FLUID_TRANSPORT.get(), pos, state);
@@ -133,6 +252,7 @@ public class FluidTransportBlockEntity extends TransportBlockEntity {
         // Cables y tanques: la red (o el grupo) tickea una vez por tick y la mueve su primer miembro.
         FluidNetwork net = be.fluidNetwork();
         if (net != null && net.isLeader(be)) net.tick(level);
+        if (!be.isCable()) be.processSlots();
     }
 
     // ── Componentes del ítem ──
@@ -162,11 +282,13 @@ public class FluidTransportBlockEntity extends TransportBlockEntity {
         super.saveAdditional(tag, reg);
         syncShare();
         tag.put("Tank", tank.writeToNBT(reg, new CompoundTag()));
+        if (!isCable()) tag.put("Items", items.serializeNBT(reg));
     }
 
     @Override
     protected void loadAdditional(@NotNull CompoundTag tag, @NotNull HolderLookup.Provider reg) {
         super.loadAdditional(tag, reg);
         if (tag.contains("Tank")) tank.readFromNBT(reg, tag.getCompound("Tank"));
+        if (tag.contains("Items")) com.hmc.zenkai.util.ItemHandlers.loadKeepingSize(items, reg, tag.getCompound("Items"));
     }
 }

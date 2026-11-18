@@ -209,6 +209,11 @@ public class Zenkai {
                 (stack, ctx) -> com.hmc.zenkai.content.item.EnergyBatteryItem.storage(stack),
                 com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get());
 
+        // Motor de Ki: solo con Create presente (compat opcional, ver compat/create/KiMotorFactory).
+        if (com.hmc.zenkai.compat.create.KiMotorFactory.loaded()) {
+            com.hmc.zenkai.compat.create.KiMotorFactory.registerCapabilities(event);
+        }
+
         // Cámara de contención de ki: fluido (solo extracción) y FE por las seis caras de las DOS
         // mitades. El block entity vive en la inferior; la superior no tiene, así que se registra
         // por BLOQUE y cada mitad busca el block entity de abajo.
@@ -237,6 +242,7 @@ public class Zenkai {
             event.register(ModMenuTypes.ENERGY_GENERATOR.get(), EnergyGeneratorScreen::new);
             event.register(ModMenuTypes.KI_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.KiChamberScreen::new);
             event.register(ModMenuTypes.PLAYER_BODY.get(), com.hmc.zenkai.client.gui.screens.PlayerBodyScreen::new);
+            event.register(ModMenuTypes.TANK.get(), com.hmc.zenkai.client.gui.screens.TankScreen::new);
         }
 
         @SubscribeEvent
@@ -278,6 +284,12 @@ public class Zenkai {
                     ModBlockEntities.SCOUTER_BENCH.get(),
                     ScouterBenchRenderer::new
             );
+
+            // Nivel en el cristal de los tanques (los cables comparten tipo: el renderer los ignora).
+            BlockEntityRenderers.register(ModBlockEntities.ENERGY_TRANSPORT.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.blockentity.TankFillRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.FLUID_TRANSPORT.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.blockentity.TankFillRenderer::new);
 
             BlockEntityRenderers.register(
                     ModBlockEntities.KI_CONTAINMENT_CHAMBER.get(),

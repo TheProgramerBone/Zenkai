@@ -102,6 +102,7 @@ public final class TankFormation {
         }
         TransportNetwork net = acc.create(members, capacity);
         for (TransportBlockEntity m : members) m.attachNetwork(net);
+        net.updateFillDisplay();   // el grupo nuevo enseña su nivel sin esperar al primer repaso
     }
 
     /**

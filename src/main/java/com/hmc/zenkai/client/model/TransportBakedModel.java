@@ -30,6 +30,23 @@ import java.util.List;
  */
 public class TransportBakedModel extends BakedModelWrapper<CompositeModel.Baked> {
 
+    /**
+     * Si el nivel no trae el aspecto (el mundo de Ponder: su getModelData(pos) devuelve vacío porque no
+     * tiene ModelDataManager), se lee del block entity, que sí lo cargó del NBT del esquema. En el
+     * mundo normal el dato ya llega por el ModelDataManager y esto no hace nada. Sin esto los cables de
+     * las escenas Ponder salían sin brazos (capturas del 2026-11-17).
+     */
+    @Override
+    public @NotNull ModelData getModelData(@NotNull net.minecraft.world.level.BlockAndTintGetter level,
+                                           @NotNull net.minecraft.core.BlockPos pos, @NotNull BlockState state,
+                                           @NotNull ModelData data) {
+        if (data.get(TransportBlockEntity.LOOK_PROPERTY) == null
+                && level.getBlockEntity(pos) instanceof TransportBlockEntity be) {
+            return be.getModelData();
+        }
+        return super.getModelData(level, pos, state, data);
+    }
+
     private final boolean cable;
 
     public TransportBakedModel(CompositeModel.Baked original, boolean cable) {

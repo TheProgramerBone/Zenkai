@@ -37,6 +37,11 @@ public class ModMenuTypes {
             MENUS.register("ki_chamber",
                     () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.KiChamberMenu::new));
 
+    /** Tanques de energía y de fluidos (0.7.0): un menú para los dos, el tipo viaja en el buffer. */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.TankMenu>> TANK =
+            MENUS.register("tank",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.TankMenu::new));
+
     public static void register(IEventBus bus) {
         MENUS.register(bus);
     }

@@ -152,8 +152,38 @@ public class TransportBlock extends BaseEntityBlock {
             configureSide(be, hit, player);
             return InteractionResult.CONSUME;
         }
+        // Tanques: su pantalla (medidor del grupo, ranuras de carga/llenado y botón «Caras»). Los
+        // cables y tuberías siguen enseñando su contenido en la action bar.
+        if (!cable && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            boolean energy = kind == Kind.ENERGY;
+            net.minecraft.world.MenuProvider provider = new net.minecraft.world.SimpleMenuProvider((id, inv, p) ->
+                    be instanceof EnergyTransportBlockEntity e
+                            ? new com.hmc.zenkai.client.gui.menu.TankMenu(id, inv, e)
+                            : new com.hmc.zenkai.client.gui.menu.TankMenu(id, inv, (FluidTransportBlockEntity) be),
+                    getName());
+            sp.openMenu(provider, buf -> { buf.writeBlockPos(pos); buf.writeBoolean(energy); });
+            return InteractionResult.CONSUME;
+        }
         player.displayClientMessage(be.info(), true);
         return InteractionResult.CONSUME;
+    }
+
+    /** Al quitar un tanque, lo que haya en sus ranuras cae al suelo (el contenido va en el ítem). */
+    @Override
+    protected void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
+                            @NotNull BlockState newState, boolean moved) {
+        if (!state.is(newState.getBlock()) && !cable && !level.isClientSide) {
+            net.neoforged.neoforge.items.ItemStackHandler items =
+                    level.getBlockEntity(pos) instanceof EnergyTransportBlockEntity e ? e.items()
+                    : level.getBlockEntity(pos) instanceof FluidTransportBlockEntity f ? f.items() : null;
+            if (items != null) {
+                for (int i = 0; i < items.getSlots(); i++) {
+                    net.minecraft.world.Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                            items.getStackInSlot(i));
+                }
+            }
+        }
+        super.onRemove(state, level, pos, newState, moved);
     }
 
     /**
@@ -161,8 +191,16 @@ public class TransportBlock extends BaseEntityBlock {
      * mano vacía y las llaves ({@link com.hmc.zenkai.feature.transport.TransportWrench}). Solo servidor.
      */
     public static void configureSide(TransportBlockEntity be, BlockHitResult hit, Player player) {
-        Direction face = be.sideAt(hit);
-        SideMode mode = be.cycleMode(face);
+        applySide(be, be.sideAt(hit), be.mode(be.sideAt(hit)).next(), player);
+    }
+
+    /** El modo ANTERIOR de la cara apuntada (Configurator de Mekanism agachado). */
+    public static void configureSideBack(TransportBlockEntity be, BlockHitResult hit, Player player) {
+        applySide(be, be.sideAt(hit), be.mode(be.sideAt(hit)).prev(), player);
+    }
+
+    private static void applySide(TransportBlockEntity be, Direction face, SideMode mode, Player player) {
+        be.setMode(face, mode);
         Level level = be.getLevel();
         if (level != null) {
             level.playSound(null, be.getBlockPos(), SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 0.4f, 1.4f);

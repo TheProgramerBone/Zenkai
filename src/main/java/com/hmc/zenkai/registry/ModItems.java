@@ -99,6 +99,9 @@ public class ModItems {
             com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> ENERGY_BATTERY = ITEMS.registerItem("energy_battery",
             com.hmc.zenkai.content.item.EnergyBatteryItem::new, new Item.Properties());
+    /** Llave: pantalla de caras en cruz y desmontar (WrenchItem). En el tag c:tools/wrench. */
+    public static final DeferredItem<Item> WRENCH = ITEMS.registerItem("wrench",
+            com.hmc.zenkai.content.item.WrenchItem::new, new Item.Properties());
 
     public static final DeferredItem<Item> KATCHIN_INGOT = ITEMS.registerItem("katchin_ingot",
             Item::new, new Item.Properties().rarity(Rarity.RARE));
@@ -144,6 +147,21 @@ public class ModItems {
      *  fluido quema por contacto al colocarla (HfilBoilingWaterBlock). */
     public static final DeferredItem<Item> HFIL_BOILING_WATER_BUCKET = ITEMS.registerItem("hfil_boiling_water_bucket",
             p -> new BucketItem(ModFluids.HFIL_BOILING_WATER.get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+
+    /** Cubos de los cuatro fluidos de Ki (0.7.0): BucketItem vanilla, como el agua curativa. Tenerlos
+     *  da un logro oculto cada uno (data/zenkai/advancement/ki_bucket_*.json). */
+    public static final DeferredItem<Item> KI_BASE_BUCKET = ITEMS.registerItem("ki_base_bucket",
+            p -> new BucketItem(ModFluids.KI_BASE.source().get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+    public static final DeferredItem<Item> KI_SUPER_BUCKET = ITEMS.registerItem("ki_super_bucket",
+            p -> new BucketItem(ModFluids.KI_SUPER.source().get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+    public static final DeferredItem<Item> KI_DIVINE_BUCKET = ITEMS.registerItem("ki_divine_bucket",
+            p -> new BucketItem(ModFluids.KI_DIVINE.source().get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+    public static final DeferredItem<Item> KI_LEGENDARY_BUCKET = ITEMS.registerItem("ki_legendary_bucket",
+            p -> new BucketItem(ModFluids.KI_LEGENDARY.source().get(), p),
             new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
 
     public static final DeferredItem<Item> WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",

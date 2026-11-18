@@ -1,0 +1,34 @@
+{
+  "parent": "zenkai:awakening",
+  "criteria": {
+    "has_bucket": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:ki_legendary_bucket"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.ki_bucket_legendary.description"
+    },
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "zenkai:ki_legendary_bucket"
+    },
+    "title": {
+      "translate": "advancements.zenkai.ki_bucket_legendary.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_bucket"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

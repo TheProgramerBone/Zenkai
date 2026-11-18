@@ -81,6 +81,16 @@ versionRange="[1.0.82,)"
 ordering="AFTER"
 side="CLIENT"
 
+# Create (opcional) — Motor de Ki (compat/create/): convierte FE y fluido de Ki en rotación (y al revés).
+# Sin Create ese bloque, su ítem, su receta y su entrada del creativo no existen y el mod arranca igual.
+[[dependencies.${mod_id}]]
+modId="create"
+type="optional"
+reason="Motor de Ki: convierte FE y fluido de Ki en rotación de Create y al revés"
+versionRange="[6.0.0,)"
+ordering="AFTER"
+side="BOTH"
+
 [modproperties.${mod_id}]
 catalogueImageIcon="assets/zenkai/icon.png"
 catalogueBackground = "assets/zenkai/background.png"

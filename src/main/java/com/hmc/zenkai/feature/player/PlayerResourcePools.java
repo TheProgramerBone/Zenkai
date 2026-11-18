@@ -11,6 +11,16 @@ public class PlayerResourcePools {
     private int staminaMax = 1;
     private int energy     = 1;
     private int energyMax  = 1;
+    /**
+     * Sobrecarga del ki Legendario (0.7.0): hueco EXTRA por encima de energyMax que deja llenar el
+     * fluido de Ki Legendario. Mientras se está dentro se renueva; al salir, {@link #tickOvercharge}
+     * lo encoge en línea recta hasta 0 y el ki sobrante se pierde con él. Se guarda en el NBT del
+     * attachment, que es también lo que viaja al cliente, así la HUD ve «345 / 276» sin packet propio.
+     */
+    private int overchargeRoom = 0;
+    /** Hueco al empezar a desvanecerse y segundos que quedan, para encogerlo en línea recta. */
+    private int overchargePeak = 0;
+    private int overchargeFadeLeft = 0;
     private double speed    = 0;
     private double flySpeed = 0;
 
@@ -53,12 +63,37 @@ public class PlayerResourcePools {
 
     public void setEnergyMax(int max) { this.energyMax = Math.max(1, max); }
 
+    /** Techo real del ki: el pool más la sobrecarga Legendaria que quede. */
+    private int energyCap() { return energyMax + overchargeRoom; }
+
     public void addEnergy(int delta) {
-        energy = MathUtil.clamp(energy + delta, 0, energyMax);
+        energy = MathUtil.clamp(energy + delta, 0, energyCap());
     }
 
     public void addKi(double delta) {
-        energy = MathUtil.clamp((int) Math.round(energy + delta), 0, energyMax);
+        energy = MathUtil.clamp((int) Math.round(energy + delta), 0, energyCap());
+    }
+
+    public int getOverchargeRoom() { return overchargeRoom; }
+
+    /**
+     * Dentro del fluido Legendario: abre (o mantiene) el hueco de sobrecarga y reinicia el
+     * desvanecimiento, que empezará cuando deje de renovarse.
+     */
+    public void holdOvercharge(int room, int fadeSeconds) {
+        overchargeRoom = Math.max(overchargeRoom, Math.max(0, room));
+        overchargePeak = overchargeRoom;
+        overchargeFadeLeft = Math.max(1, fadeSeconds) + 1;   // +1: el segundo en curso no cuenta
+    }
+
+    /** Una vez por segundo (RegenSystem): encoge el hueco y recorta el ki que ya no cabe. */
+    public void tickOvercharge() {
+        if (overchargeRoom <= 0) return;
+        overchargeFadeLeft--;
+        if (overchargeFadeLeft <= 0) overchargeRoom = 0;
+        else overchargeRoom = Math.min(overchargeRoom,
+                (int) Math.ceil(overchargePeak * (overchargeFadeLeft / (double) (overchargeFadeLeft + 1))));
+        energy = Math.min(energy, energyCap());
     }
 
     // ── Movimiento ───────────────────────────────────────────────────────────
@@ -85,7 +120,7 @@ public class PlayerResourcePools {
     public void clampToCurrent() {
         body    = Math.min(body,    bodyMax);
         stamina = Math.min(stamina, staminaMax);
-        energy  = Math.min(energy,  energyMax);
+        energy  = Math.min(energy,  energyCap());
     }
 
     public void refillAll() {
@@ -103,6 +138,11 @@ public class PlayerResourcePools {
         tag.putInt("staminaMax", staminaMax);
         tag.putInt("energy",     energy);
         tag.putInt("energyMax",  energyMax);
+        if (overchargeRoom > 0) {
+            tag.putInt("overchargeRoom", overchargeRoom);
+            tag.putInt("overchargePeak", overchargePeak);
+            tag.putInt("overchargeFade", overchargeFadeLeft);
+        }
         tag.putDouble("speed",    speed);
         tag.putDouble("flySpeed", flySpeed);
         return tag;
@@ -115,6 +155,9 @@ public class PlayerResourcePools {
         this.staminaMax = tag.getInt("staminaMax");
         this.energy     = tag.getInt("energy");
         this.energyMax  = tag.getInt("energyMax");
+        this.overchargeRoom     = tag.getInt("overchargeRoom");
+        this.overchargePeak     = tag.getInt("overchargePeak");
+        this.overchargeFadeLeft = tag.getInt("overchargeFade");
         this.speed      = tag.getDouble("speed");
         this.flySpeed   = tag.getDouble("flySpeed");
     }

@@ -558,6 +558,19 @@ public class ModNetworking {
                 SetWeightPacket.STREAM_CODEC,
                 SetWeightPacket::handle);
 
+        // Ajustes de la pantalla del Motor de Ki. El packet solo nombra KiMotorControl (sin clases de
+        // Create), así se registra igual con o sin Create; sin Create nunca llega uno válido.
+        registrar.playToServer(
+                com.hmc.zenkai.compat.create.KiMotorActionPacket.TYPE,
+                com.hmc.zenkai.compat.create.KiMotorActionPacket.STREAM_CODEC,
+                com.hmc.zenkai.compat.create.KiMotorActionPacket::handle);
+
+        // Pantalla de caras en cruz (llave, motor, tanques): un clic = siguiente/anterior modo de una cara.
+        registrar.playToServer(
+                com.hmc.zenkai.feature.sideconfig.SideConfigPacket.TYPE,
+                com.hmc.zenkai.feature.sideconfig.SideConfigPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.sideconfig.SideConfigPacket::handle);
+
         registrar.playToClient(OpenNpcMarkerPayload.TYPE, OpenNpcMarkerPayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openNpcMarker(payload)));
 

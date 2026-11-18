@@ -40,6 +40,8 @@ public final class EnergyNetwork extends TransportNetwork {
 
     public long energy() { return energy; }
 
+    @Override protected double fillFraction() { return capacity > 0 ? (double) energy / capacity : 0; }
+
     // ── Capability de cada cable (con el caudal de ESE cable) ────────────────
 
     public int receive(int max, int rate, boolean simulate) {

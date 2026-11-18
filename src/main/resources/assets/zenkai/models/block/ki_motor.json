@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "zenkai:block/ki_motor_side",
+    "north": "zenkai:block/ki_motor_front",
+    "south": "zenkai:block/ki_motor_back",
+    "east": "zenkai:block/ki_motor_side",
+    "west": "zenkai:block/ki_motor_side",
+    "up": "zenkai:block/ki_motor_top",
+    "down": "zenkai:block/ki_motor_top"
+  }
+}

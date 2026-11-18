@@ -87,11 +87,13 @@ public final class ModFluids {
     }
 
     // ── Fluidos de Ki (Fase 2a de la 0.7.0) ──────────────────────────────────────────────
-    // Cuatro tipos de energía (ver feature.kichamber.KiEnergyType). NO tienen bloque ni cubo: solo
-    // viven en tanques y puertos, como los gases de Mekanism. BaseFlowingFluid lo admite sin más:
-    // sin .block() createLegacyBlock devuelve aire y sin .bucket() getBucket devuelve Items.AIR, así
-    // que nadie puede derramarlos en el mundo ni sacarlos con un cubo. Sus sprites son
-    // textures/block/ki_<tipo>_still|flow.png (tools/gen_ki_fluids.py).
+    // Cuatro tipos de energía (ver feature.kichamber.KiEnergyType). Hasta el 2026-11-17 no tenían
+    // bloque ni cubo (vivían solo en tanques, como los gases de Mekanism); el usuario pidió cubos para
+    // llenarlos desde el tanque de fluidos, así que ahora son líquidos normales: bloque KiFluidBlock
+    // (efectos al tocarlos), cubo en ModItems e interacciones con agua, lava y entre ellos en
+    // KiFluidInteractions. No se convierten en fuente (canConvertToSource=false): nada de ki infinito.
+    // Densidad POSITIVA desde entonces: con -100 los mods con tanques de gas lo trataban como gas.
+    // Sus sprites son textures/block/ki_<tipo>_still|flow.png (tools/gen_ki_fluids.py).
 
     /** Un fluido de Ki registrado: su tipo y sus dos estados. */
     public record KiFluid(DeferredHolder<FluidType, FluidType> type,
@@ -112,22 +114,40 @@ public final class ModFluids {
                         .canExtinguish(false)
                         .canConvertToSource(false)
                         .lightLevel(12)      // es energía: los tanques de otros mods lo pintan luminoso
-                        .density(-100)       // más ligero que el aire: los mods lo tratan como gas
+                        .density(800)        // un poco más ligero que el agua; positivo = líquido para los mods
+                        .sound(net.neoforged.neoforge.common.SoundActions.BUCKET_FILL, net.minecraft.sounds.SoundEvents.BUCKET_FILL)
+                        .sound(net.neoforged.neoforge.common.SoundActions.BUCKET_EMPTY, net.minecraft.sounds.SoundEvents.BUCKET_EMPTY)
                         .viscosity(500)
                         .temperature(300)));
         // Los dos estados se refieren el uno al otro: el array hace de caja para la referencia
         // circular, y ninguno se resuelve fuera de la lambda de registro.
         KiFluid[] self = new KiFluid[1];
         DeferredHolder<Fluid, BaseFlowingFluid.Source> source = FLUIDS.register(name,
-                () -> new BaseFlowingFluid.Source(kiProperties(self[0])));
+                () -> new BaseFlowingFluid.Source(kiProperties(self[0], name)));
         DeferredHolder<Fluid, BaseFlowingFluid.Flowing> flowing = FLUIDS.register("flowing_" + name,
-                () -> new BaseFlowingFluid.Flowing(kiProperties(self[0])));
+                () -> new BaseFlowingFluid.Flowing(kiProperties(self[0], name)));
         self[0] = new KiFluid(type, source, flowing);
         return self[0];
     }
 
-    private static BaseFlowingFluid.Properties kiProperties(KiFluid f) {
-        return new BaseFlowingFluid.Properties(f.type(), f.source(), f.flowing());
+    /** Bloque y cubo se resuelven por nombre y PEREZOSAMENTE (las suppliers solo se llaman tras el
+     *  registro): ModBlocks y ModItems nombran a su vez estos fluidos, y así ningún orden de carga
+     *  de clases entre los tres archivos importa. */
+    private static BaseFlowingFluid.Properties kiProperties(KiFluid f, String name) {
+        return new BaseFlowingFluid.Properties(f.type(), f.source(), f.flowing())
+                .levelDecreasePerBlock(2)   // se extiende menos que el agua: 4 bloques
+                .block(() -> switch (name) {
+                    case "ki_base" -> ModBlocks.KI_BASE_BLOCK.get();
+                    case "ki_super" -> ModBlocks.KI_SUPER_BLOCK.get();
+                    case "ki_divine" -> ModBlocks.KI_DIVINE_BLOCK.get();
+                    default -> ModBlocks.KI_LEGENDARY_BLOCK.get();
+                })
+                .bucket(() -> switch (name) {
+                    case "ki_base" -> ModItems.KI_BASE_BUCKET.get();
+                    case "ki_super" -> ModItems.KI_SUPER_BUCKET.get();
+                    case "ki_divine" -> ModItems.KI_DIVINE_BUCKET.get();
+                    default -> ModItems.KI_LEGENDARY_BUCKET.get();
+                });
     }
 
     public static void register(IEventBus bus) {

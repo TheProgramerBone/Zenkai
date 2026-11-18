@@ -157,6 +157,21 @@ public class EnergyGeneratorScreen extends TechPanelScreen<EnergyGeneratorMenu> 
             return;
         }
 
+        // Ranura VACÍA bajo el cursor: qué va ahí (combustible o un ítem para cargar). Con ítem dentro
+        // manda su propio tooltip; con algo agarrado, el jugador está moviendo, no leyendo.
+        if (this.hoveredSlot != null && !this.hoveredSlot.hasItem() && this.menu.getCarried().isEmpty()) {
+            int idx = this.menu.slots.indexOf(this.hoveredSlot);
+            String key = idx < 0 ? null
+                    : idx < EnergyGeneratorMenu.FUEL_SLOTS ? "screen.zenkai.generator.slot.fuel"
+                    : idx < EnergyGeneratorMenu.INV_FIRST ? "screen.zenkai.generator.slot.charge" : null;
+            if (key != null) {
+                drawTooltip(g, mouseX, mouseY, List.of(
+                        TipLine.of(Component.translatable(key).withStyle(ChatFormatting.BOLD)),
+                        TipLine.of(Component.translatable(key + ".desc").withStyle(ChatFormatting.GRAY))));
+                return;
+            }
+        }
+
         // Tooltip del combustible bajo el cursor. Es el dato por el que un jugador abre esta
         // pantalla: saber si le compensa gastar el cristal aquí en vez de guardarlo.
         ItemStack stack = ownTooltipStack();

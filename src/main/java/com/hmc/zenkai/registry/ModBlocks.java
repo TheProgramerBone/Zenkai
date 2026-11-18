@@ -590,6 +590,14 @@ public class ModBlocks {
                     .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE) ? 10 : 0)),
             b -> new com.hmc.zenkai.content.item.KiChamberBlockItem(b.get(), new Item.Properties()));
 
+    /** Motor de Ki (0.7.0): convierte FE y fluido de Ki en rotación de Create y al revés. Compat OPCIONAL:
+     *  el bloque se registra siempre, pero sin Create es inerte y se oculta (ver KiMotorFactory). */
+    public static final DeferredBlock<Block> KI_MOTOR = registerBlock("ki_motor",
+            () -> com.hmc.zenkai.compat.create.KiMotorFactory.block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)));
+
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)
@@ -871,6 +879,32 @@ public class ModBlocks {
                     .sound(SoundType.EMPTY)
                     .pushReaction(PushReaction.DESTROY)
                     .noLootTable()));
+
+    // ── Fluidos de Ki derramados (0.7.0): bloque de cada fluido, sin ítem de bloque (se colocan
+    // con su cubo), como HEALING_WATER_BLOCK. Efectos al tocarlos en KiFluidBlock. ──
+    public static final DeferredBlock<com.hmc.zenkai.content.block.KiFluidBlock> KI_BASE_BLOCK =
+            kiFluidBlock("ki_base", com.hmc.zenkai.feature.kichamber.KiEnergyType.BASE, MapColor.COLOR_BLUE, 10);
+    public static final DeferredBlock<com.hmc.zenkai.content.block.KiFluidBlock> KI_SUPER_BLOCK =
+            kiFluidBlock("ki_super", com.hmc.zenkai.feature.kichamber.KiEnergyType.SUPER, MapColor.GOLD, 12);
+    public static final DeferredBlock<com.hmc.zenkai.content.block.KiFluidBlock> KI_DIVINE_BLOCK =
+            kiFluidBlock("ki_divine", com.hmc.zenkai.feature.kichamber.KiEnergyType.DIVINE, MapColor.CRIMSON_NYLIUM, 15);
+    public static final DeferredBlock<com.hmc.zenkai.content.block.KiFluidBlock> KI_LEGENDARY_BLOCK =
+            kiFluidBlock("ki_legendary", com.hmc.zenkai.feature.kichamber.KiEnergyType.LEGENDARY, MapColor.COLOR_LIGHT_GREEN, 12);
+
+    private static DeferredBlock<com.hmc.zenkai.content.block.KiFluidBlock> kiFluidBlock(
+            String name, com.hmc.zenkai.feature.kichamber.KiEnergyType type, MapColor color, int light) {
+        return MOD_BLOCKS.register(name, () -> new com.hmc.zenkai.content.block.KiFluidBlock(
+                type.fluid().source().get(), type, BlockBehaviour.Properties.of()
+                        .mapColor(color)
+                        .replaceable()
+                        .noCollission()
+                        .strength(100f)
+                        .lightLevel(st -> light)
+                        .liquid()
+                        .sound(SoundType.EMPTY)
+                        .pushReaction(PushReaction.DESTROY)
+                        .noLootTable()));
+    }
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);

@@ -75,7 +75,10 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
      * armadura de otro mod…). Se llena desde el búfer a la misma tasa máxima que se empuja a los
      * vecinos. Va aparte de la cola de combustible, y la automatización no lo ve.
      */
-    private final ItemStackHandler charge = new ItemStackHandler(1) {
+    /** Ranuras de carga: tres desde el 2026-11-17 (era una), en fila bajo la barra de quemado. */
+    public static final int CHARGE_SLOTS = 3;
+
+    private final ItemStackHandler charge = new ItemStackHandler(CHARGE_SLOTS) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -253,15 +256,17 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
 
     /** Carga el ítem del hueco con el búfer, antes de repartir a los vecinos (lo que tiene delante manda). */
     private void chargeItem() {
-        ItemStack stack = charge.getStackInSlot(0);
-        if (stack.isEmpty() || energy.getEnergyStored() <= 0) return;
-        IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-        if (cell == null || !cell.canReceive()) return;
-        int offered = Math.min(ServerConfig.energyGeneratorMaxExtract(), energy.getEnergyStored());
-        int accepted = cell.receiveEnergy(offered, false);
-        if (accepted > 0) {
-            energy.extractEnergy(accepted, false);
-            setChanged();
+        for (int i = 0; i < CHARGE_SLOTS; i++) {
+            ItemStack stack = charge.getStackInSlot(i);
+            if (stack.isEmpty() || energy.getEnergyStored() <= 0) continue;
+            IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+            if (cell == null || !cell.canReceive()) continue;
+            int offered = Math.min(ServerConfig.energyGeneratorMaxExtract(), energy.getEnergyStored());
+            int accepted = cell.receiveEnergy(offered, false);
+            if (accepted > 0) {
+                energy.extractEnergy(accepted, false);
+                setChanged();
+            }
         }
     }
 
@@ -307,7 +312,8 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         burnTicksTotal = tag.getInt("BurnTicksTotal");
         burnFePerTick  = tag.getInt("BurnFePerTick");
         if (tag.contains("Fuel")) fuel.deserializeNBT(reg, tag.getCompound("Fuel"));
-        if (tag.contains("Charge")) charge.deserializeNBT(reg, tag.getCompound("Charge"));
+        // Un mundo de antes guarda Size 1: deserializeNBT encogería el handler y el menú de 3 rompería.
+        if (tag.contains("Charge")) com.hmc.zenkai.util.ItemHandlers.loadKeepingSize(charge, reg, tag.getCompound("Charge"));
     }
 
     @Override
@@ -332,10 +338,12 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
                 fuel.setStackInSlot(i, ItemStack.EMPTY);
             }
         }
-        ItemStack held = charge.getStackInSlot(0);
-        if (!held.isEmpty()) {
-            net.minecraft.world.level.block.Block.popResource(level, pos, held);
-            charge.setStackInSlot(0, ItemStack.EMPTY);
+        for (int i = 0; i < CHARGE_SLOTS; i++) {
+            ItemStack held = charge.getStackInSlot(i);
+            if (!held.isEmpty()) {
+                net.minecraft.world.level.block.Block.popResource(level, pos, held);
+                charge.setStackInSlot(i, ItemStack.EMPTY);
+            }
         }
     }
 }

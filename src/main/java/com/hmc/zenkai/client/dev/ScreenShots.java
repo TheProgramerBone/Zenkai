@@ -379,8 +379,8 @@ public final class ScreenShots {
     }
 
     /**
-     * Tanques multibloque (modo «tanks», con mundo «new:»): un tanque de energía 2x2x3, uno de fluidos 3x3x2
-     * con agua, uno suelto con una placa de salida y otro con una de entrada, vistos desde las cuatro
+     * Tanques multibloque (modo «tanks», con mundo «new:»): un tanque de energía 2x2x3 al 40 %, uno de fluidos
+     * 3x3x2 con agua al 60 %, uno suelto de energía con placa de salida y otro de lava con una de entrada, vistos desde las cuatro
      * esquinas y desde arriba. Sirve para ver que la textura conectada empalma y que el marco va por FUERA
      * del grupo en cada cara (si la izquierda y la derecha de una cara estuvieran cambiadas, saldría por dentro).
      */
@@ -397,11 +397,12 @@ public final class ScreenShots {
             for (int y = 0; y < 2; y++) for (int x = 0; x < 3; x++) for (int z = 0; z < 3; z++) level.setBlock(o.offset(x, y, z + 4), fluid, 3);
             level.setBlock(o.offset(0, 0, 9), energy, 3);
             level.setBlock(o.offset(0, 0, 11), fluid, 3);
-            if (level.getBlockEntity(o.offset(0, 0, 4)) instanceof com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity t) {
-                var h = t.fluidAt(null);
-                for (int i = 0; i < 20; i++) h.fill(new net.neoforged.neoforge.fluids.FluidStack(
-                        net.minecraft.world.level.material.Fluids.WATER, 2_000), net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
-            }
+            // Niveles para ver el cristal: agua al ~60 % del 3x3x2 (sube por las dos capas), energía al
+            // ~40 % del 2x2x3, el suelto de energía a la mitad y el suelto de fluidos con lava (brilla).
+            fillFluid(level, o.offset(0, 0, 4), net.minecraft.world.level.material.Fluids.WATER, 0.6);
+            fillFluid(level, o.offset(0, 0, 11), net.minecraft.world.level.material.Fluids.LAVA, 0.5);
+            fillEnergy(level, o, 0.4);
+            fillEnergy(level, o.offset(0, 0, 9), 0.5);
             if (level.getBlockEntity(o.offset(0, 0, 9)) instanceof com.hmc.zenkai.content.blockentity.TransportBlockEntity t) {
                 t.cycleMode(net.minecraft.core.Direction.WEST);   // salida
             }
@@ -430,6 +431,329 @@ public final class ScreenShots {
         }
     }
 
+    /**
+     * Motor de Ki (modo «motor», con mundo «new:», necesita Create en run/mods): dos motores, uno con el eje
+     * mirando al jugador y otro de espaldas, vistos de frente, de espaldas y en diagonal; luego la pantalla
+     * en modo motor (FE a medias, Ki Súper en el tanque, un puerto en Tirar y otro en Nada) y en modo dínamo.
+     */
+    private static void motorPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos pos = sp.blockPosition().offset(3, 0, 0);
+            at[0] = pos;
+            var motor = com.hmc.zenkai.registry.ModBlocks.KI_MOTOR.get().defaultBlockState();
+            var facing = com.hmc.zenkai.compat.create.KiMotorBlock.FACING;
+            level.setBlock(pos, motor.setValue(facing, net.minecraft.core.Direction.WEST), 3);
+            level.setBlock(pos.offset(0, 0, 2), motor.setValue(facing, net.minecraft.core.Direction.EAST), 3);
+            level.setBlock(pos.offset(0, 0, -2), motor.setValue(facing, net.minecraft.core.Direction.UP), 3);
+            sp.teleportTo(level, sp.getX(), sp.getY(), sp.getZ(), -90f, 0f);
+        }));
+        PLAN.add(() -> wait = 40);
+        PLAN.add(() -> { capture(mc, "99_ki_motor_front"); wait = 3; });
+        float[][] views = { {-1.5f, 1.2f, -2.5f, -45f, 25f}, {5.5f, 1.2f, 3.5f, 135f, 25f}, {1.5f, 0.6f, 0.5f, -90f, 20f} };
+        String[] names = { "diag_front", "diag_back", "close" };
+        for (int v = 0; v < views.length; v++) {
+            final float[] view = views[v];
+            final String name = names[v];
+            PLAN.add(() -> {
+                onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() + view[0], at[0].getY() + view[1],
+                        at[0].getZ() + view[2], view[3], view[4]));
+                wait = 20;
+            });
+            PLAN.add(() -> { capture(mc, "99_ki_motor_" + name); wait = 3; });
+        }
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                sp.teleportTo(sp.serverLevel(), at[0].getX() - 2.5, at[0].getY(), at[0].getZ() + 0.5, -90f, 0f);
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.compat.create.KiMotorBlockEntity be) {
+                    var e = be.energyAt(null);
+                    e.receiveEnergy(e.getMaxEnergyStored(), false);   // lleno: si no, el fluido se convierte y el tanque sale vacío
+                    be.tank().fill(new net.neoforged.neoforge.fluids.FluidStack(
+                            com.hmc.zenkai.registry.ModFluids.KI_SUPER.source().get(), be.tank().getCapacity() / 2),
+                            net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+                    be.cyclePort(net.minecraft.core.Direction.SOUTH, false);
+                    be.cyclePort(net.minecraft.core.Direction.SOUTH, false);   // Tirar
+                    for (int i = 0; i < 3; i++) be.cyclePort(net.minecraft.core.Direction.UP, true);   // Nada
+                }
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { mc.setScreen(new com.hmc.zenkai.client.gui.screens.KiMotorScreen(at[0])); wait = 30; });
+        PLAN.add(() -> { capture(mc, "99_ki_motor_gui_motor"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.compat.create.KiMotorBlockEntity be) {
+                    be.setMode(com.hmc.zenkai.compat.create.KiMotorControl.Mode.GENERATOR);
+                }
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "99_ki_motor_gui_dynamo"); mc.setScreen(null); wait = 5; });
+    }
+
+    /**
+     * Tanda de tecnología 0.7.0 (modo «tech», con mundo «new:»): los cuatro ki derramados con agua y lava al
+     * lado (interacciones), la pantalla del tanque de energía con una batería, la del de fluidos con Ki Súper y
+     * un cubo vacío, y, con Create, el motor con su cruz.
+     */
+    private static void techPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos o = sp.blockPosition().offset(4, 0, -4);
+            at[0] = o;
+            var kis = com.hmc.zenkai.feature.kichamber.KiEnergyType.values();
+            for (int i = 0; i < kis.length; i++) {
+                BlockPos p = o.offset(0, 0, i * 3);
+                level.setBlock(p, kis[i].fluid().source().get().defaultFluidState().createLegacyBlock(), 3);
+            }
+            // Agua y lava a un bloque de distancia del Base y del Súper: al fluir, se solidifican.
+            level.setBlock(o.offset(2, 0, 0), net.minecraft.world.level.block.Blocks.WATER.defaultBlockState(), 3);
+            level.setBlock(o.offset(2, 0, 3), net.minecraft.world.level.block.Blocks.LAVA.defaultBlockState(), 3);
+            sp.getInventory().setItem(0, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.WRENCH.get()));
+            sp.getInventory().setItem(1, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_DIVINE_BUCKET.get()));
+            sp.getInventory().setItem(2, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BUCKET, 4));
+            sp.getInventory().setItem(3, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+            sp.getAbilities().flying = true;
+            sp.onUpdateAbilities();
+            sp.teleportTo(level, o.getX() - 4.5, o.getY() + 3.5, o.getZ() + 4.5, -90f, 35f);
+        }));
+        PLAN.add(() -> wait = 100);   // que fluyan y reaccionen
+        PLAN.add(() -> { capture(mc, "A0_ki_fluids_world"); wait = 3; });
+
+        // Tanques: uno de energía al 50 % con una batería vacía en «cargar» y uno de fluidos con Ki Súper.
+        final BlockPos[] tanks = new BlockPos[2];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos e = at[0].offset(-3, 0, -3), f = at[0].offset(-3, 0, -6);
+            tanks[0] = e; tanks[1] = f;
+            level.setBlock(e, com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK.get().defaultBlockState(), 3);
+            level.setBlock(f, com.hmc.zenkai.registry.ModBlocks.FLUID_TANK.get().defaultBlockState(), 3);
+            sp.getAbilities().flying = false;
+            sp.onUpdateAbilities();
+            sp.teleportTo(level, e.getX() - 2.5, e.getY(), e.getZ() + 0.5, -90f, 0f);
+        }));
+        PLAN.add(() -> wait = 30);
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            fillEnergy(level, tanks[0], 0.5);
+            fillFluid(level, tanks[1], com.hmc.zenkai.registry.ModFluids.KI_SUPER.source().get(), 0.4);
+            if (level.getBlockEntity(tanks[0]) instanceof com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity t) {
+                t.items().setStackInSlot(0, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+            }
+            if (level.getBlockEntity(tanks[1]) instanceof com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity t) {
+                t.items().setStackInSlot(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BUCKET, 3));
+            }
+            var st = level.getBlockState(tanks[0]);
+            st.useWithoutItem(level, sp, new net.minecraft.world.phys.BlockHitResult(tanks[0].getCenter(),
+                    net.minecraft.core.Direction.WEST, tanks[0], false));
+        }));
+        PLAN.add(() -> wait = 40);
+        PLAN.add(() -> { capture(mc, "A1_tank_energy_gui"); if (mc.player != null) mc.player.closeContainer(); wait = 10; });
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            var st = level.getBlockState(tanks[1]);
+            st.useWithoutItem(level, sp, new net.minecraft.world.phys.BlockHitResult(tanks[1].getCenter(),
+                    net.minecraft.core.Direction.WEST, tanks[1], false));
+        }));
+        PLAN.add(() -> wait = 40);
+        PLAN.add(() -> { capture(mc, "A2_tank_fluid_gui"); if (mc.player != null) mc.player.closeContainer(); wait = 10; });
+
+        if (net.neoforged.fml.ModList.get().isLoaded("create")) {
+            final BlockPos[] motor = new BlockPos[1];
+            PLAN.add(() -> onServer(mc, sp -> {
+                var level = sp.serverLevel();
+                BlockPos m = tanks[0].offset(0, 0, 3);
+                motor[0] = m;
+                level.setBlock(m, com.hmc.zenkai.registry.ModBlocks.KI_MOTOR.get().defaultBlockState()
+                        .setValue(com.hmc.zenkai.compat.create.KiMotorBlock.FACING, net.minecraft.core.Direction.NORTH), 3);
+                sp.teleportTo(level, m.getX() - 2.5, m.getY(), m.getZ() + 0.5, -90f, 0f);
+            }));
+            PLAN.add(() -> wait = 30);
+            PLAN.add(() -> { mc.setScreen(new com.hmc.zenkai.client.gui.screens.KiMotorScreen(motor[0])); wait = 25; });
+            PLAN.add(() -> { capture(mc, "A4_ki_motor_cross"); mc.setScreen(null); wait = 5; });
+        }
+    }
+
+    /**
+     * Escenas Ponder de la tecnología (modo «ponder», con mundo «new:»): abre la escena de cada bloque como el
+     * botón «?» de su tooltip y la captura dos veces, al poco de empezar y avanzada con seekToTime.
+     * Nombra PonderUI solo dentro de las lambdas: sin Ponder este plan no se usa y la clase no se carga.
+     */
+    private static void ponderPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        java.util.List<java.util.function.Supplier<? extends net.minecraft.world.level.ItemLike>> items = java.util.List.of(
+                com.hmc.zenkai.registry.ModBlocks.KI_CONTAINMENT_CHAMBER, com.hmc.zenkai.registry.ModBlocks.ENERGY_CABLE,
+                com.hmc.zenkai.registry.ModBlocks.FLUID_PIPE, com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK,
+                com.hmc.zenkai.registry.ModItems.WRENCH, com.hmc.zenkai.registry.ModBlocks.KI_MOTOR);
+        String[] names = {"chamber", "cables", "pipes", "tanks", "wrench", "motor"};
+        for (int i = 0; i < items.size(); i++) {
+            final int k = i;
+            PLAN.add(() -> {
+                mc.setScreen(net.createmod.ponder.foundation.ui.PonderUI.of(
+                        new net.minecraft.world.item.ItemStack(items.get(k).get())));
+                wait = 80;
+            });
+            PLAN.add(() -> { capture(mc, "B" + k + "_ponder_" + names[k] + "_a"); wait = 2; });
+            PLAN.add(() -> {
+                if (mc.screen instanceof net.createmod.ponder.foundation.ui.PonderUI ui) ui.seekToTime(260);
+                wait = 40;
+            });
+            PLAN.add(() -> { capture(mc, "B" + k + "_ponder_" + names[k] + "_b"); mc.setScreen(null); wait = 10; });
+        }
+    }
+
+    /**
+     * Llave y ranuras (modo «wrench», con mundo «new:»): sombreado de puertos con la llave en la mano sobre un
+     * tanque con una cara de cada modo y sobre el Motor de Ki (canal energía y canal fluido), y las pantallas del
+     * generador (tres ranuras de carga) y del tanque de energía (3 + 3).
+     */
+    private static void wrenchPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[4];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos tank = sp.blockPosition().offset(3, 0, 0);
+            at[0] = tank;
+            at[1] = tank.offset(0, 0, 3);
+            at[2] = tank.offset(0, 0, -3);
+            at[3] = tank.offset(0, 0, -6);
+            level.setBlock(tank, com.hmc.zenkai.registry.ModBlocks.FLUID_TANK.get().defaultBlockState(), 3);
+            if (level.getBlockEntity(tank) instanceof com.hmc.zenkai.content.blockentity.TransportBlockEntity t) {
+                t.setMode(net.minecraft.core.Direction.WEST, com.hmc.zenkai.feature.transport.SideMode.PUSH);
+                t.setMode(net.minecraft.core.Direction.UP, com.hmc.zenkai.feature.transport.SideMode.PULL);
+                t.setMode(net.minecraft.core.Direction.SOUTH, com.hmc.zenkai.feature.transport.SideMode.NONE);
+            }
+            if (net.neoforged.fml.ModList.get().isLoaded("create")) {
+                level.setBlock(at[1], com.hmc.zenkai.registry.ModBlocks.KI_MOTOR.get().defaultBlockState()
+                        .setValue(com.hmc.zenkai.compat.create.KiMotorBlock.FACING, net.minecraft.core.Direction.EAST), 3);
+                if (level.getBlockEntity(at[1]) instanceof com.hmc.zenkai.feature.sideconfig.SideConfigurable c) {
+                    c.setSideMode(com.hmc.zenkai.feature.sideconfig.SideConfigurable.Channel.ENERGY,
+                            net.minecraft.core.Direction.WEST, com.hmc.zenkai.feature.transport.SideMode.PULL);
+                    c.setSideMode(com.hmc.zenkai.feature.sideconfig.SideConfigurable.Channel.FLUID,
+                            net.minecraft.core.Direction.WEST, com.hmc.zenkai.feature.transport.SideMode.NONE);
+                    c.setSideMode(com.hmc.zenkai.feature.sideconfig.SideConfigurable.Channel.FLUID,
+                            net.minecraft.core.Direction.UP, com.hmc.zenkai.feature.transport.SideMode.PUSH);
+                }
+            }
+            level.setBlock(at[2], com.hmc.zenkai.registry.ModBlocks.ENERGY_GENERATOR.get().defaultBlockState(), 3);
+            level.setBlock(at[3], com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK.get().defaultBlockState(), 3);
+            sp.getInventory().selected = 0;
+            sp.getInventory().setItem(0, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.WRENCH.get()));
+            sp.getInventory().setItem(1, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+            // Mirando al tanque desde arriba-izquierda: se ven la cara oeste, la de arriba y la sur.
+            lookAt(sp, tank, -1.6, 1.0, 2.2);
+        }));
+        PLAN.add(() -> wait = 40);
+        PLAN.add(() -> { capture(mc, "C0_wrench_tank"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> lookAt(sp, at[1], -1.6, 1.0, 2.2));
+            wait = 25;
+        });
+        PLAN.add(() -> { capture(mc, "C1_wrench_motor_energy"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> net.minecraft.world.item.component.CustomData.update(
+                    net.minecraft.core.component.DataComponents.CUSTOM_DATA, sp.getMainHandItem(), t -> t.putInt("Mode", 1)));
+            wait = 15;
+        });
+        PLAN.add(() -> { capture(mc, "C2_wrench_motor_fluid"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                sp.teleportTo(sp.serverLevel(), at[2].getX() - 2.5, at[2].getY(), at[2].getZ() + 0.5, -90f, 0f);
+                var st = sp.serverLevel().getBlockState(at[2]);
+                st.useWithoutItem(sp.serverLevel(), sp, new net.minecraft.world.phys.BlockHitResult(at[2].getCenter(),
+                        net.minecraft.core.Direction.WEST, at[2], false));
+            });
+            wait = 40;
+        });
+        PLAN.add(() -> { capture(mc, "C3_generator_gui"); if (mc.player != null) mc.player.closeContainer(); wait = 10; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                var level = sp.serverLevel();
+                fillEnergy(level, at[3], 0.6);
+                if (level.getBlockEntity(at[3]) instanceof com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity t) {
+                    t.items().setStackInSlot(0, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+                    t.items().setStackInSlot(4, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get()));
+                }
+                var st = level.getBlockState(at[3]);
+                st.useWithoutItem(level, sp, new net.minecraft.world.phys.BlockHitResult(at[3].getCenter(),
+                        net.minecraft.core.Direction.WEST, at[3], false));
+            });
+            wait = 40;
+        });
+        PLAN.add(() -> { capture(mc, "C4_tank_energy_gui"); if (mc.player != null) mc.player.closeContainer(); wait = 10; });
+        // Tanque de energía de 1x2 cargado con una placa de Tirar en la cara oeste de abajo (el nivel debe verse
+        // ALREDEDOR de la placa) y un cable pegado a esa cara (sombreado de la llave sin paneles flotando).
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos t = at[3];
+            level.setBlock(t.above(), com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK.get().defaultBlockState(), 3);
+            level.setBlock(t.west(), com.hmc.zenkai.registry.ModBlocks.ENERGY_CABLE.get().defaultBlockState(), 3);
+            if (level.getBlockEntity(t) instanceof com.hmc.zenkai.content.blockentity.TransportBlockEntity b) {
+                b.setMode(net.minecraft.core.Direction.WEST, com.hmc.zenkai.feature.transport.SideMode.PULL);
+            }
+        }));
+        PLAN.add(() -> wait = 30);
+        PLAN.add(() -> onServer(mc, sp -> fillEnergy(sp.serverLevel(), at[3], 0.95)));
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                        sp.getMainHandItem(), tag -> tag.putInt("Mode", 0));
+                lookAt(sp, at[3].west(), -2.2, 0.2, 1.4);
+            });
+            wait = 40;
+        });
+        PLAN.add(() -> { capture(mc, "C5_tank_plate_fill_cable_overlay"); wait = 3; });
+        // Modo Rotar sobre el generador: se gira con el evento real (una llamada a la misma ruta que el clic).
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                        sp.getMainHandItem(), tag -> tag.putInt("Mode", 2));
+                var hit = new net.minecraft.world.phys.BlockHitResult(at[2].getCenter(), net.minecraft.core.Direction.WEST, at[2], false);
+                var ev = new net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock(
+                        sp, net.minecraft.world.InteractionHand.MAIN_HAND, at[2], hit);
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(ev);
+                Zenkai.LOGGER.info("ScreenShots: generador tras rotar = {}", sp.serverLevel().getBlockState(at[2]));
+                lookAt(sp, at[2], -2.2, 0.2, 1.4);
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "C6_rotate_generator"); wait = 3; });
+    }
+
+    /** Coloca al jugador en target + (dx, dy, dz) mirando al CENTRO del bloque (para que la mira lo apunte). */
+    private static void lookAt(net.minecraft.server.level.ServerPlayer sp, BlockPos target, double dx, double dy, double dz) {
+        double x = target.getX() + 0.5 + dx, y = target.getY() + dy, z = target.getZ() + 0.5 + dz;
+        double ex = target.getX() + 0.5 - x, ey = target.getY() + 1.1 - (y + sp.getEyeHeight()), ez = target.getZ() + 0.5 - z;
+        float yaw = (float) Math.toDegrees(Math.atan2(-ex, ez));
+        float pitch = (float) Math.toDegrees(-Math.atan2(ey, Math.sqrt(ex * ex + ez * ez)));
+        sp.teleportTo(sp.serverLevel(), x, y, z, yaw, pitch);
+    }
+
+    private static void fillFluid(net.minecraft.server.level.ServerLevel level, BlockPos pos,
+                                  net.minecraft.world.level.material.Fluid fluid, double fraction) {
+        if (!(level.getBlockEntity(pos) instanceof com.hmc.zenkai.content.blockentity.FluidTransportBlockEntity t)) return;
+        var h = t.fluidAt(null);
+        int want = (int) (h.getTankCapacity(0) * fraction);
+        for (int i = 0; i < 5000 && h.getFluidInTank(0).getAmount() < want; i++) {
+            int n = Math.min(2_000, want - h.getFluidInTank(0).getAmount());
+            if (h.fill(new net.neoforged.neoforge.fluids.FluidStack(fluid, n),
+                    net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE) <= 0) break;
+        }
+    }
+
+    private static void fillEnergy(net.minecraft.server.level.ServerLevel level, BlockPos pos, double fraction) {
+        if (!(level.getBlockEntity(pos) instanceof com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity t)) return;
+        var e = t.energyAt(null);
+        int want = (int) (e.getMaxEnergyStored() * fraction);
+        for (int i = 0; i < 100_000 && e.getEnergyStored() < want; i++) {
+            if (e.receiveEnergy(want - e.getEnergyStored(), false) <= 0) break;
+        }
+    }
+
     private static void wishesPlan(Minecraft mc) {
         shot(mc, "70_wish_main", ShenlongWishScreen::new);
         shot(mc, "71_wish_immortal", () -> new ImmortalWishScreen(null));
@@ -455,6 +779,10 @@ public final class ScreenShots {
         if (world.startsWith("new:")) {
             if ("chamber".equals(mode)) chamberPlan(mc);
             else if ("tanks".equals(mode)) tanksPlan(mc);
+            else if ("motor".equals(mode)) motorPlan(mc);
+            else if ("tech".equals(mode)) techPlan(mc);
+            else if ("wrench".equals(mode)) wrenchPlan(mc);
+            else if ("ponder".equals(mode)) ponderPlan(mc);
             else containersPlan(mc);
             return;
         }

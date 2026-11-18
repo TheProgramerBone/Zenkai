@@ -43,12 +43,14 @@ public class EnergyGeneratorMenu extends AbstractContainerMenu {
 
     /** Primer índice del inventario del jugador dentro de this.slots. */
     public static final int CHARGE_SLOT = FUEL_SLOTS;
-    public static final int INV_FIRST = FUEL_SLOTS + 1;
-    public static final int INV_END   = FUEL_SLOTS + 1 + 36;
+    public static final int CHARGE_SLOTS = EnergyGeneratorBlockEntity.CHARGE_SLOTS;
+    public static final int INV_FIRST = FUEL_SLOTS + CHARGE_SLOTS;
+    public static final int INV_END   = FUEL_SLOTS + CHARGE_SLOTS + 36;
 
     // ── Layout (debe coincidir con energy_generator.png) ─────────────────────
     public static final int FUEL_X = 46, FUEL_Y = 39, FUEL_STEP = 22, FUEL_COLS = 3;
     /** Hueco de carga: bajo la barra de quemado, alineado con la primera columna de la cola. */
+    /** Fila de carga: mismas columnas que la rejilla de combustible (== tools/gen_energy_generator_screen.py). */
     public static final int CHARGE_X = 46, CHARGE_Y = 100;
     private static final int INV_X = 47, INV_Y = 170, HOTBAR_Y = 229;
 
@@ -59,7 +61,7 @@ public class EnergyGeneratorMenu extends AbstractContainerMenu {
      *  handler vacío del mismo tamaño. Los ítems llegan por la sincronización normal del
      *  contenedor, igual que en cualquier cofre. */
     public EnergyGeneratorMenu(int id, Inventory inv, RegistryFriendlyByteBuf buf) {
-        this(id, inv, new ItemStackHandler(FUEL_SLOTS), new ItemStackHandler(1),
+        this(id, inv, new ItemStackHandler(FUEL_SLOTS), new ItemStackHandler(CHARGE_SLOTS),
                 new SimpleContainerData(DATA_SLOTS),
                 ContainerLevelAccess.NULL, buf.readBlockPos());
     }
@@ -89,12 +91,14 @@ public class EnergyGeneratorMenu extends AbstractContainerMenu {
             }
         }
 
-        addSlot(new SlotItemHandler(charge, 0, CHARGE_X, CHARGE_Y) {
-            @Override
-            public boolean mayPlace(@NotNull ItemStack stack) {
-                return EnergyGeneratorBlockEntity.acceptsEnergy(stack);
-            }
-        });
+        for (int i = 0; i < CHARGE_SLOTS; i++) {
+            addSlot(new SlotItemHandler(charge, i, CHARGE_X + i * FUEL_STEP, CHARGE_Y) {
+                @Override
+                public boolean mayPlace(@NotNull ItemStack stack) {
+                    return EnergyGeneratorBlockEntity.acceptsEnergy(stack);
+                }
+            });
+        }
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -163,7 +167,7 @@ public class EnergyGeneratorMenu extends AbstractContainerMenu {
         } else if (GeneratorFuels.isFuel(stack)) {
             if (!moveItemStackTo(stack, 0, FUEL_SLOTS, false)) return ItemStack.EMPTY;
         } else if (EnergyGeneratorBlockEntity.acceptsEnergy(stack)) {
-            if (!moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + 1, false)) return ItemStack.EMPTY;
+            if (!moveItemStackTo(stack, CHARGE_SLOT, CHARGE_SLOT + CHARGE_SLOTS, false)) return ItemStack.EMPTY;
         } else {
             return ItemStack.EMPTY;
         }

@@ -50,7 +50,8 @@ import java.util.List;
  * actualización del block entity. El cliente lo entrega al modelo como ModelData
  * ({@link #LOOK_PROPERTY}) y lo usa para la forma. El blockstate no lleva nada.
  */
-public abstract class TransportBlockEntity extends BlockEntity {
+public abstract class TransportBlockEntity extends BlockEntity
+        implements com.hmc.zenkai.feature.sideconfig.SideConfigurable {
 
     /** Aspecto empaquetado de las seis caras, para el modelo. */
     public static final ModelProperty<Integer> LOOK_PROPERTY = new ModelProperty<>();
@@ -83,6 +84,10 @@ public abstract class TransportBlockEntity extends BlockEntity {
     private @Nullable TransportNetwork network;
     private final Look[] look = new Look[6];
     private int ctBits = CT_ALONE;
+    /** Nivel visible del cristal de un tanque (0..FILL_STEPS) y el fluido que se ve. Lo fija el grupo. */
+    private int fill;
+    private String fillFluid = "";
+    public static final int FILL_STEPS = 32;
     private int ticks;
 
     protected TransportBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -119,6 +124,18 @@ public abstract class TransportBlockEntity extends BlockEntity {
     }
 
     public int ctBits() { return ctBits; }
+    public int fillSteps() { return fill; }
+    public String fillFluidId() { return fillFluid; }
+
+    /** Lo llama el grupo de tanques; solo se manda al cliente si cambió. */
+    public void setFillDisplay(int steps, String fluidId) {
+        if (steps == fill && fluidId.equals(fillFluid)) return;
+        fill = steps;
+        fillFluid = fluidId;
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+        }
+    }
 
     /** La red actual si es válida, SIN construir ninguna. */
     public @Nullable TransportNetwork currentNetwork() {
@@ -187,6 +204,26 @@ public abstract class TransportBlockEntity extends BlockEntity {
     /** Pasa la cara al siguiente modo y refresca aspecto y capabilities. Devuelve el nuevo modo. */
     public SideMode cycleMode(Direction d) {
         SideMode next = mode(d).next();
+        setMode(d, next);
+        return next;
+    }
+
+    // ── Pantalla de caras (SideConfigurable): un solo canal, el de su tipo ────
+
+    @Override
+    public java.util.List<Channel> sideChannels() {
+        return java.util.List.of(kind() == TransportBlock.Kind.ENERGY ? Channel.ENERGY : Channel.FLUID);
+    }
+
+    @Override
+    public SideMode sideMode(Channel channel, Direction face) { return mode(face); }
+
+    @Override
+    public void setSideMode(Channel channel, Direction face, SideMode m) { setMode(face, m); }
+
+    /** Fija el modo de una cara con los efectos de siempre: red, capabilities, aspecto y vecinos. */
+    public void setMode(Direction d, SideMode next) {
+        if (mode(d) == next) return;
         modes[d.get3DDataValue()] = next;
         setChanged();
         dissolveNetwork();   // una cara Desconectada parte la red; una que deja de estarlo la une
@@ -194,8 +231,9 @@ public abstract class TransportBlockEntity extends BlockEntity {
             level.invalidateCapabilities(worldPosition);
             recomputeLook();
             level.updateNeighborsAt(worldPosition, getBlockState().getBlock());   // un cable vecino depende de MI modo
+            // Los modos viajan en el paquete de actualización: la pantalla de caras los lee en el cliente.
+            if (!level.isClientSide) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }
-        return next;
     }
 
     /**
@@ -299,8 +337,15 @@ public abstract class TransportBlockEntity extends BlockEntity {
     @Override
     public @NotNull CompoundTag getUpdateTag(@NotNull HolderLookup.Provider reg) {
         CompoundTag tag = new CompoundTag();
+        int[] raw = new int[6];
+        for (int i = 0; i < 6; i++) raw[i] = modes[i].ordinal();
+        tag.putIntArray("Modes", raw);   // para la pantalla de caras (el aspecto de un cable no es su modo)
         tag.putInt("Look", lookBits());
         tag.putInt("Ct", ctBits);
+        if (!isCable()) {
+            tag.putInt("Fill", fill);
+            tag.putString("FillFluid", fillFluid);
+        }
         return tag;
     }
 
@@ -370,6 +415,10 @@ public abstract class TransportBlockEntity extends BlockEntity {
             int ctBefore = ctBits;
             readLook(tag.getInt("Look"));
             if (tag.contains("Ct")) ctBits = tag.getInt("Ct");
+            if (tag.contains("Fill")) {   // solo viaja al cliente: lo pinta TankFillRenderer cada fotograma
+                fill = tag.getInt("Fill");
+                fillFluid = tag.getString("FillFluid");
+            }
             // En el cliente llega aquí desde el paquete de actualización. requestModelDataUpdate() solo
             // refresca el DATO; NO vuelve a dibujar el trozo de mapa. Sin el aviso de abajo el modelo se
             // queda con el aspecto antiguo aunque la forma (que lee el block entity directamente) ya

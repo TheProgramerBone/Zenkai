@@ -26,6 +26,11 @@ public enum SideMode implements net.minecraft.util.StringRepresentable {
         return values()[(ordinal() + 1) % values().length];
     }
 
+    /** El anterior: clic derecho en la pantalla de caras (como en Mekanism). */
+    public SideMode prev() {
+        return values()[(ordinal() + values().length - 1) % values().length];
+    }
+
     /** ¿Puede entregar a lo que tiene delante por esta cara? */
     public boolean canGive() { return this == NORMAL || this == PUSH; }
 

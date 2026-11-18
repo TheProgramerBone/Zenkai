@@ -134,6 +134,7 @@ public class ModCreativeModeTabs {
         Set<Item> hidden = hidden();
         Set<Item> visibleArmor = visibleRaceArmor();
         boolean mekanism = ModList.get().isLoaded("mekanism");
+        boolean createLoaded = ModList.get().isLoaded("create");
 
         List<Item> items = new ArrayList<>();
 
@@ -147,6 +148,8 @@ public class ModCreativeModeTabs {
             // Registrado siempre —el registro no admite condiciones y debe coincidir entre
             // cliente y servidor— pero invisible si el mod que le da sentido no está.
             if (!mekanism && item == ModItems.DIRTY_RAW_KATCHIN.get()) continue;
+            // Motor de Ki: sin Create el bloque es inerte (compat/create/KiMotorFactory).
+            if (!createLoaded && item == ModBlocks.KI_MOTOR.get().asItem()) continue;
 
             items.add(item);
         }

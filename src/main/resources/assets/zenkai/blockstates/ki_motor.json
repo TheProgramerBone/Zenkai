@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "zenkai:block/ki_motor"
+    },
+    "facing=south": {
+      "model": "zenkai:block/ki_motor",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "zenkai:block/ki_motor",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "zenkai:block/ki_motor",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "zenkai:block/ki_motor",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "zenkai:block/ki_motor",
+      "x": 90
+    }
+  }
+}

@@ -910,6 +910,76 @@ public class ServerConfig {
             BUILDER.comment("FE per tick the battery accepts or gives through its energy capability (chargers and machines of any mod).")
                     .defineInRange("energy.battery_max_transfer", 1_000, 1, 10_000_000);
 
+    // ── Motor de Ki (compat opcional con Create, 0.7.0) ──────────────────────
+
+    private static final ModConfigSpec.IntValue KI_MOTOR_RATED_SU =
+            BUILDER.comment("Create stress units (SU) the Ki Motor provides in motor mode, whatever RPM is chosen (the capacity per RPM is this divided by the RPM).")
+                    .defineInRange("ki_motor.rated_su", 4096, 1, 1_000_000);
+
+    private static final ModConfigSpec.DoubleValue KI_MOTOR_FE_PER_SU =
+            BUILDER.comment("FE per tick the motor burns per SU of load actually used (it only pays for the network load, not for the rated SU).")
+                    .defineInRange("ki_motor.fe_per_su", 0.05, 0.0001, 1000.0);
+
+    private static final ModConfigSpec.IntValue KI_MOTOR_GENERATOR_IMPACT =
+            BUILDER.comment("Stress impact per RPM of the motor in generator mode (rotation to FE): SU = this x RPM.")
+                    .defineInRange("ki_motor.generator_impact", 32, 1, 100_000);
+
+    private static final ModConfigSpec.DoubleValue KI_MOTOR_GENERATOR_FE_PER_SU =
+            BUILDER.comment("FE per tick produced per SU absorbed in generator mode. Keep it below ki_motor.fe_per_su so a motor and a generator chained together cannot create energy.")
+                    .defineInRange("ki_motor.generator_fe_per_su", 0.04, 0.0001, 1000.0);
+
+    private static final ModConfigSpec.IntValue KI_MOTOR_FE_CAPACITY =
+            BUILDER.comment("FE buffer of the Ki Motor.")
+                    .defineInRange("ki_motor.fe_capacity", 50_000, 1, 100_000_000);
+
+    private static final ModConfigSpec.IntValue KI_MOTOR_TANK_CAPACITY =
+            BUILDER.comment("Ki fluid tank of the Ki Motor, in mB.")
+                    .defineInRange("ki_motor.tank_capacity", 4_000, 1, 1_000_000);
+
+    private static final ModConfigSpec.IntValue KI_MOTOR_IO_PER_TICK =
+            BUILDER.comment("Ceiling of FE per tick the motor takes in (ports and fluid conversion) or pushes out (generator mode).")
+                    .defineInRange("ki_motor.io_per_tick", 2_048, 1, 10_000_000);
+
+    // ── Fluidos de Ki derramados en el mundo (0.7.0) ─────────────────────────
+    private static final ModConfigSpec.DoubleValue KI_FLUID_RECHARGE_BASE =
+            BUILDER.comment("Ki recharged per second, as % of the pool, while standing in Ki Base you have affinity with (any player with ki).")
+                    .defineInRange("ki_fluid.recharge_base_percent", 5.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_FLUID_RECHARGE_STRONG =
+            BUILDER.comment("Ki recharged per second, as % of the pool, in Super, Divine and Legendary Ki you have affinity with.")
+                    .defineInRange("ki_fluid.recharge_strong_percent", 10.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_FLUID_LEGENDARY_OVERCHARGE =
+            BUILDER.comment("Legendary Ki lets a Legendary player overfill their ki up to this % ABOVE the pool. The extra fades over ki_fluid.overcharge_fade_seconds after leaving the fluid.")
+                    .defineInRange("ki_fluid.legendary_overcharge_percent", 25.0, 0.0, 400.0);
+
+    private static final ModConfigSpec.IntValue KI_FLUID_OVERCHARGE_FADE =
+            BUILDER.comment("Seconds the Legendary overcharge takes to fade after leaving the fluid.")
+                    .defineInRange("ki_fluid.overcharge_fade_seconds", 30, 1, 3600);
+
+    private static final ModConfigSpec.DoubleValue KI_FLUID_DRAIN =
+            BUILDER.comment("Ki swallowed per second, as % of the pool, from a player WITHOUT affinity for that ki (Super: no Super form bought; Divine: no God Ki; Legendary: not Legendary).")
+                    .defineInRange("ki_fluid.drain_percent", 8.0, 0.0, 100.0);
+
+    private static final ModConfigSpec.DoubleValue KI_FLUID_DAMAGE =
+            BUILDER.comment("Damage per second the ki deals to mobs without ki, and to players without affinity once their ki is empty.")
+                    .defineInRange("ki_fluid.damage_per_second", 2.0, 0.0, 1000.0);
+
+    public static double kiFluidRechargeBase()       { return KI_FLUID_RECHARGE_BASE.get(); }
+    public static double kiFluidRechargeStrong()     { return KI_FLUID_RECHARGE_STRONG.get(); }
+    public static double kiFluidLegendaryOvercharge() { return KI_FLUID_LEGENDARY_OVERCHARGE.get(); }
+    public static int    kiFluidOverchargeFadeSeconds() { return KI_FLUID_OVERCHARGE_FADE.get(); }
+    public static double kiFluidDrain()              { return KI_FLUID_DRAIN.get(); }
+    public static double kiFluidDamage()             { return KI_FLUID_DAMAGE.get(); }
+
+    public static int    kiMotorRatedSu()          { return KI_MOTOR_RATED_SU.get(); }
+    public static double kiMotorFePerSu()          { return KI_MOTOR_FE_PER_SU.get(); }
+    public static int    kiMotorGeneratorImpact()  { return KI_MOTOR_GENERATOR_IMPACT.get(); }
+    public static double kiMotorGeneratorFePerSu() { return KI_MOTOR_GENERATOR_FE_PER_SU.get(); }
+    public static int    kiMotorFeCapacity()       { return KI_MOTOR_FE_CAPACITY.get(); }
+    public static int    kiMotorTankCapacity()     { return SPEC.isLoaded() ? KI_MOTOR_TANK_CAPACITY.get() : 4_000; }
+    public static int    kiMotorIoPerTick()        { return KI_MOTOR_IO_PER_TICK.get(); }
+
     public static double kiChamberSpeedMult()          { return KI_CHAMBER_SPEED_MULT.get(); }
     public static double kiChamberStoragePercent()     { return KI_CHAMBER_STORAGE_PERCENT.get(); }
     public static int    kiChamberOverloadSeconds()    { return KI_CHAMBER_OVERLOAD_SECONDS.get(); }

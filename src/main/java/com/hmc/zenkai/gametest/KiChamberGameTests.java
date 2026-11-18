@@ -70,6 +70,12 @@ public final class KiChamberGameTests {
         check(helper, FormIds.SSJ4, KiEnergyType.SUPER);
         check(helper, zenkai("namek_super"), KiEnergyType.SUPER);
         check(helper, zenkai("namek_orange"), KiEnergyType.SUPER);
+        check(helper, FormIds.GOLDEN_FORM, KiEnergyType.SUPER);
+        check(helper, FormIds.BLACK_FIFTH_FORM, KiEnergyType.SUPER);
+        check(helper, zenkai("human_super"), KiEnergyType.SUPER);
+        check(helper, zenkai("majin_pure_evil"), KiEnergyType.SUPER);
+        check(helper, FormIds.BEAST, KiEnergyType.SUPER);
+        check(helper, FormIds.FINAL_FORM, KiEnergyType.BASE);
         check(helper, zenkai("ssj_god"), KiEnergyType.DIVINE);
         check(helper, FormIds.SSJ_BLUE_EVOLUTION, KiEnergyType.DIVINE);
         check(helper, FormIds.NAMEK_GOD, KiEnergyType.DIVINE);

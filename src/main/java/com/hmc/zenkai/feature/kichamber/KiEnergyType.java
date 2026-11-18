@@ -27,8 +27,10 @@ import java.util.Set;
  *      la forma PUESTA, no el flag isLegendary: un Legendario en Base da Base.
  *   3. La forma, o algún ancestro por parent, es un peldaño divino (divine_tier), o es Ultra
  *      Instinto (Señal incluida) o Ultra Ego → DIVINE.
- *   4. SSJ1 a SSJ4, Súper Namekiano, Namekiano Naranja y cualquier forma de tier EVOLUTION → SUPER.
- *   5. El resto (Base, Potencial Desatado, Kaioken sin forma y formas sin regla) → BASE.
+ *   4. SSJ1 a SSJ4, Súper Namekiano, Namekiano Naranja, las formas Golden/Black del Arcosiano,
+ *      Humano Super/Ultra, Majin Super/Mal Puro, Bestia y cualquier forma de tier EVOLUTION → SUPER
+ *      (uniformado el 2026-11-17: antes caían en BASE por no tener regla).
+ *   5. El resto (Base, Potencial Desatado, 2ª/3ª/5ª/Final del Arcosiano y Kaioken sin forma) → BASE.
  * El Kaioken no cuenta: es una capa aparte de la forma y no cambia el tipo.
  *
  * El orden del enum es el que viaja por ContainerData y por NBT (ordinal): añadir tipos SOLO al final.
@@ -42,7 +44,13 @@ public enum KiEnergyType {
     private static final Set<ResourceLocation> SUPER_FORMS = Set.of(
             FormIds.SSJ1, FormIds.SSJ2, FormIds.SSJ3, FormIds.SSJ4,
             ResourceLocation.fromNamespaceAndPath("zenkai", "namek_super"),
-            ResourceLocation.fromNamespaceAndPath("zenkai", "namek_orange"));
+            ResourceLocation.fromNamespaceAndPath("zenkai", "namek_orange"),
+            FormIds.GOLDEN_FORM, FormIds.BLACK_FORM, FormIds.GOLDEN_FIFTH_FORM, FormIds.BLACK_FIFTH_FORM,
+            ResourceLocation.fromNamespaceAndPath("zenkai", "human_super"),
+            ResourceLocation.fromNamespaceAndPath("zenkai", "human_ultra"),
+            ResourceLocation.fromNamespaceAndPath("zenkai", "majin_super"),
+            ResourceLocation.fromNamespaceAndPath("zenkai", "majin_pure_evil"),
+            FormIds.BEAST);
 
     private static final Set<ResourceLocation> DIVINE_FORMS = Set.of(
             FormIds.ULTRA_INSTINCT_SIGN, FormIds.ULTRA_INSTINCT, FormIds.ULTRA_EGO);

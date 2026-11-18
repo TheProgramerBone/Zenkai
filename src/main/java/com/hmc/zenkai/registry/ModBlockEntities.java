@@ -51,6 +51,12 @@ public class ModBlockEntities {
                             ModBlocks.KI_CONTAINMENT_CHAMBER.get())
                     .build(null));
 
+    /** Motor de Ki (compat Create). El factory solo se invoca al colocar el bloque real, que solo existe con Create. */
+    public static final Supplier<BlockEntityType<net.minecraft.world.level.block.entity.BlockEntity>> KI_MOTOR =
+            BLOCK_ENTITIES.register("ki_motor", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.compat.create.KiMotorFactory::blockEntity, ModBlocks.KI_MOTOR.get())
+                    .build(null));
+
     public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity>> ENERGY_TRANSPORT =
             BLOCK_ENTITIES.register("energy_transport", () -> BlockEntityType.Builder
                     .of(com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity::new,

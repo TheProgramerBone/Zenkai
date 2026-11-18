@@ -1,0 +1,36 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "S": {
+      "item": "create:shaft"
+    },
+    "C": {
+      "item": "create:brass_casing"
+    },
+    "B": {
+      "item": "zenkai:energy_battery"
+    }
+  },
+  "pattern": [
+    "IKI",
+    "SCB",
+    "IKI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:ki_motor"
+  }
+}
