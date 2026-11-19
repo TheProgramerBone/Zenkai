@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * C2S: el jugador eligió un planeta en el menú galáctico (GalacticMenuScreen). El servidor
- * decide TODO de nuevo — que siga realmente montado en una SpacePodEntity, que el destino
+ * decide cada cosa de nuevo — que siga realmente montado en una SpacePodEntity, que el destino
  * exista y sea distinto de su dimensión actual — mismo criterio que TeleportRequestPacket: un
  * cliente modificado no puede pedir un despegue sin estar de verdad en una nave.
  * destinationId cabe de sobra en 16 bytes: los ids vienen de SpacePodDestination.id() (nombres

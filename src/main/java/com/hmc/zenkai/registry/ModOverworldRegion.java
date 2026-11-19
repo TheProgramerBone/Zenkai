@@ -62,7 +62,7 @@ public class ModOverworldRegion extends Region {
         // "Deep ocean"). Causa (terrablender.mixin.MixinParameterList.findValuePositional,
         // fuente real leída): la selección de bioma es NEAREST-NEIGHBOR por distancia acumulada
         // en las 6 dimensiones climáticas, no "¿cae dentro del rango declarado?" — así que un
-        // punto nuestro puede ganarle al DEFERRED_PLACEHOLDER (el hueco que cubre "todo lo que
+        // punto nuestro puede ganarle al DEFERRED_PLACEHOLDER (el hueco que cubre "cuanto
         // no elegimos", incluido el océano) si gana suficiente terreno en OTROS ejes aunque
         // pierda mucho en continentalness. Verificado con un gametest de investigación
         // (RockyWastelandOceanInvestigation, temporal) reconstruyendo el generador REAL +
@@ -85,7 +85,7 @@ public class ModOverworldRegion extends Region {
         // humidity≈-0.41 — es decir, humidity (ARID..NEUTRAL, span MUY ancho: -1.0 a 0.1) seguía
         // dejando ganar casos oceánicos por ese eje. Estrechado a un span custom (-1.0, -0.1) —
         // toda la banda ARID más el hueco seco antes de NEUTRAL, pero sin entrar en NEUTRAL —
-        // bajó el escape a 0.97% (83/8582, casi todo COAST/OCEAN somero, 2 casos deep_ocean).
+        // bajó el escape a 0.97% (83/8582, casi en su totalidad COAST/OCEAN somero, 2 casos deep_ocean).
         // Probado también ARID sola (más agresivo, 0.17% de escape) pero se descartó: dejaba la
         // ocupación en tierra en 5.8%, demasiado poco frente al pedido de "que no sea pequeño".
         // TRADE-OFF MEDIDO Y ACEPTADO (elección explícita del usuario: priorizar cerrar el escape
@@ -136,7 +136,7 @@ public class ModOverworldRegion extends Region {
         // a forest" + katchin más raro de lo esperado, punto exacto (954,43,-4) seed
         // 7818626915293203912): `Depth.SURFACE` de las rondas 1/2 es, verificado leyendo
         // OverworldBiomeBuilder.addSurfaceBiome (fuente real de vainilla, NO adivinado), un PUNTO
-        // de ancho CERO en depth=0.0 — y todo bioma normal de vainilla (forest, savanna...) declara
+        // de ancho CERO en depth=0.0 — y cualquier bioma normal de vainilla (forest, savanna...) declara
         // AMBOS depth=0.0 Y depth=1.0 (FLOOR) a la vez vía esa misma función, nunca uno solo. Con
         // nuestro único punto en 0.0, en cuanto el jugador bajaba unos bloques del suelo real (D
         // deja de ser ~0) forest ganaba la competencia en depth con la MISMA distancia que
@@ -144,7 +144,7 @@ public class ModOverworldRegion extends Region {
         // literalmente sin altura utilizable (confirmado: en la columna de prueba, con
         // Depth.SURFACE rocky_wasteland solo empezaba a y=56, con el suelo real en y=73 — apenas
         // 17 bloques de bioma real, y la mena de Katchin de este bioma (KATCHIN_ORE_ROCKY) apunta a
-        // un rango de Y de -64 a 32, CASI TODO por debajo de donde el bioma llegaba a existir).
+        // un rango de Y de -64 a 32, CASI POR COMPLETO por debajo de donde el bioma llegaba a existir).
         // Intentado primero `Depth.SURFACE, Depth.FLOOR` (los DOS puntos exactos, replicando el
         // patrón real de vainilla) — no ayudó nada (mismo resultado que solo SURFACE, ver el
         // pendiente): dos puntos exactos siguen dejando un hueco enorme sin cubrir en medio, y
@@ -155,7 +155,7 @@ public class ModOverworldRegion extends Region {
         // toda esa franja en vez de empatar. Medido con barridos sucesivos (ver
         // RockyWastelandOceanInvestigation, sección "RONDA 3"): (-0.15,0.4) ya llegaba a y=4 sin
         // bache de forest; (-0.15,0.6) a y=-24; (-0.15,0.85) — el valor final — a y=-56, cubriendo
-        // CASI TODO el rango de la mena de Katchin, SIN NINGÚN aumento medido en el escape oceánico
+        // CASI la totalidad del rango de la mena de Katchin, SIN NINGÚN aumento medido en el escape oceánico
         // en ninguno de los pasos (121/12628 fijo en las tres pruebas, 0 casos deep_ocean) — el
         // escape oceánico resultó no ser sensible a este eje en absoluto, a diferencia de
         // temperature/humidity/weirdness. Techo dejado deliberadamente en 0.85, no más cerca de
@@ -194,7 +194,7 @@ public class ModOverworldRegion extends Region {
         // continentalness NO lo arregla (probado con span(0.15, 1.0) y span(0.3, 1.0): el punto del
         // reporte seguía siendo rocky_wasteland y el bioma perdía 46% y 72% de su área): la distancia
         // en C es solo un sumando más. Lo que sí funciona es un punto DEFERRED_PLACEHOLDER propio que
-        // cubre todo el rango de los demás ejes y continentalness hasta el inicio de MID_INLAND: ahí
+        // cubre el rango entero de los demás ejes y continentalness hasta el inicio de MID_INLAND: ahí
         // la distancia a ese punto es 0 y gana el bioma de vainilla del sitio. Medido: 0 celdas de
         // rocky_wasteland por debajo de MID_INLAND; el punto del reporte pasa a ser sunflower_plains.
         // Coste medido: el punto también compite tierra adentro (su distancia crece con la

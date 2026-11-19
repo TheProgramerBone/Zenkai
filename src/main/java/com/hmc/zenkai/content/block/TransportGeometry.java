@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Geometría de los brazos de cable y tubería, en UN solo sitio para que el modelo (datagen), la
  * forma de colisión/selección y la detección del clic coincidan al píxel.
  *
- * Todo se mide en 16avos de bloque. Un brazo sale del núcleo (de 5 a 11 en cada eje) hacia el borde
+ * Se mide en 16avos de bloque. Un brazo sale del núcleo (de 5 a 11 en cada eje) hacia el borde
  * del bloque: «along» cuenta desde ese borde (0 = borde, 5 = pegado al núcleo) y «cross» es la
  * sección transversal. Forma de cada modo:
  *   NORMAL  tubo liso de 6x6 (along 0 a 5).

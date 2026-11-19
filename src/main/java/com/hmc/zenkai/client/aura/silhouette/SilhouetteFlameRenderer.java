@@ -102,7 +102,7 @@ public final class SilhouetteFlameRenderer {
 
     private static final List<Slot> SLOTS = new ArrayList<>();
 
-    /** Humo MOMENTÁNEO (whileCharging): segundos para aparecer del todo y para apagarse. */
+    /** Humo MOMENTÁNEO (whileCharging): segundos para aparecer por completo y para apagarse. */
     private static final float RAMP_IN_S = 0.5f, RAMP_OUT_S = 0.9f;
     /** Por jugador: {rampa 0..1, último nanoTime}. Tiempo real, no ticks: se avanza al dibujarlo. */
     private static final Map<Integer, float[]> RAMP = new HashMap<>();
@@ -345,7 +345,7 @@ public final class SilhouetteFlameRenderer {
                 THICKNESS_MIN_PX, THICKNESS_MAX_PX);
         float id = (SLOTS.size() + 1) / (float) MAX_SLOTS;
 
-        // Todo lo pendiente se dibuja YA: el depth de antes no debe incluir al jugador ni quedarse sin
+        // Lo pendiente se dibuja YA: el depth de antes no debe incluir al jugador ni quedarse sin
         // lo que ya estaba encolado.
         mc.renderBuffers().bufferSource().endBatch();
         int fbo = boundFramebuffer();
@@ -398,7 +398,7 @@ public final class SilhouetteFlameRenderer {
 
     /**
      * Deja de contar como silueta lo que se dibuje a partir de AHORA (halo del Otherworld). La máscara sale de
-     * comparar el depth de antes y de después del jugador, así que todo lo que pinte entre su Pre y su Post
+     * comparar el depth de antes y de después del jugador, así que cuanto pinte entre su Pre y su Post
      * (el halo, la placa del nombre) recibía contorno de humo. Se marca lo ya dibujado y se suspende; el que
      * llame decide si reabre ({@link #resumeCapture}) o no (la placa del nombre va la última).
      */

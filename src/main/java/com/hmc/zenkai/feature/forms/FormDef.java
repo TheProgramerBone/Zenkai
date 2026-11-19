@@ -85,7 +85,7 @@ import java.util.Map;
  * PlayerVisualAttachment.eyeColorRgb al crear personaje, y ese es el que se pinta siempre que
  * ninguna forma diga lo contrario. Este campo es la escotilla de escape para cuando una forma
  * necesita imponer SU PROPIO color de ojos por encima de la elección del jugador (ojos plateados
- * de Ultra Instinto, verde-azulado de SSJ...) — pensado sobre todo para las razas sin pelo
+ * de Ultra Instinto, verde-azulado de SSJ...) — pensado en especial para las razas sin pelo
  * (Namekiano/Majin/Arcosiano), donde el pelo no puede vender la transformación y el cambio de
  * ojos es la única pista visual de "ascensión" que les queda (ver `divineTier` en
  * human_god/namek_god/majin_god). No sustituye el iris SELECCIONADO (`eyeIndex`, la forma del

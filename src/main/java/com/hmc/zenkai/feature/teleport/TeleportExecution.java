@@ -51,7 +51,7 @@ public final class TeleportExecution {
 
         // sp.teleportTo(ServerLevel, ...) SÍ pasa por ServerPlayer.changeDimension(...) en cuanto
         // destLevel es distinto del nivel actual (verificado leyendo el fuente real de NeoForm/
-        // NeoForge: la rama newLevel != this.level() de ese método construye un
+        // NeoForge: la rama newLevel != this.level() de esa función construye un
         // DimensionTransition y llama a changeDimension, que a su vez dispara
         // PlayerChangedDimensionEvent) — DimensionEntryTracker está enganchado a ese evento para
         // capturar la posición REAL del portal en un cruce genuino, así que hay que avisarle de

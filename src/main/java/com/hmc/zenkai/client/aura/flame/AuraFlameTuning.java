@@ -23,7 +23,7 @@ public final class AuraFlameTuning {
         // apenas pasaba de la cabeza y se estrechaba en los pies (valores de Fase 1: radius 0.55,
         // half_height 1.05, center_y 0.95, amp 1.4, sin top_boost). Elipsoide más ancha y más
         // baja: su parte más estrecha queda BAJO tierra (el depth-test la tapa) y a ras de suelo
-        // la llama ya tiene casi todo su ancho, como en las referencias (aura_1/aura_4).
+        // la llama ya tiene casi la totalidad de su ancho, como en las referencias (aura_1/aura_4).
         // Lágrima (2026-09-30): comparado en vídeo con DragonMine Z, los valores de la Fase 2
         // (radius 0.75, half_height 1.3, center_y 0.85, amp 1.5, peaks 12, freq_y 1.2, up_dir
         // 0.65) daban un ABANICO abierto de ~3 veces el jugador con 5-6 lenguas enormes. El anime

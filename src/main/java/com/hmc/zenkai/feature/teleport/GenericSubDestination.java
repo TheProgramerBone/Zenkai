@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
  * dimensión sin volver a los casos especiales por-enum que {@link TeleportDestination} ya dejó
  * atrás una vez (ver el javadoc de esa clase, "Ya NO incluye NETHER_PORTAL/END_SPAWN"). TRES
  * formas de resolver la posición real:
- *  - {@link Fixed} — una coordenada compartida por todo el mundo, igual que
+ *  - {@link Fixed} — una coordenada compartida por el mundo entero, igual que
  *    {@link TeleportAnchors} para los realms curados (p. ej. la plataforma de obsidiana del End,
  *    SIEMPRE en el mismo sitio en cualquier partida vainilla).
  *  - {@link LastEntry} — "el portal por el que entraste a esta dimensión": el mismo valor que ya
@@ -52,6 +52,6 @@ public sealed interface GenericSubDestination {
     /** {@code waypointKey} es la clave dentro de {@code InstantTransmissionAttachment.waypoints}
      *  (NO el id de este sub-destino: dos dimensiones distintas podrían compartir el mismo id de
      *  sub-destino sin colisionar, pero la clave del waypoint tiene que ser única de verdad en
-     *  todo el attachment). */
+     *  el attachment entero). */
     record Waypoint(String id, String waypointKey, int iconColumn, int iconRow) implements GenericSubDestination {}
 }

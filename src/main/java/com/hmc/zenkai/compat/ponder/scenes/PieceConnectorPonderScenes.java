@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
  * Escenas Ponder del conector de piezas (piece_connector) — el bloque de autoría del motor
  * propio de piezas modulares de Zenkai (nuestro "jigsaw", ver .claude/docs/piece-graph.md).
  * Dos escenas registradas bajo el mismo bloque: "piece_connector" (identificación rápida) y
- * "piece_connector_example" (cómo encajan de verdad dos piezas, con socket y todo). Los
+ * "piece_connector_example" (cómo encajan de verdad dos piezas, con socket incluido). Los
  * esquemas viven en tools/gen_ponder_schematics.py — regenerar ahí, no a mano.
  */
 public final class PieceConnectorPonderScenes {

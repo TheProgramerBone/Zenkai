@@ -45,7 +45,7 @@ public final class ZenkaiFirstPersonArmHooks {
 
     // ── Brazo DERECHO — calibración original, MUTABLE en runtime vía /zenkaiarmright. Se deja
     // intacta a propósito como copia de seguridad: es la única calibración que existió hasta
-    // ahora y todo lo de abajo se deriva de ella, nunca al revés. ──
+    // ahora y lo de abajo se deriva de ella, nunca al revés. ──
     public static float OFF_X = -1.55f;
     public static float OFF_Y = 0.65f;
     public static float OFF_Z = -0.5f;

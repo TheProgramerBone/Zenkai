@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
  * qué forma es de qué raza, el porcentaje de stats acoplado al TP y la «resonancia divina».
  *
  * Escalado (decidido con el usuario, 2026-10-25): el Legendario crece LENTO con el TP gastado en atributos,
- * hasta un techo algo por debajo de la forma divina de su raza; con God Ki, la «resonancia» multiplica todo
- * el porcentaje y lo deja POR ENCIMA del techo divino (es un modificador de la MISMA forma, no una forma
+ * hasta un techo algo por debajo de la forma divina de su raza; con God Ki, la «resonancia» multiplica
+ * el porcentaje entero y lo deja POR ENCIMA del techo divino (es un modificador de la MISMA forma, no una forma
  * nueva: el Broly canon supera a los dioses y no hay cimas post-divinas). El % no sale del JSON sino de
  * aquí, como Potential Unlock: el servidor refresca {@link #ceiling} cada tick y viaja en el sync de la forma.
  * El Saiyan (ikari / ssj_green / ssj_green_max) NO usa esto: sus números están en su JSON.

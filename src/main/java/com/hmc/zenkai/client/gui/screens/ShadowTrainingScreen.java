@@ -35,7 +35,7 @@ import java.util.List;
  * descripción, pero el texto envuelve a un número de líneas que depende del ancho real de fuente
  * (varía por idioma) — con más líneas de las que el offset fijo esperaba, el stepper se dibujaba
  * ENCIMA de las últimas líneas. Ahora se mide this.font.split(...) UNA VEZ en initContent() (el
- * texto es fijo, no cambia por frame) y todo lo de abajo (steppers, TP potencial, récord,
+ * texto es fijo, no cambia por frame) y lo de abajo (steppers, TP potencial, récord,
  * Start/Back) se posiciona relativo a esa altura MEDIDA, nunca a un número fijo adivinado.
  *
  * "Opponent form: SS Blue" solapaba los botones +/- del selector (bug real, captura del usuario):

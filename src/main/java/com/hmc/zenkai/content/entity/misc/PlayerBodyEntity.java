@@ -92,7 +92,7 @@ public class PlayerBodyEntity extends Entity {
     private int handSlot;
     /** Tipo de Curios de cada ranura 41.. ("" = sin usar). Ocupan siempre un prefijo. */
     private final String[] curioIds = new String[CURIO_MAX];
-    /** Puntos de experiencia que guarda el cuerpo (los reclama el dueño con «Llevarse todo»). */
+    /** Puntos de experiencia que guarda el cuerpo (los reclama el dueño con «take_all»). */
     private int xp;
     /** Reloj del mundo en que nació (para ordenar por antigüedad y aplicar el tope). */
     private long createdAt;
@@ -223,7 +223,7 @@ public class PlayerBodyEntity extends Entity {
 
     public boolean hasItems() { return !inventory.isEmpty(); }
 
-    /** Suelta todo el contenido al suelo (desintegrar, enterrar, tope de cuerpos...). Solo servidor. */
+    /** Suelta el contenido entero al suelo (desintegrar, enterrar, tope de cuerpos...). Solo servidor. */
     public void spillContents() {
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack s = inventory.removeItemNoUpdate(i);

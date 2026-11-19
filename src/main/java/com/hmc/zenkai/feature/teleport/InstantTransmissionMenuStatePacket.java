@@ -17,7 +17,7 @@ import java.util.List;
  * InstantTransmissionMenuScreen necesita para pintar las filas del menú. El attachment del
  * servidor NUNCA llega solo por `getData(...)` en el cliente (no es un attachment
  * auto-sincronizado como PlayerStatsAttachment); sin este packet la pantalla vería siempre los
- * conjuntos vacíos y todo aparecería bloqueado/oculto pase lo que pase.
+ * conjuntos vacíos y cada entrada aparecería bloqueado/oculto pase lo que pase.
  * Se manda en el login (InstantTransmissionMenuSync) y cada vez que el servidor descubre algo
  * nuevo (TeleportDiscoverySystem, EndOuterIslandTracker) — nunca en bucle, solo en los cambios
  * reales.

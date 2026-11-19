@@ -5,20 +5,20 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 /**
- * Modo de diagnóstico del VFX de ki, SOLO cliente. Reemplaza al método "a ciegas" (probar un
+ * Modo de diagnóstico del VFX de ki, SOLO cliente. Reemplaza al enfoque "a ciegas" (probar un
  * cambio, mirar en juego, adivinar si el problema es geometría/shader/partículas) por aislamiento
- * real: cada modo apaga TODO menos la capa que se quiere inspeccionar, así que un artefacto solo
+ * real: cada modo apaga cualquier otra cosa salvo la capa que se quiere inspeccionar, así que un artefacto solo
  * puede venir de la capa que sigue encendida.
  *
  * Ya NO hay tecla para cambiarlo (se quitó la K de Controles: una herramienta de desarrollador no
  * debe estar a mano del jugador). Para volver a usarlo, llamar a {@link #cycle()} desde un punto
  * temporal de depuración y retirarlo después.
  *
- * Los métodos "showsX()" son lo que consultan los renderers — nunca un `switch` disperso por
+ * Las funciones "showsX()" son lo que consultan los renderers — nunca un `switch` disperso por
  * cada uno: añadir un modo nuevo solo toca esta clase.
  */
 public enum KiVfxDebugMode {
-    /** Todo el VFX, tal cual lo ve un jugador. */
+    /** El VFX entero, tal cual lo ve un jugador. */
     NORMAL,
     /** Solo cáscara + envolvente. Aísla si un artefacto viene del núcleo/ribbons/partículas. */
     SHELL_ONLY,
@@ -38,7 +38,7 @@ public enum KiVfxDebugMode {
     /** Geometría en líneas, sin relleno ni shader — la malla real, sin que ninguna capa de
      *  color la tape. Ver KiVfxRenderTypes.wireframe(). */
     WIREFRAME,
-    /** Todo menos las partículas sueltas (chispas/arcos de ModParticles). */
+    /** Cualquier capa salvo las partículas sueltas (chispas/arcos de ModParticles). */
     PARTICLES_OFF;
 
     public boolean showsShell()     { return this == NORMAL || this == SHELL_ONLY || this == FLAT_BANDS || this == NORMALS || this == WIREFRAME; }

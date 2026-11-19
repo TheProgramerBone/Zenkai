@@ -33,7 +33,7 @@ import org.joml.Vector3f;
  * la regla, es absorbida y suma MASA. Alcance, estamina y enfriamiento son los del JSON de la técnica
  * (physical/absorb.json); además cuesta un % del ki máximo ({@code majin.absorb_ki_cost_percent}).
  *
- * REGLA de absorber (todo en ServerConfig, {@code majin.*}), con el PL del Majin frente al del objetivo:
+ * REGLA de absorber (en ServerConfig, {@code majin.*}), con el PL del Majin frente al del objetivo:
  *  - DOMINADO: el Majin tiene {@code absorb_dominant_pl_ratio} veces el PL del objetivo o más -> se absorbe aunque esté
  *    sano.
  *  - Si no, el objetivo debe estar por debajo de {@code absorb_max_health_percent} de su vida Y su PL no puede pasar de

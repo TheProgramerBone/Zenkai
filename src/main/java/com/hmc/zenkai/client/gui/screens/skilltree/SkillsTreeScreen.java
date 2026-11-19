@@ -830,7 +830,7 @@ public class SkillsTreeScreen extends TreeCanvasScreen {
     }
 
     /**
-     * Línea recta a PÍXEL EXACTO sobre la textura (Bresenham), todo opaco: contorno oscuro de 1 px, cuerpo de 2 px y,
+     * Línea recta a PÍXEL EXACTO sobre la textura (Bresenham), sin transparencia: contorno oscuro de 1 px, cuerpo de 2 px y,
      * encendida, un filete claro de 1 px por el centro (aspecto de tubo). Apagada: cuerpo apagado sin filete. Las
      * primeras versiones (cuadros de 2 px con halo translúcido, luego un g.fill por píxel) manchaban la línea o
      * tiraban los FPS; ver {@link #drawEdges}.
@@ -949,7 +949,7 @@ public class SkillsTreeScreen extends TreeCanvasScreen {
         float ib = v.silhouette() ? 0.2f : weaponOff ? 0.35f : v.owned() ? 1f : 0.6f;
         int skillIcon = v.silhouette() ? -1 : SkillTreeArt.skillIconIndex(def.id());
         if (skillIcon >= 0) {
-            // Icono propio de la skill (skill_icons.png), a todo color y 1:1; la silueta (aún no conocida) y las
+            // Icono propio de la skill (skill_icons.png), a color pleno y 1:1; la silueta (aún no conocida) y las
             // skills sin icono siguen con el «?» tintado.
             SkillTreeArt.skillIcon(g, skillIcon, x + (NODE - ICON) / 2f, y + (NODE - ICON) / 2f, ib);
         } else {

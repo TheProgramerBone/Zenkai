@@ -225,7 +225,7 @@ public final class BodyShots {
             wait = WAIT;
         });
         PLAN.add(() -> capture(mc, "placed_again"));
-        PLAN.add(() -> {   // «Llevarse todo» con armadura puesta: scouter (protegido), peto peor, ranura vacía y botas mejores
+        PLAN.add(() -> {   // «take_all» con armadura puesta: scouter (protegido), peto peor, ranura vacía y botas mejores
             var server = mc.getSingleplayerServer();
             if (server == null) return;
             server.execute(() -> {

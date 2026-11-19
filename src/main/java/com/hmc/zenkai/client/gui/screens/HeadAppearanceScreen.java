@@ -335,7 +335,7 @@ public class HeadAppearanceScreen extends Screen {
         for (ResourceLocation id : raw) {
             if (id == null) out.add(null); else named.add(id);
         }
-        // Favoritos (clic derecho, Favorites) delante de todo, también de "Ninguno"; cada grupo
+        // Favoritos (clic derecho, Favorites) delante del resto, también de "Ninguno"; cada grupo
         // en orden alfabético.
         String cat = tab.category.key();
         Favorites.sort(named, cat, ResourceLocation::toString, id -> nameOf(id).getString());

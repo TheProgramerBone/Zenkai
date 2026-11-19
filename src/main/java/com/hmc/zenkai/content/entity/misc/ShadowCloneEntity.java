@@ -146,7 +146,7 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
     public int debugKiSize() { return debugKiSize; }
     public int debugKiInterval() { return debugKiInterval; }
 
-    /** El dueño si está en el mundo; si no, el jugador más cercano. Objetivo de TODO el guion. */
+    /** El dueño si está en el mundo; si no, el jugador más cercano. Objetivo del guion entero. */
     public LivingEntity debugTarget() {
         Player p = ownerId == null ? null : level().getPlayerByUUID(ownerId);
         return p != null ? p : level().getNearestPlayer(this, 64.0);
@@ -199,7 +199,7 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
     @Override
     protected void registerGoals() {
         // IA de combate universal (ver ZenkaiDefaultMob.registerCombatGoals): ki/físicas por
-        // delante del cuerpo a cuerpo, reparto por distancia, guardia y vuelo — todo lo que antes
+        // delante del cuerpo a cuerpo, reparto por distancia, guardia y vuelo — cuanto antes
         // estaba escrito aquí a mano, ahora compartido con cualquier NPC de combate.
         registerCombatGoals(1.4D);
 

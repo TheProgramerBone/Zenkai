@@ -1016,7 +1016,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         // Formas: textura propia > celda del atlas > icon_default del JSON > «?» (SkillTreeArt.formIcon). El resto de nodos, igual que siempre.
         SkillTreeArt.FormIcon formIcon = n.form() != null && n.kind() != Kind.ROOT ? SkillTreeArt.formIcon(n.form()) : null;
         int icon = formIcon != null ? formIcon.cell() : SkillTreeArt.iconIndex(n, att.getRace());
-        // Pasiva de la raza: su icono vive en skill_icons.png (a todo color, solo con el brillo del estado).
+        // Pasiva de la raza: su icono vive en skill_icons.png (a color pleno, solo con el brillo del estado).
         int passiveIcon = n.kind() == Kind.PASSIVE ? SkillTreeArt.passiveIconIndex(att.getRace()) : -1;
         float ir = ib, ig = ib, ibl = ib;
         if (passiveIcon < 0 && icon == SkillTreeArt.UNKNOWN_ICON && (formIcon == null || formIcon.texture() == null)) {

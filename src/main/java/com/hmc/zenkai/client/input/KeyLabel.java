@@ -17,7 +17,7 @@ import org.lwjgl.glfw.GLFW;
  *  - botones de ratón: "M1", "M4"...;
  *  - teclas de texto largo conocidas: abreviaturas fijas ("Spc", "Tab", "Ent"...);
  *  - cualquier otra: su nombre, recortado a MAX_CHARS.
- * Todo es solo presentación: la tecla real sigue siendo la del KeyMapping.
+ * Es solo presentación: la tecla real sigue siendo la del KeyMapping.
  */
 public final class KeyLabel {
     private KeyLabel() {}
@@ -75,7 +75,7 @@ public final class KeyLabel {
         };
     }
 
-    /** Texto corto para todo lo que no es una flecha ni un Shift. */
+    /** Texto corto para cuanto no es una flecha ni un Shift. */
     static String text(KeyMapping key) {
         InputConstants.Key k = key.getKey();
         int code = k.getValue();

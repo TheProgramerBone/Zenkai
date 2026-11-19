@@ -102,7 +102,7 @@ public final class ModDataComponents {
 
     /**
      * Cuánto se ven los colores propios de los mechones en un pelo por mechones (StrandColors), en
-     * pasos de HairResolver.COLOR_STEPS: 0 o ausente = todo del color de pelo; el máximo = los
+     * pasos de HairResolver.COLOR_STEPS: 0 o ausente = entero del color de pelo; el máximo = los
      * colores del código. Lo pone HairResolver en el mismo stack virtual (interruptor del jugador,
      * forma que tiñe el pelo y su transición).
      */

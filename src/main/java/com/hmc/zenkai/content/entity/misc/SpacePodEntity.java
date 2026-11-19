@@ -348,7 +348,7 @@ public class SpacePodEntity extends Animal implements com.hmc.zenkai.content.ent
         // se sobrescriben después de todos modos), se retira ESTA instancia del nivel de origen
         // con remove(CHANGED_DIMENSION) — NO discard()/muerte, así que no dispara die() ni suelta
         // SPACE_POD_ITEM, la nave no se está destruyendo, solo mudando de sitio — y se recrea con
-        // esos mismos datos en destLevel. this queda inválida a partir de aquí; todo lo de abajo
+        // esos mismos datos en destLevel. this queda inválida a partir de aquí; lo de abajo
         // opera sobre travelledPod.
         CompoundTag podData = new CompoundTag();
         this.saveWithoutId(podData);

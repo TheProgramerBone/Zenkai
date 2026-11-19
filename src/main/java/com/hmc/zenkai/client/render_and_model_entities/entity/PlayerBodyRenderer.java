@@ -81,7 +81,7 @@ public class PlayerBodyRenderer extends EntityRenderer<PlayerBodyEntity> {
                                  Models models, BodyGear gear, Entity wearer) {
         PlayerModel<LivingEntity> model = skin.model() == PlayerSkin.Model.SLIM ? models.slim() : models.wide();
         // `young` vale TRUE por defecto y solo setupAnim lo pone según la entidad: como aquí no se llama, el modelo salía como un
-        // BEBÉ (cabeza x2, cuerpo x0,5). Medido con BodyShots y bloques de oro de 1 m: todo medía justo la mitad de lo esperado.
+        // BEBÉ (cabeza x2, cuerpo x0,5). Medido con BodyShots y bloques de oro de 1 m: cada medida era justo la mitad de lo esperado.
         model.young = false;
         ps.pushPose();
         ps.translate(0.0, 0.2, 0.0);                       // medio grosor del cuerpo: tumbado, apoyado en el suelo

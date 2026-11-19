@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * ANTI-SPAM: la ventana se abre al EMPEZAR a bloquear, y un bloqueo nuevo solo la vuelve a abrir
  * pasado parry.cooldown_ticks desde la última vez que se abrió, acierte o no. Si no, tocar el
  * botón de guardia a ráfagas dejaría el parry encendido para siempre.
- * Todo es autoritativo del servidor; el cliente solo recibe la animación (ParryAnimPacket).
+ * Es autoritativo del servidor; el cliente solo recibe la animación (ParryAnimPacket).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class ParryServer {

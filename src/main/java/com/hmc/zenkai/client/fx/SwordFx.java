@@ -30,7 +30,7 @@ import java.util.List;
  * ki con su bloom) que se revela siguiendo el golpe y se apaga sola. Es lo que da PESO a un tajo: el
  * filo del arma de ki ya dibuja su estela, pero es del tamaño del arma; esto es del tamaño del golpe.
  *
- * Forma por técnica (todo en el marco del que ataca: F delante, L a su izquierda, U arriba; el yaw sale
+ * Forma por técnica (medido en el marco del que ataca: F delante, L a su izquierda, U arriba; el yaw sale
  * de la cabeza en el instante del tajo y el arco se queda quieto en el mundo, como un corte en el aire):
  *  - RISING_SLASH: arco vertical grande de abajo-derecha a arriba, ladeado 20 grados.
  *  - CROSS_SLASH: una diagonal por tajo (variant 0 y 1, ladeadas +-45 grados): juntas dibujan la X.

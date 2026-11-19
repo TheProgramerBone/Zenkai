@@ -44,7 +44,7 @@ public final class GuardHands {
     }
 
     /** ¿Tiene materializada un arma de ki? No es un ítem: la mano principal está VACÍA y el arma
-     *  la dibuja una capa, así que todo lo que antes miraba "mano principal vacía" tiene que
+     *  la dibuja una capa, así que cuanto antes miraba "mano principal vacía" tiene que
      *  preguntar también esto (ver KiWeaponState). */
     public static boolean hasKiWeapon(LivingEntity e) {
         return KiWeaponState.isActive(e);
@@ -146,7 +146,7 @@ public final class GuardHands {
      * Escudo DE KI: defiende como un escudo (mismo bonus de config) y suma su {@code block_bonus};
      * en vez de durabilidad, cada golpe bloqueado cuesta ki ({@code block_ki_pct} del máximo). Sin
      * ki suficiente el escudo se "agrieta" y defiende solo como la guardia normal: no deja de
-     * protegerte del todo, pero pierde la ventaja que justifica llevarlo.
+     * protegerte por completo, pero pierde la ventaja que justifica llevarlo.
      */
     private static double kiShieldReduction(ServerPlayer sp, double base) {
         KiWeaponDef def = KiWeaponServer.heldShield(sp);

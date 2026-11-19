@@ -148,7 +148,7 @@ public final class WeightSystem {
      *  en vez de al 100%. Pedido explícito del usuario (2026-09-10): la gravedad debe seguir
      *  frenando el movimiento y dando bono de TP al completo, pero no debe aplastar el salto
      *  tanto como cargar equipo físico de verdad — a PL 20k con 100t de Kaiosama (r combinado
-     *  ~0.55) el salto se sentía "aún no del todo mitigado". Con el default 0.25 ese mismo caso
+     *  ~0.55) el salto se sentía "aún no por completo mitigado". Con el default 0.25 ese mismo caso
      *  pasa a r≈0.14 solo para el salto, mientras que movimiento/stats/TP siguen usando la r
      *  completa de {@link #computeLoad}. El equipo físico NO se toca: sigue contando al 100%
      *  para el salto, como antes. */

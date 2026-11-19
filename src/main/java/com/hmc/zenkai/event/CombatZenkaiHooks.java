@@ -236,7 +236,7 @@ public class CombatZenkaiHooks {
             // mitigado y la armadura se cobra aparte en VanillaMitigation.
             // OJO CON EL DOBLE CONTEO: `dmg` (armadura del objetivo YA aplicada por vanilla,
             // ver LivingDamageEvent.Pre#getContainer) vuelve a pasar por mitigate(), que
-            // multiplica TODO lo que sale de aquí por armorMult otra vez — necesario para las
+            // multiplica cuanto sale de aquí por armorMult otra vez — necesario para las
             // ramas que sustituyen dmg por un número nuevo (STR/ki), pero aquí seguimos
             // devolviendo el propio dmg vanilla. Se cancela dividiendo por armorMult ahora, así
             // mitigate() lo deja tal y como vanilla ya lo dejó, una sola vez. El bonus de ki SÍ

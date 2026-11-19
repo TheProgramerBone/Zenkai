@@ -44,7 +44,7 @@ public final class CuriosCompat {
     /** Un objeto equipado en Curios con su ranura (id del tipo + posición dentro del tipo). Solo tipos de vanilla. */
     public record Equipped(String id, int index, ItemStack stack) {}
 
-    /** Todo lo que lleva equipado en Curios (copias). Vacía si Curios no está. */
+    /** Cuanto lleva equipado en Curios (copias). Vacía si Curios no está. */
     public static List<Equipped> allEquipped(LivingEntity entity) {
         if (!LOADED || entity == null) return List.of();
         return Impl.allEquipped(entity);

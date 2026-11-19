@@ -19,7 +19,7 @@ import java.util.UUID;
  * C2S: el jugador eligió a un compañero de party en el menú de planetas (nivel 8+, ver
  * SkillEffects.instantTransmissionPartyUnlocked) — teletransporte a su posición EN VIVO, no a un
  * ancla fija (a diferencia de todos los demás destinos de Instant Transmission, ver
- * TeleportAnchors). El servidor revalida TODO de nuevo: nivel, que el destino siga siendo
+ * TeleportAnchors). El servidor revalida cada cosa de nuevo: nivel, que el destino siga siendo
  * compañero de party AHORA MISMO (pudo salir/ser expulsado entre que se abrió el menú y el
  * clic) y que siga conectado — un cliente modificado no puede pedir un TP a nadie que no sea de
  * su party ni saltarse el nivel mínimo.

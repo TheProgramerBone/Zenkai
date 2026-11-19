@@ -118,7 +118,7 @@ public class PlayerStateFlags {
     /**
      * Cola de saiyan: una de las tres condiciones de Oozaru (junto con raza y luna llena, ver
      * OozaruConditions). PENDIENTE: hoy no existe ninguna pieza de GeckoLibArmor de cola
-     * todavía, así que el valor por defecto es true (todo saiyan la tiene) para no bloquear el
+     * todavía, así que el valor por defecto es true (cada saiyan la tiene) para no bloquear el
      * sistema mientras se modela; cuando exista el ítem, algo (equipar/perder la cola) deberá
      * poder ponerlo en false. No se restringe por raza aquí: PlayerStateFlags no conoce razas,
      * ese filtro vive en OozaruConditions.
@@ -332,7 +332,7 @@ public class PlayerStateFlags {
 
     public void load(CompoundTag tag) {
         // hasTail: default true. Una partida guardada ANTES de que este campo existiera no
-        // tiene la clave -> debe leer true igual (todo saiyan la tenía), no false por omisión
+        // tiene la clave -> debe leer true igual (cada saiyan la tenía), no false por omisión
         // como haría getBoolean() con una key ausente.
         this.hasTail = !tag.contains("hasTail") || tag.getBoolean("hasTail");
         this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");

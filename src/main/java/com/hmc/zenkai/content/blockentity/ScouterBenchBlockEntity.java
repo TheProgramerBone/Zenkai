@@ -97,7 +97,7 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
      *  de uso es solo mientras hay un menú de verdad abierto, no mientras dura un trabajo en
      *  segundo plano con la GUI ya cerrada — el trabajo SIGUE corriendo sin que nadie mire (ver
      *  el javadoc de clase). Antes canBeUsedBy miraba job/owner: la mesa se quedaba "ocupada"
-     *  para cualquier otro jugador todo ese tiempo, y si el trabajo quedaba en PAUSA (sin dueño
+     *  para cualquier otro jugador ese tiempo entero, y si el trabajo quedaba en PAUSA (sin dueño
      *  conectado, sin materiales, sin energía) podía tardar en despejarse indefinidamente,
      *  aunque no hubiera ningún menú abierto de verdad delante de la mesa. */
     @Nullable private UUID viewer = null;

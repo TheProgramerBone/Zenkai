@@ -1,6 +1,8 @@
 package com.hmc.zenkai.feature.kichamber;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.hfil.HfilWaterInteractions;
+import com.hmc.zenkai.registry.ModFluids;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -8,26 +10,28 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.fluids.FluidInteractionRegistry;
+import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInformation;
 import net.neoforged.neoforge.fluids.FluidType;
 
 /**
- * Qué pasa cuando un fluido de Ki derramado toca agua, lava u otro ki (0.7.0). La tabla la eligió
- * el usuario (2026-11-17) de una propuesta: bloques RAROS o de difícil acceso, nunca minerales, para
- * que el ki dé un uso decorativo sin volverse una granja de recursos.
+ * Qué pasa cuando un fluido de Ki derramado toca agua, lava, otro ki o los fluidos de Namek y del HFIL.
+ * La tabla completa y su justificación: {@code .claude/docs/interacciones-de-fluidos.md}.
  *
- *   ki           + agua               + lava
- *   Base (azul)  hielo azul           bloque de amatista
- *   Súper (oro)  piedra luminosa      piedra negra dorada
- *   Divino       luz de hongo         obsidiana llorona
- *   Legendario   linterna marina      bloque de sculk
+ * REGLA DE DISEÑO (2026-11-17, tras la crítica habitual de «contenido que le quita la exclusividad a
+ * los biomas y dimensiones»): el resultado NUNCA es un bloque exclusivo de un bioma o dimensión, ni
+ * un bloque propio del HFIL o de Namek, ni un bloque teñido (el ki no sustituye al tinte).
  *
- * Dos ki distintos que se tocan se neutralizan («chispazo»: el fizz de lava y agua) y dejan:
- * Base + Súper → bloque de cuarzo; cualquiera + Divino → bloque de purpur; cualquiera + Legendario
- * → prismarina oscura. Divino + Legendario manda el Legendario (prismarina oscura).
+ *   ki + agua           → cristal (los cuatro)
+ *   ki + lava           → Base grava · Súper andesita · Divino diorita · Legendario granito
+ *   ki + agua curativa  → arcilla
+ *   ki + agua hirviendo → el ki se EVAPORA (sin bloque)
+ *   ki + otro ki        → toba («descarga»: ambos se neutralizan; el que se actualiza queda sólido)
+ *   ki + el mismo ki    → sin reacción
  *
- * FluidInteractionRegistry convierte el bloque del fluido QUE SE ACTUALIZA (al colocarse o cuando
- * un vecino cambia), así que basta registrar la pareja desde el lado del ki: si es el agua la que
- * llega, el ki vecino recibe el aviso y se solidifica él.
+ * El BLOQUE QUE SE VUELVE SÓLIDO es siempre el ki (es el escaso y no se regenera: un cubo = un bloque);
+ * el agua o la lava siguen donde estaban. FluidInteractionRegistry convierte el bloque del fluido QUE SE
+ * ACTUALIZA, así que basta registrar la pareja desde el lado del ki: si es el otro fluido el que llega,
+ * el ki vecino recibe el aviso y reacciona él.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)   // FMLCommonSetupEvent es de bus de mod: NeoForge 21.1 lo deduce solo
 public final class KiFluidInteractions {
@@ -39,42 +43,47 @@ public final class KiFluidInteractions {
     }
 
     private static void register() {
+        FluidType boiling = ModFluids.HFIL_BOILING_WATER_TYPE.get();
+        FluidType healing = ModFluids.HEALING_WATER_TYPE.get();
         for (KiEnergyType ki : KiEnergyType.values()) {
             FluidType self = ki.fluid().type().get();
             FluidInteractionRegistry.addInteraction(self,
-                    new FluidInteractionRegistry.InteractionInformation(NeoForgeMod.WATER_TYPE.value(), withWater(ki)));
+                    new InteractionInformation(NeoForgeMod.WATER_TYPE.value(), withWater(ki)));
             FluidInteractionRegistry.addInteraction(self,
-                    new FluidInteractionRegistry.InteractionInformation(NeoForgeMod.LAVA_TYPE.value(), withLava(ki)));
+                    new InteractionInformation(NeoForgeMod.LAVA_TYPE.value(), withLava(ki)));
+            FluidInteractionRegistry.addInteraction(self,
+                    new InteractionInformation(healing, withHealing(ki)));
+            // Agua hirviendo: el ki que se actualiza se evapora (sin bloque).
+            FluidInteractionRegistry.addInteraction(self, new InteractionInformation(
+                    (level, cur, rel, state) -> level.getFluidState(rel).getFluidType() == boiling,
+                    (level, cur, rel, state) -> HfilWaterInteractions.evaporate(level, cur)));
             for (KiEnergyType other : KiEnergyType.values()) {
                 if (other == ki) continue;
                 FluidInteractionRegistry.addInteraction(self,
-                        new FluidInteractionRegistry.InteractionInformation(other.fluid().type().get(), mixed(ki, other)));
+                        new InteractionInformation(other.fluid().type().get(), mixed(ki, other)));
             }
         }
     }
 
     public static BlockState withWater(KiEnergyType ki) {
-        return switch (ki) {
-            case BASE -> Blocks.BLUE_ICE.defaultBlockState();
-            case SUPER -> Blocks.GLOWSTONE.defaultBlockState();
-            case DIVINE -> Blocks.SHROOMLIGHT.defaultBlockState();
-            case LEGENDARY -> Blocks.SEA_LANTERN.defaultBlockState();
-        };
+        return Blocks.GLASS.defaultBlockState();
     }
 
     public static BlockState withLava(KiEnergyType ki) {
         return switch (ki) {
-            case BASE -> Blocks.AMETHYST_BLOCK.defaultBlockState();
-            case SUPER -> Blocks.GILDED_BLACKSTONE.defaultBlockState();
-            case DIVINE -> Blocks.CRYING_OBSIDIAN.defaultBlockState();
-            case LEGENDARY -> Blocks.SCULK.defaultBlockState();
+            case BASE -> Blocks.GRAVEL.defaultBlockState();
+            case SUPER -> Blocks.ANDESITE.defaultBlockState();
+            case DIVINE -> Blocks.DIORITE.defaultBlockState();
+            case LEGENDARY -> Blocks.GRANITE.defaultBlockState();
         };
     }
 
-    /** Simétrica: el resultado no depende de cuál de los dos se actualiza. */
+    public static BlockState withHealing(KiEnergyType ki) {
+        return Blocks.CLAY.defaultBlockState();
+    }
+
+    /** Descarga entre dos ki distintos: toba, sin color ni tipo. */
     public static BlockState mixed(KiEnergyType a, KiEnergyType b) {
-        if (a == KiEnergyType.LEGENDARY || b == KiEnergyType.LEGENDARY) return Blocks.DARK_PRISMARINE.defaultBlockState();
-        if (a == KiEnergyType.DIVINE || b == KiEnergyType.DIVINE) return Blocks.PURPUR_BLOCK.defaultBlockState();
-        return Blocks.QUARTZ_BLOCK.defaultBlockState();   // Base + Súper
+        return Blocks.TUFF.defaultBlockState();
     }
 }

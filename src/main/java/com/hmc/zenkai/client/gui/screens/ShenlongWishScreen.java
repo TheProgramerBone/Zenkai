@@ -160,7 +160,7 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
     private void layoutRows() {
         int top = panelTop + LIST_TOP;
         int bottom = panelTop + BG_H - ARROW_FROM_BOTTOM - 4;
-        // Si todo cabe no hacen falta flechas y se aprovecha ese hueco para filas.
+        // Si cabe completo no hacen falta flechas y se aprovecha ese hueco para filas.
         int fitAll = (panelTop + BG_H - PAD - top + ROW_GAP) / (ROW_H + ROW_GAP);
         boolean overflow = rows.size() > fitAll;
         if (overflow) fitAll = Math.max(1, (bottom - top + ROW_GAP) / (ROW_H + ROW_GAP));

@@ -8,7 +8,7 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * ¿Es una armadura claramente mejor que otra para esa ranura? Lo usa «Llevarse todo» para intercambiar la que lleva el jugador
+ * ¿Es una armadura claramente mejor que otra para esa ranura? Lo usa «take_all» para intercambiar la que lleva el jugador
  * por la del cuerpo (la suya iría al inventario).
  *
  * PUNTUACIÓN: suma de los modificadores de atributo que el objeto da EN ESA RANURA ({@code ItemStack.forEachModifier}), el

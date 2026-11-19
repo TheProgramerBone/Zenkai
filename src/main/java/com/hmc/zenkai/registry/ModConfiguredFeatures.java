@@ -178,7 +178,7 @@ public class ModConfiguredFeatures {
                 new OreConfiguration(katchinOres, 9, 0.0F));
 
         // Otherworld (HFIL): UN solo objetivo porque el default_block de esa dimensión es un
-        // único bloque en todo el rango (HFIL_SCORCHED_STONE desde el rediseño de atmósfera,
+        // único bloque en el rango entero (HFIL_SCORCHED_STONE desde el rediseño de atmósfera,
         // ver ModBlocks) — no hay deepslate que reemplazar, así que DEEPSLATE_KATCHIN_ORE
         // es exclusivo del overworld. Veta de 9 para igualar al hierro: vainilla reparte
         // 10x9 + 10x4 = 130 en la franja profunda y aquí son 15 tiradas x 9 = 135.

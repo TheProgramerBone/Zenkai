@@ -71,7 +71,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
     @Override
     public void render(KiProjectileEntity entity, float entityYaw, float partialTick,
                        PoseStack pose, MultiBufferSource buffer, int packedLight) {
-        // Iris llama de nuevo a este render() en su pase de sombras. Todo lo de abajo (encolar,
+        // Iris llama de nuevo a este render() en su pase de sombras. Lo de abajo (encolar,
         // partículas, consumeFxTick, afterglow) debe ocurrir UNA vez por frame: ver
         // IrisCompat.renderingShadowPass.
         if (IrisCompat.renderingShadowPass()) return;
@@ -103,7 +103,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
             // vez por frame y lo comparten las dos pasadas (mundo y bloom) y el afterglow.
             List<Vec3> columnPts = null;
             // Haz anclado: se ordena por el PUNTO MEDIO del tubo, no por la cabeza — un haz de
-            // treinta bloques con la cabeza lejos tiene casi todo el cuerpo cerca de la cámara.
+            // treinta bloques con la cabeza lejos tiene casi la totalidad del cuerpo cerca de la cámara.
             if (v.column()) {
                 columnPts = columnPath(entity, center);
                 center = center.add(columnPts.get(0)).scale(0.5);

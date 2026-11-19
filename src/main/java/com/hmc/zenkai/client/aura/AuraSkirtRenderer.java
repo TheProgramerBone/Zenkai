@@ -121,7 +121,7 @@ public final class AuraSkirtRenderer {
         boolean fade = !Float.isNaN(toCamX);
         // Intensidad del jitter de altura: una forma serena (turbulence bajo, ej. divine)
         // apenas mueve sus lenguas; una violenta (ascension/dark) las hace bailar mucho
-        // más. Una sola vez por cone(), no por plano — es constante para todo el conjunto.
+        // más. Una sola vez por cone(), no por plano — es constante para el conjunto entero.
         float jitterMul = AuraTuning.jitterMul(plan.profile().turbulence());
 
         int si = 0;

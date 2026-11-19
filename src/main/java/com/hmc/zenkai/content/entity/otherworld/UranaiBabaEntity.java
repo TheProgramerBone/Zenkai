@@ -28,7 +28,7 @@ import java.util.List;
  * Uranai Baba, junto a Yemma en el palacio del Otherworld. Con la muerte permanente encendida y el jugador muerto, le ofrece
  * una visita temporal a la Tierra ({@link EarthVisit}) a cambio de almas (las que sueltan los ogros del HFIL); sin ellas
  * da una pista de dónde conseguirlas. El resto del tiempo hace de adivina: despacha con una frase.
- * Todo el estado (muerto, espera, hardcore) se lee del servidor en cada clic y se vuelve a comprobar al elegir.
+ * El estado entero (muerto, espera, hardcore) se lee del servidor en cada clic y se vuelve a comprobar al elegir.
  */
 public class UranaiBabaEntity extends ZenkaiDefaultNPC implements DialogueSpeaker {
 

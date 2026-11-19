@@ -37,7 +37,8 @@ public final class ModFluids {
                     .canSwim(true)
                     .canDrown(false)          // es curativa, no un obstáculo que ahogue
                     .canExtinguish(true)
-                    .canConvertToSource(true) // igual que el agua vanilla
+                    .canConvertToSource(false) // sin fuentes infinitas (decidido 2026-11-17): se gasta, no se cultiva
+                    .canHydrate(true)          // hidrata la tierra de cultivo como el agua
                     .density(1000)
                     .viscosity(1000)
                     .temperature(300)));

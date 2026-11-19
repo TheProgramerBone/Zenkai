@@ -110,7 +110,7 @@ public class YemmaEntity extends ZenkaiDefaultNPC implements DialogueSpeaker {
         return OtherworldManager.REVIVE_DELAY_TICKS - (this.level().getGameTime() - stats.getOtherworldSince());
     }
 
-    /** Opción elegida en la pantalla. El id lo manda el cliente: se vuelve a comprobar todo el estado. */
+    /** Opción elegida en la pantalla. El id lo manda el cliente: se vuelve a comprobar el estado entero. */
     @Override
     public void onDialogueChoice(ServerPlayer sp, String choiceId) {
         PlayerStatsAttachment stats = PlayerStatsAttachment.get(sp);

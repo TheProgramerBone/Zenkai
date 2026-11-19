@@ -170,7 +170,7 @@ public final class TrainingHooks {
 
     /** Núcleo: decay de fatiga, eficiencia, diferencia de poder, HTC, pesas, carry y sync.
      *  Devuelve el TP ENTERO concedido en esta llamada (0 si no llegó a sumar nada, p. ej. se
-     *  quedó todo en el carry fraccional) — los llamadores de combate lo ignoran, los
+     *  quedó cada cosa en el carry fraccional) — los llamadores de combate lo ignoran, los
      *  minijuegos de Training lo reportan al cliente.
      *  @param cat qué fatiga/carry usar — cada categoría es independiente, ver TrainingCategory. */
     private static int grant(ServerPlayer sp, double rawTp, long victimPl, TrainingCategory cat) {

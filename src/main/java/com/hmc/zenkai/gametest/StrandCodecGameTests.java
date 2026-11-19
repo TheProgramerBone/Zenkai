@@ -268,7 +268,7 @@ public final class StrandCodecGameTests {
 
     /**
      * Colores propios de los mechones (StrandColors): receta por segmento (segmento > mechón ->
-     * punta), columna 0 = color de pelo, UV del .geo.json en su columna y peso 0 = todo de un color.
+     * punta), columna 0 = color de pelo, UV del .geo.json en su columna y peso 0 = un solo color.
      */
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void strandColorsPalette(GameTestHelper helper) {

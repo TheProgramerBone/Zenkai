@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * C2S: el jugador eligió un destino en el menú de planetas (InstantTransmissionMenuScreen).
- * El servidor decide TODO de nuevo (nivel, descubrimiento, misma validación que ya hace el
+ * El servidor decide cada cosa de nuevo (nivel, descubrimiento, misma validación que ya hace el
  * cliente para pintar la fila habilitada/bloqueada) — un cliente modificado no puede pedir un
  * destino que no ha encontrado ni saltarse el nivel mínimo del menú.
  */

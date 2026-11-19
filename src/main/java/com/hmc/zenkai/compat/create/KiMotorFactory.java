@@ -14,7 +14,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
  *
  * Esta clase NO puede nombrar {@link KiMotorBlock} ni {@link KiMotorBlockEntity}: el verificador de la
  * JVM carga los tipos que se asignan a otro (un {@code return new KiMotorBlock(..)} como {@code Block})
- * y eso cargaría la superclase de Create y daría NoClassDefFoundError sin Create. Todo eso vive en
+ * y eso cargaría la superclase de Create y daría NoClassDefFoundError sin Create. Eso vive en
  * {@link KiMotorLoader}, que solo se toca tras {@link #loaded()}.
  */
 public final class KiMotorFactory {

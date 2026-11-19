@@ -10,7 +10,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * «Llevarse todo» de un cuerpo (botón del menú). Lo que no cabe se queda en el cuerpo.
+ * «take_all» de un cuerpo (botón del menú). Lo que no cabe se queda en el cuerpo.
  *  - Armadura: si tu ranura está LIBRE, se equipa. Si ya llevas algo y {@code permadeath.take_all_swap_armor} está activa,
  *    se intercambia cuando la del cuerpo es estrictamente mejor ({@link ArmorCompare}) Y tu pieza vieja cabe en el inventario;
  *    si no, la del cuerpo va al inventario.

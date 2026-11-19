@@ -49,7 +49,7 @@ public final class ZenkaiStructurePlacement {
             // ORDEN IMPORTA: ensureKaiosama() detecta "mundo de antes del split" mirando si
             // KEY_OTHERWORLD YA estaba marcado — eso solo distingue un mundo viejo de uno
             // recién creado si se comprueba ANTES de que ensureOtherworldPalace() lo marque
-            // en ESTA misma llamada. Invertir el orden haría que todo mundo NUEVO se
+            // en ESTA misma llamada. Invertir el orden haría que cada mundo NUEVO se
             // confundiera con uno migrado y Kaiosama nunca se colocara de verdad.
             ensureKaiosama(ow);
             ensureOtherworldPalace(ow);

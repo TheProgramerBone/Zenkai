@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
  *
  * Historia:
  *  · S1 (2026-10-01): eyes_1..5 -> zenkai:eyes/legacy_1..5, mouth_1 -> zenkai:mouth/legacy_1.
- *  · S4: los ojos legacy se retiraron (todo índice viejo de ojos -> zenkai:eyes/minimal).
+ *  · S4: los ojos legacy se retiraron (cualquier índice viejo de ojos -> zenkai:eyes/minimal).
  *  · Mismo día, a petición del usuario: los 5 ojos antiguos VUELVEN, adaptados al sistema actual
  *    (iris izquierdo/derecho separados) y con ids NUMÉRICOS zenkai:eyes/1..5 ("no hace falta
  *    nombre, pueden ser números"). Un índice viejo de ojos vuelve a su ojo exacto, y los saves

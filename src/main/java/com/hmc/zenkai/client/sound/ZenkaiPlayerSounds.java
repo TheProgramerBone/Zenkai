@@ -88,9 +88,9 @@ public final class ZenkaiPlayerSounds {
     /**
      * El cliente crea un LocalPlayer NUEVO en cada respawn (muerte o cambio de dimensión), pero
      * VANILLA REUTILIZA EL MISMO entity id en el objeto nuevo — precisamente para que sistemas
-     * como este, que llevan la cuenta por id, no se desincronicen del todo. El problema es el
+     * como este, que llevan la cuenta por id, no se desincronicen por completo. El problema es el
      * matiz: PlayerFormAttachment del objeto nuevo empieza en su default (formId=BASE) hasta que
-     * SyncPlayerFormPacket lo corrija (puede tardar uno o dos ticks, sobre todo si
+     * SyncPlayerFormPacket lo corrija (puede tardar uno o dos ticks, en especial si
      * PlayerLifeCycle.onDimChange se olvidara de pedirlo — ver esa clase), pero BASE_PREV
      * conserva el valor de ANTES del respawn bajo ese mismo id. Si el jugador estaba
      * transformado, fireEdge ve `was=false` (el valor viejo, correcto) y `state=true` (el

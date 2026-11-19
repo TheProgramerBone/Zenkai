@@ -18,7 +18,7 @@ import java.util.Objects;
  * btn_x.png (familia de bisel de dos tonos, ver XIconButton) desentonaba al lado del badge
  * "▶" pintado/sombreado de PlayIconButton en la misma fila de Back/Start — dos familias
  * visuales distintas conviviendo en el mismo botón de acción. Mismo idioma que PlayIconButton
- * en todo lo demás: tamaño configurable, sin textura de hover propia (el brillo sale de teñir
+ * en lo demás: tamaño configurable, sin textura de hover propia (el brillo sale de teñir
  * el propio blit).
  */
 public class BackIconButton extends AbstractButton {

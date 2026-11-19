@@ -98,7 +98,7 @@ public final class SkillCommands {
      * formas de SU raza (misma regla que SkillBuyPacket, vía FormDrivenSkills — que además
      * decide CUÁL cadena, super_forms o god_ki). Sin este mínimo, un humano acabaría con
      * niveles de super_forms que no existen para él, o cualquier raza con niveles de god_ki
-     * que no existen para ella (ver el bug real: god_ki quedó en 5/2 porque este método
+     * que no existen para ella (ver el bug real: god_ki quedó en 5/2 porque esta función
      * comparaba SIEMPRE contra SuperForms.maxLevel, sin importar qué skill fuera).
      */
     public static int skillGiveAll(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {

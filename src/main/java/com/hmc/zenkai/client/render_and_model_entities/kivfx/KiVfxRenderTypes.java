@@ -38,7 +38,7 @@ import java.util.function.Function;
  * 1) Aditivo (SRC_ALPHA, ONE) en halo/núcleo/estela: cada capa solapada sumaba hacia blanco — con
  *    varias técnicas, la cámara cerca o el jugador dentro de su técnica, la escena se lavaba.
  * 2) Mezcla normal (el modelo de dragonminez/dbrebirth): arregló el lavado, pero una capa
- *    translúcida solo TIÑE lo de detrás, no emite — sobre el cielo claro de día todo se veía
+ *    translúcida solo TIÑE lo de detrás, no emite — sobre el cielo claro de día se veía cada cosa
  *    pastel (vídeo 09-38-28; de noche, en cambio, saturado y legible).
  * 3) Ahora: ONE, ONE_MINUS_SRC_ALPHA con el color ya multiplicado por su alfa en el shader, y un
  *    alfa de salida que es SOLO la parte que tapa. Cada capa decide cuánto emite (suma) y cuánto

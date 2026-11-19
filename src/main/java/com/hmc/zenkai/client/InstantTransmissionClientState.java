@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Espejo cliente del estado de Transmisión Instantánea que el HUD y el menú de planetas
  * necesitan. El attachment del servidor NUNCA llega solo al cliente (no es un attachment
- * auto-sincronizado como PlayerStatsAttachment) — todo lo de aquí llega por packets S2C
+ * auto-sincronizado como PlayerStatsAttachment) — lo de aquí llega por packets S2C
  * explícitos (InstantTransmissionSyncPacket para cooldown + quietud, InstantTransmissionMenuStatePacket
  * para descubrimiento/dimensiones visitadas). No es un attachment ni necesita persistencia
  * propia, es puro estado de UI que se reconstruye del servidor en cada login.

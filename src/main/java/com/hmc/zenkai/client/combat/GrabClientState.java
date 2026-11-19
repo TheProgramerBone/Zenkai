@@ -47,7 +47,7 @@ public final class GrabClientState {
     private static double frozenPos = -1;
 
     // ── HUD propio (atlas grab_hud.png; fuente única: tools/gen_grab_hud.py, sus coordenadas son estas constantes). Un
-    //    solo panel opaco que lo contiene todo: título, barra, progreso y pista. ──
+    //    solo panel opaco que contiene cada elemento: título, barra, progreso y pista. ──
     private static final net.minecraft.resources.ResourceLocation TEX =
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/hud/grab_hud.png");
     private static final int TEX_W = 256, TEX_H = 64;

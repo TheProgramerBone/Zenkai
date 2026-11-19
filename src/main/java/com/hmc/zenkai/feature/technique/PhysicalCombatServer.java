@@ -655,7 +655,7 @@ public final class PhysicalCombatServer {
         sp.serverLevel().sendParticles(ParticleTypes.EXPLOSION, c.x, c.y, c.z, 1, 0, 0, 0, 0);
     }
 
-    /** Tajo ascendente: cono frontal; todo el que lo recibe sale disparado hacia arriba (se aplica
+    /** Tajo ascendente: cono frontal; cualquiera que lo reciba sale disparado hacia arriba (se aplica
      *  DESPUÉS del daño para que el knockback vanilla de hurt() no lo pise). */
     private static void risingSlash(ServerPlayer sp, double str, PhysicalTechnique t) {
         swingFx(sp, 1.4f, t, 0);
@@ -962,7 +962,7 @@ public final class PhysicalCombatServer {
      * EVADE = SUPER EXPLOSIVE WAVE: el jugador se planta INMÓVIL (en el suelo o en el aire), carga el ki comprimido
      * unos ticks (la pose de sentadilla y brazos recogidos la pone el clip phys_evade), abre los brazos y libera una
      * onda omnidireccional sin daño; mantiene la pose rígida mientras la cúpula barre el entorno y se descarga. Es
-     * intocable todo el rato (hasIFrames). El empuje sale en {@link #tickEvade} al terminar la carga; si estaba
+     * intocable durante el rato entero (hasIFrames). El empuje sale en {@link #tickEvade} al terminar la carga; si estaba
      * agarrado, ese es el momento en que se suelta (y la onda aparta al agarrador).
      */
     private static void startEvade(ServerPlayer sp, double str, PhysicalTechnique t) {
@@ -973,7 +973,7 @@ public final class PhysicalCombatServer {
     }
 
     /**
-     * Onda expansiva SIN daño: empuja en horizontal (y un poco hacia arriba) a todo ser vivo del radio, más fuerte
+     * Onda expansiva SIN daño: empuja en horizontal (y un poco hacia arriba) a cada ser vivo del radio, más fuerte
      * cuanto más cerca, y dibuja un anillo de polvo que se abre desde {@code c}. La evasiva la usa para quitarse de
      * encima a quien la rodea (mobs y jugadores). El aturdimiento opcional respeta los frenos de StunState, y los
      * jefes (UNGRABBABLE) se empujan igual pero no se aturden.

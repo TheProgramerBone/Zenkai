@@ -234,7 +234,7 @@ public class FriezaCocoonPiece extends StructurePiece {
         return false;
     }
 
-    /** Prado bajo la copa: césped con borde irregular, flores y pétalos (todo por hash). */
+    /** Prado bajo la copa: césped con borde irregular, flores y pétalos (por hash). */
     private void meadow(WorldGenLevel level, BoundingBox chunkBox, BlockPos base, int g0) {
         BlockState grass = Blocks.GRASS_BLOCK.defaultBlockState();
         for (int a = -MEADOW_RADIUS - 6; a <= MEADOW_RADIUS; a++) {

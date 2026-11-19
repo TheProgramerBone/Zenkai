@@ -1,6 +1,11 @@
 package com.hmc.zenkai.content.block;
 
+import com.hmc.zenkai.feature.fluidreact.FluidReactions;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.level.block.Block;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.core.BlockPos;
@@ -67,12 +72,46 @@ public class HealingWaterBlock extends LiquidBlock {
         super(fluid, properties);
     }
 
+    /** Ticks que tarda en curarse un zombi aldeano bañado en agua curativa (1 min; vanilla tarda 2-4). */
+    private static final int ZOMBIE_VILLAGER_CURE_TICKS = 1200;
+
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
         if (!level.isClientSide() && entity instanceof Player player && entity.tickCount % TICK_INTERVAL == 0) {
             healPools(player);
         }
+        // Cura al zombi aldeano sin la poción de debilidad ni la manzana dorada: es la misma curación
+        // de vanilla, solo que más cómoda, y no cambia nada que dependa de un bioma.
+        if (!level.isClientSide() && entity instanceof ZombieVillager zv && !zv.isConverting()) {
+            ((com.hmc.zenkai.mixin.ZombieVillagerInvoker) zv).zenkai$startConverting(null, ZOMBIE_VILLAGER_CURE_TICKS);
+        }
         super.entityInside(state, level, pos, entity);
+    }
+
+    // ── Transformación de bloques sólidos vecinos (feature.fluidreact.FluidReactions) ──
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
+        super.onPlace(state, level, pos, old, moving);
+        FluidReactions.wake(level, pos, this);
+    }
+
+    @Override
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos from, boolean moving) {
+        super.neighborChanged(state, level, pos, block, from, moving);
+        FluidReactions.wake(level, pos, this);
+    }
+
+    @Override
+    protected boolean isRandomlyTicking(BlockState state) { return true; }
+
+    @Override
+    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        FluidReactions.wake(level, pos, this);
+    }
+
+    @Override
+    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        FluidReactions.tick(level, pos, this, FluidReactions.Family.HEALING);
     }
 
     private static void healPools(Player player) {

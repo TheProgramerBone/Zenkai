@@ -236,7 +236,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     }
 
     /** Termina la sesión YA (botón Finish o Escape, ver onClose()) y pasa a RESULTS con el reward
-     *  REAL — mismo camino que una sesión completada del todo (tick() al agotar la duración),
+     *  REAL — mismo camino que una sesión completada por completo (tick() al agotar la duración),
      *  nunca el "silencio" que antes solo devolvía al hub sin enseñar nada. Único sitio que sabe
      *  terminar una sesión a medias, para que los dos disparadores no diverjan. */
     private void finishSessionEarly() {

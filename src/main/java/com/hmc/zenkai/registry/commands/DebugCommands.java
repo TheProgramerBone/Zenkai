@@ -163,7 +163,7 @@ public final class DebugCommands {
      *  PlayerStatsAttachment — son dos attachments distintos. */
     public static int debugSetMajinControlled(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, boolean value) {
         // MajinEffect.setControlled hace TRES cosas juntas y SÍNCRONAS: flag, MobEffectInstance
-        // y sync visual. No basta con tocar solo el flag (ver el javadoc de ese método para la
+        // y sync visual. No basta con tocar solo el flag (ver el javadoc de esa función para la
         // condición de carrera exacta que eso produce con el propio tick del efecto).
         MajinEffect.setControlled(sp, value);
         ctx.getSource().sendSuccess(() -> Component.literal(

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 /**
- * S2C: empieza un choque de haces y este jugador es uno de los dos participantes. Lleva TODO lo
+ * S2C: empieza un choque de haces y este jugador es uno de los dos participantes. Lleva cuanto
  * que el cliente necesita para pintar la barra por sí solo: los parámetros del minijuego (no se
  * apoya en su copia de la config), la fase inicial de SU cursor y el tick de juego exacto en que
  * arranca. Con eso la barra es una función pura del tiempo (ClashRules.cursor) y no hace falta

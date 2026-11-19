@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * C2S: «quiero ayudar a este luchador». Lo manda el clic derecho («Usar objeto») apuntando a un
  * participante de un choque de haces (ClashJoinClient). Solo lleva A QUIÉN se apunta y la posición
- * seleccionada del overlay de técnicas; TODO lo demás lo decide el servidor (ClashManager.join):
+ * seleccionada del overlay de técnicas; lo demás lo decide el servidor (ClashManager.join):
  * si hay choque, distancia, party, sitio en el equipo, qué técnica hay en esa posición, su daño
  * y su coste de ki. Un cliente modificado no puede elegir ni el equipo ni el daño que aporta.
  */

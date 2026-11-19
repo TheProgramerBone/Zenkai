@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Inventory;
 /**
  * Pantalla de un cuerpo: el aspecto del inventario de vanilla (panel gris con pozos de 18x18) para que se lea a
  * primera vista, con la fila de armadura, mochila, barra y —si hay— las filas de Curios del cuerpo, y encima los
- * botones «Llevarse todo» y «Enterrar» (este último solo con el cuerpo vacío). Los pozos se pintan con rellenos
+ * botones «take_all» y «Enterrar» (este último solo con el cuerpo vacío). Los pozos se pintan con rellenos
  * y no con una textura: la altura cambia con el número de ranuras de Curios, y así no hay un PNG por cada altura.
  * La geometría sale de {@link Layout}, la misma que usa el menú para colocar los huecos.
  */
@@ -92,7 +92,7 @@ public class PlayerBodyScreen extends AbstractContainerScreen<PlayerBodyMenu> {
         if (menu.curioCount() > PlayerBodyMenu.PAGE)
             g.drawCenteredString(font, (menu.page() + 1) + "/" + menu.pages(), 142, Layout.CURIO_Y + 2, TEXT);
         int xp = menu.storedXp();
-        if (xp > 0) {   // la XP que guarda el cuerpo (solo la reclama quien puede; «Llevarse todo» la entrega)
+        if (xp > 0) {   // la XP que guarda el cuerpo (solo la reclama quien puede; «take_all» la entrega)
             Component t = Component.translatable("zenkai.body.xp", xp, PlayerBodyMenu.levelOf(xp));
             g.drawString(font, t, Layout.W - 8 - font.width(t), titleLabelY, 0xFF2E7D32, false);
         }

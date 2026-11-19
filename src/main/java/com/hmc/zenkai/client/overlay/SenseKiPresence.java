@@ -51,7 +51,7 @@ public final class SenseKiPresence {
     long threatSinceNanos = -1;
     /** Instante de la última subida de categoría de fuerza, o -1. */
     long strengthRoseNanos = -1;
-    /** 0..1, estable por id: desfasa los latidos para que no pulse todo a la vez. */
+    /** 0..1, estable por id: desfasa los latidos para que no pulsen a la vez. */
     final float phase;
 
     Tier tier = Tier.SIMPLE;

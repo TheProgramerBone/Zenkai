@@ -28,7 +28,7 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSeriali
 /**
  * Pieza única del landmark del Blood Pond (ver {@link BloodPondStructure} para el porqué de la
  * estructura). NO extiende {@link SegmentPiece} — esta pieza necesita CAVAR terreno además de
- * colocar bloques, y {@code SegmentPiece} solo estampa un NBT tal cual. Todo a mano, mismo
+ * colocar bloques, y {@code SegmentPiece} solo estampa un NBT tal cual. Hecho a mano, mismo
  * estilo ligero que {@code HfilSpikeFeature}/{@code HfilBonePileFeature}: sin jigsaw, sin
  * asset NBT (a diferencia del plan original del rework del HFIL, ya retirado de
  * .claude/pendiente/, que proponía un NBT para el cartel/plataforma —

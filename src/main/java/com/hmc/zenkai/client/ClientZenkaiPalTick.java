@@ -177,7 +177,7 @@ public final class ClientZenkaiPalTick {
             net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
             // Ciclo de Control: OFF -> Vuelo rápido -> Crucero -> Vuelo rápido -> OFF. El crucero es el vuelo
             // rápido con adelante virtual (ver FlightCruise), así que fastFlightMode sigue true mientras dura.
-            // Al salir del crucero con Control se vuelve al vuelo rápido (cruiseReturn) y un Control más apaga todo;
+            // Al salir del crucero con Control se vuelve al vuelo rápido (cruiseReturn) y un Control más lo apaga por completo;
             // si el crucero se corta solo (atrás, pared) el ciclo se reinicia en el vuelo rápido normal.
             while (mc.options.keySprint.consumeClick()) {
                 if (!flying) continue;

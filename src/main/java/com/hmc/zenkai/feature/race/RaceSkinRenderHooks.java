@@ -103,7 +103,7 @@ public final class RaceSkinRenderHooks {
                 renderer.addLayer(armorLayer);
             }
 
-            // 5) Halo y scouter van AL FINAL, DESPUÉS de todo lo anterior (pelo incluido).
+            // 5) Halo y scouter van AL FINAL, DESPUÉS de cuanto va antes (pelo incluido).
             //    Antes cada uno se registraba desde su propio @EventBusSubscriber (HaloRenderHooks/
             //    ScouterRenderHooks) escuchando el mismo EntityRenderersEvent.AddLayers: el orden
             //    entre subscribers de clases DISTINTAS no está garantizado por NeoForge, así que

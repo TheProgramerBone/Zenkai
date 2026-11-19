@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Deseo de DESPERTAR EL POTENCIAL (2026-11-15, idea del usuario). Shenlong sube {@code ki_control} unos pocos niveles (el tope de
- * poder liberable, {@link SkillEffects#maxPowerPercent}; {@code ServerConfig.awakenPotentialKiControlLevels}, 3 por defecto: darlo todo de
+ * poder liberable, {@link SkillEffects#maxPowerPercent}; {@code ServerConfig.awakenPotentialKiControlLevels}, 3 por defecto: darlo completo de
  * golpe se vio excesivo) y, a los Namekianos, les regala además su primera transformación
  * (Súper Namekiano, nivel 2 de {@code super_forms}; es una SEGUNDA vía: también se compra con TP) junto con el indicio de que
  * existe un poder superior. Al Namekiano que YA la tenía (0.7.0), el deseo le da además algo de MAESTRÍA de esa forma

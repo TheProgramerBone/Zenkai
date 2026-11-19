@@ -109,7 +109,7 @@ public final class FormSystem {
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
             if (def == null || !def.allows(att.getRace()) || !SuperForms.usable(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
-                // Antes de forzar Base del todo: si lo único que cambió es que dejó de ser la
+                // Antes de forzar Base por completo: si lo único que cambió es que dejó de ser la
                 // hermana divina que le corresponde (isDivine se volteó mientras la llevaba
                 // puesta — ver DivineForms), pasar a la hermana correcta en vez de desvestirlo.
                 // pendingSiblingSwap ya comprueba que la hermana SÍ esté desbloqueada, así que
@@ -124,7 +124,7 @@ public final class FormSystem {
                 } else {
                     form.forceBase();
                     // Sin esto, el bloque de abajo seguiría viendo el 'def'/'currentFormId'
-                    // VIEJOS (forceBase() no los toca, son variables locales de este método) y
+                    // VIEJOS (forceBase() no los toca, son variables locales de esta función) y
                     // aplicaría el drenaje de una forma de la que el jugador ya salió.
                     currentFormId = FormIds.BASE;
                     def = null;

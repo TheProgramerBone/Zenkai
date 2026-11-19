@@ -65,7 +65,7 @@ public enum KiTechniqueType {
      *  Lo que no viaja no apunta, no converge con la mira y no se desvía.
      *  Dato (TechniqueDef.travels, 0.3.0): default true si el tipo está desactivado. */
     /** ¿Rompe bloques al detonar por su propia naturaleza (no por el efecto elegido)? Las técnicas firma
-     *  de maestro, que no se editan. La gamerule zenkai_enableKiGriefing lo sigue apagando todo. */
+     *  de maestro, que no se editan. La gamerule zenkai_enableKiGriefing lo sigue apagando por completo. */
     public boolean breaksBlocks() { TechniqueDef d = def(); return d != null && d.breaksBlocks(); }
 
     public boolean travels() { TechniqueDef d = def(); return d == null || d.travels(); }

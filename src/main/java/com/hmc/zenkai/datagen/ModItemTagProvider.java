@@ -65,7 +65,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModItems.SCOUTER.get()
         );
 
-        // «Llevarse todo» de un cuerpo nunca retira estos de quien los lleva (ver ArmorCompare).
+        // «take_all» de un cuerpo nunca retira estos de quien los lleva (ver ArmorCompare).
         tag(ModTags.Items.NO_ARMOR_SWAP).add(
                 ModItems.SCOUTER.get(),
                 ModItems.HALO.get(),

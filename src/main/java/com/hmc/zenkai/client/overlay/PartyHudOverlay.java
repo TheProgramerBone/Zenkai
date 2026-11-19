@@ -48,7 +48,7 @@ public final class PartyHudOverlay {
 
     /** Diamante sobre los compañeros en el mundo: invisible a esta distancia o menos... */
     private static final double WORLD_FADE_START = 16.0;
-    /** ...y del todo visible a partir de esta. */
+    /** ...y por completo visible a partir de esta. */
     private static final double WORLD_FADE_FULL = 32.0;
 
     @SubscribeEvent
@@ -107,7 +107,7 @@ public final class PartyHudOverlay {
     /**
      * Diamante de cada compañero elegido SOBRE su cabeza, proyectado a pantalla (como los ecos del
      * Ki Sense; no necesita la habilidad). Es para localizar a la party de lejos: a 16 bloques o
-     * menos no se dibuja (ya se le ve) y de 16 a 32 sube la opacidad hasta ser del todo visible.
+     * menos no se dibuja (ya se le ve) y de 16 a 32 sube la opacidad hasta ser por completo visible.
      * Solo hay posición de quien está cargado en el cliente.
      */
     @SubscribeEvent

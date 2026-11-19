@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Colores propios de los mechones (DMZ 2.2: color del mechón "c", de la punta "tc" y de cada
  * segmento "so[].c"; DMZ 2.1: solo "c"). Petición del usuario (2026-10-12): un peinado blanco con
- * dos mechones negros debe verse así, y poder volver a "todo de un color".
+ * dos mechones negros debe verse así, y poder volver a "un solo color".
  *
  * Reglas del FORMATO (leídas del código publicado de DMZ 2.2, implementación propia):
  *  · color de un segmento = el suyo si lo trae; si no, del color del mechón (o el de pelo si no

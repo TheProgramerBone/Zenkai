@@ -41,7 +41,7 @@ public final class ClashRules {
     }
 
     /** Velocidad del choque (0 lenta, 1 media, 2 rápida). No depende del instante: es la misma
-     *  durante todo el minijuego. Conserva el parámetro `t` para no tocar a los llamantes. */
+     *  durante el minijuego entero. Conserva el parámetro `t` para no tocar a los llamantes. */
     public static int stage(double t, Params p) {
         return p.speed();
     }

@@ -15,14 +15,14 @@ import net.minecraft.world.level.Level;
  * AMBIENTAL, la misma tanto para decidir si Oozaru puede EMPEZAR como para decidir si debe
  * seguir activo una vez transformado — OozaruSystem la usa en los dos sentidos. Mirar hacia
  * arriba, en cambio, es SOLO el gatillo de entrada: exigirlo también para MANTENERSE
- * transformado forzaría al jugador a no apartar la vista del cielo durante todo el rato que
+ * transformado forzaría al jugador a no apartar la vista del cielo durante el rato entero que
  * sea Oozaru, lo cual no tiene sentido de juego (en canon nadie se queda mirando la luna
  * mientras pelea transformado). {@link #lookingAtMoon} se comprueba SOLO junto a
  * {@link #satisfied} en OozaruSystem, exclusivamente cuando el formId todavía es Base.
  *
  * El chequeo de mirada es DELIBERADO como "salida de emergencia" del jugador: a diferencia de
  * cola/raza/luna (fuera de su control momento a momento), el pitch de la cámara SÍ lo controla
- * él en todo instante — un saiyan que no quiera volverse Oozaru simplemente no mira hacia
+ * él en cada instante — un saiyan que no quiera volverse Oozaru simplemente no mira hacia
  * arriba.
  */
 public final class OozaruConditions {

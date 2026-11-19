@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * El "jigsaw" de Zenkai: recorre el catálogo a partir de una pieza inicial, encajando piezas
- * en cada hueco abierto hasta agotar profundidad/presupuesto. Todo en Java plano — sin pools
+ * en cada hueco abierto hasta agotar profundidad/presupuesto. Hecho en Java plano — sin pools
  * JSON, sin joints con nombres mágicos, y CADA rechazo se explica en el log (colisión, sin
  * candidata, profundidad agotada...), a diferencia del jigsaw vainilla que simplemente no
  * coloca la pieza y no dice por qué.

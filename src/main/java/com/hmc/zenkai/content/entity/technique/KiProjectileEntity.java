@@ -672,7 +672,7 @@ public class KiProjectileEntity extends Projectile {
         // SIN humo/escombros de vainilla a propósito: ParticleTypes.EXPLOSION_EMITTER/EXPLOSION
         // son una nube gris grande que opacaba el destello teñido de arriba (era justo la queja
         // — "el efecto que puse se ve opacado"), y el escalado por `radius` seguía sin bastar en
-        // los tamaños grandes. El sonido se queda: es lo único que faltaría si se quita del todo.
+        // los tamaños grandes. El sonido se queda: es lo único que faltaría si se quita por completo.
         sl.playSound(null, center.x, center.y, center.z,
                 SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
                 1.2f + 0.15f * size(), 1.25f - 0.06f * size());

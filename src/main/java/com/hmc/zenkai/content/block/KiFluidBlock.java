@@ -7,8 +7,12 @@ import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skilltree.SkillTree;
 import com.hmc.zenkai.registry.ModDamageTypes;
+import com.hmc.zenkai.feature.fluidreact.FluidReactions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -32,8 +36,9 @@ import net.minecraft.world.level.material.FlowingFluid;
  * <b>Sin ki</b> (mobs, jugadores sin raza): daño directo. Las entidades del propio mod (maestros,
  *   NPC de combate) tienen ki y no se dañan.
  *
- * Las interacciones con agua, lava y los otros ki (bloques raros al solidificar) no viven aquí:
- * son FluidInteractionRegistry, en KiFluidInteractions.
+ * Las interacciones con otros fluidos (agua, lava, otros ki, agua curativa, agua hirviendo) no viven
+ * aquí: son FluidInteractionRegistry, en KiFluidInteractions. Las transformaciones de bloques
+ * sólidos vecinos (adoquín a grava, barro a arcilla...) están en feature.fluidreact.FluidReactions.
  */
 public class KiFluidBlock extends LiquidBlock {
 
@@ -48,6 +53,33 @@ public class KiFluidBlock extends LiquidBlock {
     }
 
     public KiEnergyType kiType() { return type; }
+
+    // ── Transformación de bloques sólidos vecinos (feature.fluidreact.FluidReactions) ──
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
+        super.onPlace(state, level, pos, old, moving);
+        FluidReactions.wake(level, pos, this);
+    }
+
+    @Override
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos from, boolean moving) {
+        super.neighborChanged(state, level, pos, block, from, moving);
+        FluidReactions.wake(level, pos, this);
+    }
+
+    /** Un tic aleatorio basta para despertarlo si el bloque sólido se puso mucho antes (o tras recargar). */
+    @Override
+    protected boolean isRandomlyTicking(BlockState state) { return true; }
+
+    @Override
+    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        FluidReactions.wake(level, pos, this);
+    }
+
+    @Override
+    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        FluidReactions.tick(level, pos, this, FluidReactions.Family.ofKi(type));
+    }
 
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {

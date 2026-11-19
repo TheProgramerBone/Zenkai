@@ -254,7 +254,7 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
         }
 
         // NO se dispara "strike" aquí: la técnica ya tiene su propio clip real disparado en
-        // start() (phys_dash_punch/heavy_blow/barrage/kiai) que cubre todo el wind-up Y el
+        // start() (phys_dash_punch/heavy_blow/barrage/kiai) que cubre el wind-up entero Y el
         // impacto — relanzar "strike" en este instante (mismo controlador "KiAttack") lo
         // INTERRUMPÍA a media animación justo en el golpe, un bug real heredado de antes de que
         // las físicas tuvieran animación propia (cuando esto era inerte para PlayerModel y no se

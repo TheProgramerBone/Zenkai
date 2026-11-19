@@ -10,7 +10,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import java.util.UUID;
 
 /**
- * Cuerpo que un jugador lleva en brazos (estilo CarryOn). El cuerpo sale del mundo y todo su estado, con el
+ * Cuerpo que un jugador lleva en brazos (estilo CarryOn). El cuerpo sale del mundo y su estado entero, con el
  * inventario, viaja en {@code nbt}; al soltarlo se vuelve a crear la entidad con él.
  *
  * SINCRONIZACIÓN: el NBT (puede pesar miles de bytes) es SOLO del servidor. Los demás clientes reciben nada más

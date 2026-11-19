@@ -130,7 +130,7 @@ public final class ModBiomeGen {
      * .claude/pendiente) — cada variante decide su propio lago exclusivo en su función, en vez
      * de que los 3 compartan el mismo set. BiomeDefaultFeatures.addDefaultCarversAndLakes NO
      * separa cuevas de lagos en dos funciones públicas (verificado en su fuente: un único
-     * método que añade los 3 carvers Y los 2 lagos de lava juntos), así que aquí se replican a
+     * función que añade los 3 carvers Y los 2 lagos de lava juntos), así que aquí se replican a
      * mano solo las 3 llamadas a builder.addCarver(...) — las cuevas SÍ se quedan comunes a los
      * 3 biomas; los lagos de lava vanilla los añade únicamente hfilCinderDunes.
      */
@@ -154,7 +154,7 @@ public final class ModBiomeGen {
         gen.addCarver(GenerationStep.Carving.AIR, Carvers.CANYON);
         // SIN addDefaultUndergroundVariety (2026-10-04, petición del usuario: que la dimensión no
         // se sienta un copia y pega del Overworld). Esas vetas (grava, granito, diorita, andesita,
-        // toba, calcita, tierra) son piedra vanilla y generan en todo lo que esté en
+        // toba, calcita, tierra) son piedra vanilla y generan en cuanto esté en
         // stone_ore_replaceables, que el HFIL SÍ necesita para sus menas propias.
         if (lavaSprings) {
             BiomeDefaultFeatures.addDefaultSprings(gen);
@@ -208,7 +208,7 @@ public final class ModBiomeGen {
      * Efectos comunes con cielo propio. Niebla Y cielo por bioma (petición del usuario,
      * 2026-10-02): con los tres biomas en rojos casi iguales, cruzar de uno a otro no se notaba
      * en el aire, solo en el suelo. Cada bioma tiene ahora su atmósfera — y como el horizonte
-     * del Otherworld es casi todo niebla, cambiar la niebla cambia lo que se ve del "cielo".
+     * del Otherworld es casi pura niebla, cambiar la niebla cambia lo que se ve del "cielo".
      */
     private static BiomeSpecialEffects.Builder hfilEffects(int skyColor, int fogColor) {
         return new BiomeSpecialEffects.Builder()

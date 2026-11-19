@@ -91,7 +91,7 @@ public final class CustomHairLibraryGameTests {
             CustomHairLibraryPacket.tryAdd(v, Race.SAIYAN, true, "", code("B", 3));
             v.setHairStyleId(a.styleId());
 
-            // Disco y propio jugador: todo. Demás jugadores: solo lo puesto. Snapshot/cliente: nada.
+            // Disco y propio jugador: el conjunto completo. Demás jugadores: solo lo puesto. Snapshot/cliente: nada.
             PlayerVisualAttachment disk = new PlayerVisualAttachment();
             disk.load(v.saveFull());
             helper.assertTrue(disk.getCustomHairs().size() == 2 && disk.activeCustomHair() != null, "saveFull lleva todo");

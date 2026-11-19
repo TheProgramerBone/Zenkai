@@ -29,7 +29,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 /**
  * Base de cualquier NPC de combate de Zenkai (Saibaman, Guerrero Namekiano, Sombra, ogros...) y de los
  * NPC voladores pacíficos (ángeles). Desde 2026-10-02 la IA de combate es UNIVERSAL (petición del
- * usuario: "si toca ajustar IA de combate se soluciona todo desde una sola pasada, lo mismo para
+ * usuario: "si toca ajustar IA de combate se soluciona cada caso desde una sola pasada, lo mismo para
  * el combate volador"): {@link #registerCombatGoals} pone en un solo sitio el orden de goals ya
  * depurado con la Sombra (ki → físicas → cuerpo a cuerpo → guardia → deambular/vuelo), y el
  * BLOQUEO vive aquí (antes solo en ShadowCloneEntity). Qué usa cada NPC lo dice su ficha JSON
@@ -213,7 +213,7 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
     /** Hook OVERRIDABLE: ¿vuela AHORA MISMO? Por defecto, la capacidad estructural del JSON —
      *  ShadowCloneEntity lo sobreescribe para además exigir que el dueño tenga la skill fly (ver
      *  su javadoc). A diferencia de createNavigation()/el constructor (que leen el JSON directo),
-     *  este SÍ es seguro de llamar desde tick() (ya construido del todo para entonces) y es la
+     *  este SÍ es seguro de llamar desde tick() (ya construido por completo para entonces) y es la
      *  única vía correcta de gatear el vuelo por-instancia sin poder cambiar el tipo de
      *  PathNavigation ya instalado. Público: KiAttackGoal/PhysicalAttackGoal lo consultan para
      *  saber si ESTE mob puede de verdad cerrar distancia con un objetivo en el aire. */
@@ -349,7 +349,7 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
     }
 
     /** Melee: dispara el strike triggereado en el conjunto de clientes que ven al mob. Ya NO
-     *  hace falta ningún canal alternativo (PosedAttacker) para esto: todo zenkaimob de combate
+     *  hace falta ningún canal alternativo (PosedAttacker) para esto: cada zenkaimob de combate
      *  es GeckoLib de verdad (incluida la Sombra desde que se convirtió a
      *  {@link com.hmc.zenkai.client.render_and_model_entities.entity.PosedHumanoidGeoModel}),
      *  así que triggerAnim SIEMPRE llega al modelo. */

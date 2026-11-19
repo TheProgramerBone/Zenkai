@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 /**
  * Botón del pie de las pantallas de deseos de Shenlong. Los PanelButton (btn_wide, naranja/beige) desentonaban
  * sobre el verde dragón del panel, así que este se dibuja con la paleta SHENRON_*: relleno oscuro, borde de dos
- * tonos y esquinas recortadas 1 px como el marco del panel. Todo es simétrico respecto al eje del botón (sin
+ * tonos y esquinas recortadas 1 px como el marco del panel. El conjunto es simétrico respecto al eje del botón (sin
  * cinta lateral, a diferencia de las filas de la lista) para que el par Volver/Confirmar lo sea también.
  * Hereda de PanelButton para que ZenkaiPanelScreen siga tipando confirmButton/backButton igual.
  */

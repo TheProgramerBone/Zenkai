@@ -25,7 +25,7 @@ import java.util.Locale;
  * /zkvfx list                          valores actuales y ayuda de cada parámetro
  * /zkvfx set &lt;param&gt; &lt;valor&gt;             global
  * /zkvfx set &lt;param&gt; &lt;valor&gt; &lt;técnica&gt;   solo esa técnica (si el parámetro lo admite)
- * /zkvfx reset [técnica]               vuelve a fábrica (todo, o los overrides de una técnica)
+ * /zkvfx reset [técnica]               vuelve a fábrica (el conjunto, o los overrides de una técnica)
  * /zkvfx dump                          lo cambiado, en chat Y en latest.log
  * </pre>
  * El dump va también al log a propósito: así el asistente puede leer los valores calibrados

@@ -306,7 +306,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         );
 
         // CRÍTICO: HFIL_SCORCHED_STONE pasa a ser el default_block de otherworld_noise.json
-        // (todo el relleno subterráneo del Otherworld, no solo una veneer de superficie como
+        // (el relleno subterráneo entero del Otherworld, no solo una veneer de superficie como
         // ROCKY_BLOCK). Los ores vanilla del HFIL (BiomeDefaultFeatures.addDefaultOres) Y el
         // Katchin propio (KATCHIN_ORE_HFIL, ver ModConfiguredFeatures) buscan bloque objetivo
         // vía este mismo tag — sin esta entrada, NINGÚN ore del HFIL encontraría dónde
@@ -316,7 +316,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.HFIL_SCORCHED_STONE.get()
         );
 
-        // IGUAL DE CRÍTICO y encontrado tarde (bug reportado en juego, "no hay cuevas, todo
+        // IGUAL DE CRÍTICO y encontrado tarde (bug reportado en juego, "no hay cuevas, nada
         // está cubierto por scorched stone"): los carvers (cave/cave_extra_underground/canyon,
         // vía BiomeDefaultFeatures.addDefaultCarversAndLakes en ModBiomeGen.hfilBase) solo
         // pueden tallar aire en bloques listados en este tag — es el mismo mecanismo que

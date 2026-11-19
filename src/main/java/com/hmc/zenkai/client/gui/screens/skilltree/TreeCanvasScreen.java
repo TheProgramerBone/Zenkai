@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Lienzo común de los dos skill trees ({@link SkillTreeScreen}: formas; {@link SkillsTreeScreen}: skills por maestro).
  *
- * POR QUÉ EXISTE. Las dos pantallas tenían copiados ~30 métodos idénticos (geometría del visor, conversiones
+ * POR QUÉ EXISTE. Las dos pantallas tenían copiados ~30 funciones idénticas (geometría del visor, conversiones
  * mundo↔pantalla, arrastre, soltar, cámara animada, placas de TP/MND, pulso, anillo…) y cada cambio —el «?» de
  * ayuda, el fundido de fondos— había que hacerlo dos veces. Aquí vive SOLO lo que era literalmente igual; lo que
  * difiere (nodos, dibujo, tooltips, tutorial, compra) sigue en cada subclase.

@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * sobrecarga. Se acumula por UUID y se descarta en cuanto el jugador deja de cargar la Genki Dama
  * (disparo, cancelación, cambio de técnica, muerte, desconexión).
  *
- * Todo es servidor: el cliente solo ve las partículas y los mensajes.
+ * Es lógica de servidor: el cliente solo ve las partículas y los mensajes.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class SpiritBombGatherer {

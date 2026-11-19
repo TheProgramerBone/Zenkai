@@ -25,7 +25,7 @@ public final class PieceCatalog {
     public record Entry(PieceTemplate piece, int weight) {}
 
     private final List<Entry> entries = new ArrayList<>();
-    /** Índice socket → piezas que lo ofrecen, para no recorrer todo el catálogo por cada hueco. */
+    /** Índice socket → piezas que lo ofrecen, para no recorrer el catálogo entero por cada hueco. */
     private final Map<ResourceLocation, List<Entry>> bySocket = new HashMap<>();
 
     private PieceCatalog() {}

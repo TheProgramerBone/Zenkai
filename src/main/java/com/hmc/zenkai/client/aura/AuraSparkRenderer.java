@@ -173,7 +173,7 @@ public final class AuraSparkRenderer {
         // activas (sesión 2026-09-04): "IllegalStateException: Not building!" en
         // AuraQuads.vert, sin relación con ningún cambio de esa sesión (confirmado leyendo
         // el .java real de MultiBufferSource.BufferSource, decompilado de las fuentes de
-        // NeoForge: TODO RenderType custom no-fixed comparte UN solo sharedBuffer, y
+        // NeoForge: cualquier RenderType custom no-fixed comparte UN solo sharedBuffer, y
         // getBuffer(tipoDistinto) cierra automáticamente (endBatch) el tipo anterior antes
         // de devolver el nuevo). La versión de una sola pasada pedía `vc` (energy(sheet)) y
         // luego, ANTES de escribir nada en él, pedía `vcGlow` (energyAdditive) — eso cerraba
@@ -229,7 +229,7 @@ public final class AuraSparkRenderer {
 
     /**
      * Rayo quebrado: 3 segmentos encadenados subiendo desde el origen de la chispa, con
-     * quiebro lateral alternado (zigzag) — la "geometría segmentada" del TODO de clase.
+     * quiebro lateral alternado (zigzag) — la "geometría segmentada" de la nota de clase.
      * El pose ya está trasladado/rotado al billboard de la chispa (ver renderAll); cada
      * segmento solo añade su propio quiebro lateral encima.
      */

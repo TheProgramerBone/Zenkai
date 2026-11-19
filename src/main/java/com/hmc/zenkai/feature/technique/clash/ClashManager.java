@@ -55,7 +55,7 @@ import java.util.UUID;
  * entra recibe su propia barra (barStart), alargando el plazo; encendido, el minijuego se reinicia
  * para todos.
  *
- * Todo es autoritativo del servidor. El cliente solo recibe qué pintar (ClashStartPacket,
+ * Es autoritativo del servidor. El cliente solo recibe qué pintar (ClashStartPacket,
  * ClashResultPacket) y manda "pulsé" (ClashPressPacket); el valor lo calcula este lado con su tick.
  *
  * Fases: CONTACT (haces quietos, esfera creciendo) -> MINIGAME -> RESOLVE (se enseñan las
@@ -401,7 +401,7 @@ public final class ClashManager {
     // ── Unirse ───────────────────────────────────────────────────────────────
 
     /**
-     * Un jugador quiere ayudar a {@code targetEntityId}. Todo se valida aquí: hay choque y no se
+     * Un jugador quiere ayudar a {@code targetEntityId}. Se valida cada cosa aquí: hay choque y no se
      * ha resuelto, el objetivo es un luchador, distancia (clash.join_range), sitio en su equipo
      * (clash.team_max_size), no ser de la party de nadie del otro lado, una técnica de ki ofensiva
      * en la posición seleccionada, lista y pagable. Lo que no cuadra se rechaza con un aviso en la

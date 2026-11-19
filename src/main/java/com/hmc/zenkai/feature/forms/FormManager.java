@@ -43,7 +43,7 @@ public final class FormManager {
      * Formas baneadas (data/zenkai/banned_forms.json): no se cargan. Sirve para tener definida una
      * forma (JSON, ítems) mientras su modelo no existe, sin que nadie pueda usarla; quien la quiera
      * borra su línea. Gana el archivo del pack de mayor prioridad, así un datapack puede
-     * desbanear todo con {"banned": []} sin tocar el mod.
+     * desbanear cualquier forma con {"banned": []} sin tocar el mod.
      */
     private static final ResourceLocation BANNED_FILE =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "banned_forms.json");
@@ -232,7 +232,7 @@ public final class FormManager {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }
             }
-            // Banear una forma banea también todo lo que cuelga de ella (su parent ya no existe):
+            // Banear una forma banea también cuanto cuelga de ella (su parent ya no existe):
             // sin esto quedaría una rama huérfana y un error de "parent inexistente" por cada una.
             boolean removed;
             do {

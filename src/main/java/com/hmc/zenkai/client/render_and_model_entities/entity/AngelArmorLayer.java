@@ -16,7 +16,7 @@ import software.bernie.geckolib.renderer.layer.ItemArmorGeoLayer;
  * Pinta la ARMADURA del ángel igual que la de cualquier otra entidad con casco: el ítem de la
  * ranura de casco (el halo del mod, {@code ModItems.HALO}, que AngelEntity se pone solo) se dibuja
  * encima del hueso `head` con la capa de armadura que ya trae GeckoLib. Así el aro hereda sin
- * código propio todo lo que le pase a la cabeza (cabeceo, alabeo, balanceo del cuerpo), exactamente
+ * código propio cuanto le pase a la cabeza (cabeceo, alabeo, balanceo del cuerpo), exactamente
  * como un casco de diamante sobre un zombi. Sustituye a la antigua AngelHaloLayer, que redibujaba el
  * .geo.json del halo a mano y se quedaba clavado al origen del modelo.
  */

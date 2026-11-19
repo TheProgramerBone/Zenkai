@@ -31,7 +31,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * ya sabe que solo hay una fila (menos de dos sub-destinos, sin submenú, ver
  * InstantTransmissionMenuScreen.clickRealms). Un `subId` no vacío busca esa entrada concreta en
  * {@link GenericDimensionDestinations#byId}.
- * El servidor revalida TODO de nuevo (visitada, punto grabado, nivel de cross-dimension) — un
+ * El servidor revalida cada cosa de nuevo (visitada, punto grabado, nivel de cross-dimension) — un
  * cliente modificado no puede pedir una dimensión que nunca visitó, un subId inexistente, ni
  * saltarse el nivel mínimo.
  */

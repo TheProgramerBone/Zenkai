@@ -6,7 +6,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Todo lo que un {@link SequenceStep} necesita para ejecutarse: dónde ({@code origin}), con qué
+ * Cuanto un {@link SequenceStep} necesita para ejecutarse: dónde ({@code origin}), con qué
  * color ({@code rgb}, el mismo principio "plantilla, no color final" que {@code ZenkaiVfxEffect})
  * y, opcionalmente, quién la ejecuta ({@code executor} — un futuro {@code AnimationStep} real lo
  * necesita para disparar SU mecanismo de animación; hoy ningún step lo usa).

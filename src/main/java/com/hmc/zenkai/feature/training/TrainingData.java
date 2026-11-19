@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 /**
  * Estado de entrenamiento del jugador (attachment TRAINING).
  *  - fatigue/carry/lastDecayTime: UNA copia por {@link TrainingCategory} (2026-09-09, pedido
- *    explícito del usuario — antes era un solo contador compartido por todo, ver el javadoc de
+ *    explícito del usuario — antes era un solo contador compartido por cada tipo, ver el javadoc de
  *    TrainingCategory para el porqué y el reparto de fuentes). fatigue = TP ganado entrenando
  *    esta "sesión" de ESA categoría, NORMALIZADO por el PL propio (así los umbrales funcionan
  *    igual a PL 50 que a PL 1M); sube al ganar, baja con el tiempo (lazy decay: se aplica al

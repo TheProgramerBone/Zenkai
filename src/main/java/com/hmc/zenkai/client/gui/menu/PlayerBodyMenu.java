@@ -36,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
  * es la ranura 41 + 9p + i. Cambiar de página solo cambia ese número (un DataSlot sincronizado) y el servidor reenvía lo que
  * ahora ve cada hueco. El icono de cada hueco vacío es el que Curios da a su tipo (se calcula con la página actual).
  *
- * Botones por clickMenuButton (red vanilla, ya validada): 0 llevarse todo, 1 enterrar, 2 y 3 página anterior/siguiente.
+ * Botones por clickMenuButton (red vanilla, ya validada): 0 take_all, 1 enterrar, 2 y 3 página anterior/siguiente.
  * La XP y «¿está vacío?» viajan por DataSlot; la XP en dos mitades de 15 bits porque DataSlot manda un short.
  */
 public class PlayerBodyMenu extends AbstractContainerMenu {
@@ -218,7 +218,7 @@ public class PlayerBodyMenu extends AbstractContainerMenu {
         return true;
     }
 
-    /** Llevarse todo: ver {@link PlayerBodyLoot} (armadura libre o claramente mejor, Curios, mano, resto y XP). */
+    /** take_all: ver {@link PlayerBodyLoot} (armadura libre o claramente mejor, Curios, mano, resto y XP). */
     private void takeAll(ServerPlayer sp) {
         PlayerBodyLoot.takeAll(sp, entity);
         broadcastChanges();

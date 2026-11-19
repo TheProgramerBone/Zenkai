@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * se encadenan un dash y un Paso rápido). Un interruptor de la rueda (encendido por defecto)
  * alterna entre Paso rápido y dash normal.
  *
- * Todo es autoritativo del servidor: el cliente solo detecta el doble toque y manda la
+ * Es autoritativo del servidor: el cliente solo detecta el doble toque y manda la
  * dirección. Se rechaza en silencio (sin packet de rechazo: es un gesto de movimiento, no una
  * acción con coste que haya que revertir en el cliente) si no estás en modo combate, estás
  * abatido, volando, defendiendo, o con otra acción exclusiva en curso.

@@ -125,7 +125,7 @@ public final class HairMotion {
     /**
      * Dirección media del mechón desde su raíz, en espacio de render: centro de sus vértices con la
      * rotación de cada cubo aplicada (GeckoLib guarda los vértices SIN ella; la aplica al pintar,
-     * Z·Y·X alrededor del pivote del cubo, todo en bloques) menos el pivote del hueso (en px).
+     * Z·Y·X alrededor del pivote del cubo, en bloques) menos el pivote del hueso (en px).
      */
     private static Vector3f direction(GeoBone bone) {
         Vector3f pivot = new Vector3f(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ()).div(16f);

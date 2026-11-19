@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Rage Forms, lado servidor: evalúa UN acontecimiento para UN beneficiario y concede el resultado (flujo de
  * archivo/2026-11-08-rage-forms-diseno-v2.md §4.1). Es autoritativo: el cliente solo presenta. Los detectores ({@link RageListeners}) solo
- * dicen «pasó X a Y»; aquí se decide todo lo demás.
+ * dicen «pasó X a Y»; aquí se decide lo demás.
  *
  * Reglas:
  *  - Una forma se concede SOLO si es la siguiente válida de la cadena: el padre ya se posee. Nunca hay saltos.
@@ -34,7 +34,7 @@ import java.util.List;
  *  - Un hecho se recompensa una vez ({@code eventId} en el anillo del jugador) y los de ALLY_* comparten un enfriamiento
  *    en tiempo del servidor, comprobado ANTES de recompensar: activo => RECORDED y no se concede nada.
  *  - La forma se REGALA sin cobrar MIND ({@code PlayerSkills#grantWaived}) y sin TP.
- *  - Todo hecho (salvo uno repetido) deja una entrada en la {@link RageChronicle}, también los RECORDED.
+ *  - Cada hecho (salvo uno repetido) deja una entrada en la {@link RageChronicle}, también los RECORDED.
  */
 public final class RageSystem {
     private RageSystem() {}
@@ -84,7 +84,7 @@ public final class RageSystem {
 
     /**
      * Igual que {@link #handle} pero sin sync: el estado queda aplicado y el resultado se devuelve (los gametests lo usan).
-     * Todo hecho que llega aquí (salvo uno repetido) deja una entrada en la {@link RageChronicle}: también los que no
+     * Cada hecho que llega aquí (salvo uno repetido) deja una entrada en la {@link RageChronicle}: también los que no
      * recompensan, que quedan como RECORDED.
      */
     public static RageResult evaluate(ServerPlayer sp, RageTrigger trigger, RageIntensity intensity, @Nullable String eventId,

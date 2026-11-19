@@ -58,7 +58,7 @@ public final class WheelMenu {
         // WheelScreen ya soporta profundidad arbitraria (0.3.0, ver su javadoc/hoverPath), así
         // que anidar una categoría dentro de otra vuelve a funcionar: Forms -> Race -> hoja de
         // forma navega en 3 anillos sin problema. Ya NO incluye "Base": destransformar del
-        // todo es la tecla de transformar (toque corto), no una opción que valga la pena
+        // en cualquier caso es la tecla de transformar (toque corto), no una opción que valga la pena
         // ocupar sitio en la rueda (pedido del usuario, 2026-09-28).
         List<WheelNode> forms = forms(p);
         if (!forms.isEmpty()) {

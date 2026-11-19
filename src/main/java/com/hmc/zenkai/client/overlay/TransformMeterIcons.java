@@ -160,7 +160,7 @@ public final class TransformMeterIcons {
             g.setColor(1f, 1f, 1f, 1f);
         }
         if (frac <= 0.0) return;
-        // Pulso: el encendido respira sobre el apagado, sin llegar a apagarse del todo.
+        // Pulso: el encendido respira sobre el apagado, sin llegar a apagarse por completo.
         if (alert) g.setColor(1f, 1f, 1f, 0.55f + 0.45f * pulse);
         int u = k.uLit;
         int p = (int) Math.round(PERIMETER * frac);

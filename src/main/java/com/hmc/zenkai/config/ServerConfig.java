@@ -16,18 +16,18 @@ import java.util.*;
  * {@code serverconfig/}) que NeoForge SINCRONIZA automáticamente al cliente al conectarse. Aquí
  * va cualquier número/ajuste de gameplay que un admin de server o modpack quiera tunear por
  * mundo y que el cliente necesite ver correctamente sincronizado — que es, en la práctica, casi
- * todo el balance del mod (combate, economía de TP, entrenamiento, maestría, vuelo, pools...).
+ * el balance entero del mod (combate, economía de TP, entrenamiento, maestría, vuelo, pools...).
  * Antes de 2026-09-04 ese balance vivía en {@link CommonConfig} (Type.COMMON: un archivo POR
  * INSTALACIÓN, cliente y servidor leen cada uno su PROPIA copia, nunca se sincroniza) — eso ya
  * causó un bug real parcheado a mano (ver {@code feature/stats/TpCurve.java} antes de esa fecha
  * en el histórico de git): con la config retocada en el servidor, el cliente calculaba costes de
  * TP con SU PROPIO archivo, así que la pantalla de stats mostraba un precio que no era el que el
  * servidor iba a cobrar de verdad. La migración a SERVER hace que ese tipo de bug sea imposible
- * por construcción: solo hace falta tunear el archivo del mundo, y todo el que se conecta ve el
+ * por construcción: solo hace falta tunear el archivo del mundo, y cualquiera que se conecte ve el
  * valor real, sin instalar nada.
  * DOS CONVENCIONES DE ACCESO CONVIVEN EN ESTE ARCHIVO — mirar cuál sigue una opción antes de
  * copiarle el patrón a una nueva:
- * - **Hot-path** (todo lo migrado desde CommonConfig, y cualquier opción nueva leída muchas veces
+ * - **Hot-path** (lo migrado desde CommonConfig, y cualquier opción nueva leída muchas veces
  *   por tick o por golpe): sigue el patrón RAW + copia volátil que refresca {@code onConfigLoad},
  *   igual que documentaba CommonConfig — el resto del código lee SOLO el getter de la copia
  *   volátil, nunca `_RAW.get()` directamente. El valor inicial de cada copia volátil DEBE
@@ -2640,7 +2640,7 @@ public class ServerConfig {
 
     /**
      * Prohibido en el deseo de duplicación, mirando el STACK entero: lo de {@link #isBanned(net.minecraft.world.item.Item)}
-     * y, además, todo objeto con INVENTARIO PROPIO. Duplicar una mochila copia su contenido: es un exploit fijo, y hay
+     * y, además, cualquier objeto con INVENTARIO PROPIO. Duplicar una mochila copia su contenido: es un exploit fijo, y hay
      * demasiados mods de mochilas para listarlos por id. Casi todos exponen {@code Capabilities.ItemHandler.ITEM} en el
      * stack, así que se detecta por eso (mochilas, cofres portátiles...) y no por mod. También se rechazan los de vanilla
      * que guardan objetos en componentes (shulker, bundle) si llevan algo dentro. Se mira el stack y no solo el objeto

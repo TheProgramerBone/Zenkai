@@ -296,7 +296,7 @@ final class SkillTreeArt {
         return skillId == null ? -1 : SKILL_ICON_ORDER.indexOf(skillId);
     }
 
-    /** Dibuja el icono propio de una skill (a todo color, sin tinte salvo el brillo {@code b}). */
+    /** Dibuja el icono propio de una skill (a color pleno, sin tinte salvo el brillo {@code b}). */
     static void skillIcon(GuiGraphics g, int index, float x, float y, float b) {
         int u = (index % 8) * ICON_TEX, v = (index / 8) * ICON_TEX;
         blitTinted(g, SKILL_ICONS, x, y, u, v, ICON_TEX, ICON_TEX, ICONS_SIZE, ICONS_SIZE, b, b, b, 1f);

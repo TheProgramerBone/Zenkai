@@ -180,7 +180,7 @@ public final class BodyLimitsGameTests {
         int prevLoss = ServerConfig.PERMADEATH_ITEM_LOSS_PERCENT.get();
         int prevDur = ServerConfig.PERMADEATH_DURABILITY_LOSS_PERCENT.get();
         try {
-            // Sin riesgo: todo intacto.
+            // Sin riesgo: nada cambia.
             ServerConfig.PERMADEATH_ITEM_LOSS_PERCENT.set(0);
             ServerConfig.PERMADEATH_DURABILITY_LOSS_PERCENT.set(0);
             List<ItemStack> items = new ArrayList<>(List.of(new ItemStack(Items.DIAMOND, 5), new ItemStack(Items.IRON_PICKAXE)));

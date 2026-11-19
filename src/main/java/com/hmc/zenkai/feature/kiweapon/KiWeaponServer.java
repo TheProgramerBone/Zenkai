@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * desvanece (deja de estar activa, pero sigue querida); vuelves a dejar la mano libre y reaparece
  * sola. El interruptor nunca se toca por el camino.
  *
- * Qué cuelga de que el arma esté ACTIVA (todo se recalcula en el tick, nunca en el momento de
+ * Qué cuelga de que el arma esté ACTIVA (cada cosa se recalcula en el tick, nunca en el momento de
  * pulsar, porque la mano puede vaciarse u ocuparse sin avisar):
  *  - daño y coste de ki: {@link #heldWeapon} lo leen CombatZenkaiHooks y KiInfusion;
  *  - guardia y parry: GuardHands la cuenta como arma en la mano principal;

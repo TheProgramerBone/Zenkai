@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * ESCENA de la primera transformación (Rage Forms y cualquier otra vía): lo que rodea al aura larga y la cámara. Cada cliente que
  * recibe el aviso ({@code LongTransformPacket}) arranca su copia de la escena en el mismo instante que el compositor de auras dispara
- * la secuencia larga (al PULSAR la tecla, o en el acto en un despertar por muerte), así que todo comparte reloj con {@code TransformFx}:
+ * la secuencia larga (al PULSAR la tecla, o en el acto en un despertar por muerte), así que cada parte comparte reloj con {@code TransformFx}:
  * <pre>
  *   QUIEBRE   0 - 1,9 s   latido grave; el jugador cae / se encorva (clip PAL); el mundo se oscurece y la viñeta de color sube.
  *   ESCALADA  1,9 - 4 s   sube el viento y el zumbido; el temblor aumenta; pelo y ojos viran hacia la forma (buildup).
@@ -43,9 +43,9 @@ import java.util.List;
  * La POSE la declara la FORMA (campo {@code long_scene.pose} de su JSON, 0.6.1: familias como {@code serene} para las divinas,
  * {@code skyward} para los Legendarios, {@code flex} para el Arcosiano…), salvo el rescate de un aliado, que siempre es levantarse en
  * calma. Sin pose declarada: de rodillas por duelo y rugido por cualquier otra vía (entrenamiento, ritual…). La NOTA de sonido, igual: pérdida de un
- * aliado, mascota o rescate. No hay grito (decidido: se hará aparte). Todo es presentación: nada de esto toca el estado.
+ * aliado, mascota o rescate. No hay grito (decidido: se hará aparte). Es pura presentación: nada de esto toca el estado.
  * <p>
- * MODOS ({@link LongTransformMode}): FULL todo; REDUCED sin destello, oscurecimiento, rayo ni cámara (apto para quien teme los
+ * MODOS ({@link LongTransformMode}): FULL completo; REDUCED sin destello, oscurecimiento, rayo ni cámara (apto para quien teme los
  * fogonazos). Abrir cualquier pantalla corta solo las capas VISUALES propias (viñeta, destello, título): la animación y el sonido
  * siguen, como la cámara de {@code TransformCameraFx}.
  * <p>

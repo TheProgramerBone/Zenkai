@@ -28,7 +28,7 @@ import net.minecraft.world.item.component.DyedItemColor;
  * S5 (2026-10-01): antes cada peinado era un item registrado y la variante de cada forma SSJ se
  * buscaba por convención de nombres ("ssj2_hair2" -> "ssj2_hair1" -> "ssj1_hair2" -> ...). Ahora
  * el peinado es un id del catálogo de datapack (HairCatalog) y la variante por forma la declara
- * el propio peinado ("form_overrides"); todo se pinta con UN item genérico (zenkai:hair). La
+ * el propio peinado ("form_overrides"); se pinta cada cosa con UN item genérico (zenkai:hair). La
  * decisión de qué peinado se ve es la función pura HairCatalog.effectiveStyle (con gametest).
  */
 public final class HairResolver {

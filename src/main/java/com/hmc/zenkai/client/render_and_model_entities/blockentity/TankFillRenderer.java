@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -80,7 +81,7 @@ public class TankFillRenderer<T extends TransportBlockEntity> implements BlockEn
             passes = 2;
         }
 
-        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucentCull(TextureAtlas.LOCATION_BLOCKS));
+        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucentCull(InventoryMenu.BLOCK_ATLAS));
         Matrix4f m = pose.last().pose();
         BlockPos pos = be.getBlockPos();
         float top = be.fillSteps() / (float) TransportBlockEntity.FILL_STEPS;   // altura llena, 0..1 desde abajo
@@ -96,8 +97,10 @@ public class TankFillRenderer<T extends TransportBlockEntity> implements BlockEn
             int bits = (be.ctBits() >> (4 * face.get3DDataValue())) & 15;
             // Rectángulo de cristal en coordenadas de la cara vista desde fuera (u izq->der, v abajo->arriba), 0..1.
             float u0 = (bits & TransportBlockEntity.CT_LEFT) != 0 ? (FRAME + 1) / 32f : 0f;
-            float u1 = (bits & TransportBlockEntity.CT_RIGHT) != 0 ? (32 - FRAME) / 32f : 1f;
-            float v0 = (bits & TransportBlockEntity.CT_BOTTOM) != 0 ? FRAME / 32f : 0f;
+            float u1 = (bits & TransportBlockEntity.CT_RIGHT) != 0 ? (32 - FRAME - 1) / 32f : 1f;
+            // El cristal empieza en el píxel 8 desde cada borde (bordes 0-6 + sombra en el 7): simétrico en los
+            // cuatro lados. Antes derecha y abajo usaban 7 y el fluido se comía la línea de sombra (2026-11-17).
+            float v0 = (bits & TransportBlockEntity.CT_BOTTOM) != 0 ? (FRAME + 1) / 32f : 0f;
             float glassTop = (bits & TransportBlockEntity.CT_TOP) != 0 ? (32 - FRAME - 1) / 32f : 1f;
             float v1 = Math.min(top, glassTop);
             if (v1 <= v0 || u1 <= u0) continue;
@@ -128,7 +131,7 @@ public class TankFillRenderer<T extends TransportBlockEntity> implements BlockEn
     }
 
     private static java.util.function.Function<ResourceLocation, TextureAtlasSprite> atlas() {
-        return Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS);
+        return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
     }
 
     /**

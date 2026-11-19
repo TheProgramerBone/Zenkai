@@ -628,7 +628,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     }
 
     /** Termina la sesión YA (botón Finish o Escape, ver onClose()) y pasa a RESULTS con el reward
-     *  REAL — mismo camino que una sesión completada del todo (tick() al agotar la duración),
+     *  REAL — mismo camino que una sesión completada por completo (tick() al agotar la duración),
      *  nunca el "silencio" que antes solo devolvía al hub sin enseñar nada. Único sitio que sabe
      *  terminar una sesión a medias, para que los dos disparadores no diverjan. */
     private void finishSessionEarly() {
@@ -1224,7 +1224,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             // Flash breve de carril al acertar/fallar (pedido explícito del usuario: "no hay
             // marcadores... tampoco hay un efecto para cuando te equivocas") — mismo color que
             // el judgment de texto, pero MUY translúcido para no tapar las notas que caen. Solo
-            // en una banda pegada a la línea de acierto (no la columna entera): pintar todo el
+            // en una banda pegada a la línea de acierto (no la columna entera): pintar el
             // carril era demasiado ruido visual justo encima de las notas que aún hay que leer
             // (feedback real de captura de juego).
             int flash = 0;

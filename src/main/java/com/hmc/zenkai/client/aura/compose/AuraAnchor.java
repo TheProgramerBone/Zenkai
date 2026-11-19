@@ -54,7 +54,7 @@ public final class AuraAnchor {
 
     /**
      * Cada segmento es una CAJA redondeada, no un cilindro: extremos A/B del eje, semiancho lateral
-     * (rx, a lo largo del eje X del ModelPart) y semiprofundidad (rz), todo en PÍXELES del espacio de
+     * (rx, a lo largo del eje X del ModelPart) y semiprofundidad (rz), medido en PÍXELES del espacio de
      * su ModelPart (Y hacia abajo). Las tapas añaden {@code 0.5 * min(rx, rz)} más allá de A y B
      * (aura_body_flow.vsh), así que los extremos están metidos ese tanto para que la caja cubra
      * EXACTAMENTE el cubo del modelo vanilla (torso 8x12x4, brazos/piernas 4x12x4, cabeza 8x8x8). Antes

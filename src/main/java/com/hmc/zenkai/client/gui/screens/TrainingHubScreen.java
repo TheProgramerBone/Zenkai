@@ -30,7 +30,7 @@ import java.util.Locale;
  * "Ki Target Practice", ver sus respectivas *TrainingScreen/MeditationScreen/
  * TargetPracticeScreen) + el panel "TP Modifiers", que es la sección "Carga" que ANTES vivía en
  * el popup de StatsScreen (buildStatRows) — se migró aquí entera porque el popup de Stats ya iba
- * apretado de espacio y porque este es el sitio temático correcto para mostrar TODO lo que
+ * apretado de espacio y porque este es el sitio temático correcto para mostrar cuanto
  * afecta la ganancia de TP, pesas Y HTC juntos (HTC no se mostraba en ningún lado antes).
  *
  * Mismo idioma visual "hub de filas grandes" que {@link AppearanceScreen} — ícono a la
@@ -129,7 +129,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     /** Respuesta a TrainingFatigueRequestPacket (ver ClientPayloadHandlers.onTrainingFatigue) —
      *  empujada aquí igual que TrainingMinigameScreen.onRewardReceived/onTrainingInfoReceived,
-     *  pero este hub no implementa esa interfaz (no es un minijuego), así que es un método
+     *  pero este hub no implementa esa interfaz (no es un minijuego), así que es una función
      *  público normal en vez de una sobrescritura. */
     public void onFatigueReceived(double combatEfficiency, double meditationEfficiency,
                                    double targetPracticeEfficiency,
@@ -262,7 +262,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         }
     }
 
-    /** Margen derecho fijo para todo texto alineado a la derecha de este panel — pegado a `x+w`
+    /** Margen derecho fijo para cualquier texto alineado a la derecha de este panel — pegado a `x+w`
      *  a secas quedaba a ras del borde/las esquinas del panel (feedback de imagen: "ajusta el
      *  margen de la letra"). */
     private static final int PANEL_RIGHT_MARGIN = 3;
@@ -415,7 +415,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         boolean hasBar() { return bar >= 0f; }
     }
 
-    /** Desglose SIN la fila "Source": esa se pinta aparte como línea propia a todo lo ancho
+    /** Desglose SIN la fila "Source": esa se pinta aparte como línea propia de lado a lado
      *  (ver renderGravityPopup) — con nombres largos como "Hyperbolic Time Chamber" no cabía
      *  compartiendo línea con una etiqueta "Source" sin solaparse (feedback de imagen,
      *  2026-09-10). Multiplicador cosmético, equipo físico y gravedad ambiental por separado, y
@@ -471,7 +471,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                 tx, ty, ZenkaiPalette.GOLD, true);
         ty += 13;
 
-        // Fuente a TODO lo ancho, sin etiqueta compartiendo línea — "Hyperbolic Time Chamber"
+        // Fuente de lado a lado, sin etiqueta compartiendo línea — "Hyperbolic Time Chamber"
         // no cabía junto a "Source:" sin solaparse (feedback de imagen), ver buildGravityRows.
         Component sourceText = sourceKey != null
                 ? Component.translatable(sourceKey)

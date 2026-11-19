@@ -13,7 +13,7 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
 
     /**
      * Pasada de IMAGEN RESIDUAL (AfterImageClient): distinto de 0 = ARGB de la silueta. Mientras
-     * está puesto, TODO el arte GeckoLib del mod (pelo, cola, halo) se dibuja como una silueta
+     * está puesto, el arte GeckoLib entero del mod (pelo, cola, halo) se dibuja como una silueta
      * plana translúcida de ese color, sin capas de cara/tinte, y no se oculta por invisibilidad.
      * Solo hilo de render, y lo pone y quita siempre el mismo bloque try/finally.
      */
@@ -74,7 +74,7 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         return super.getRenderType(animatable, texture, bufferSource, partialTick);
     }
 
-    /** Sin capas (cara, tinte) en la imagen residual: serían pasadas a todo color encima de la silueta. */
+    /** Sin capas (cara, tinte) en la imagen residual: serían pasadas a color pleno encima de la silueta. */
     @Override
     public java.util.List<software.bernie.geckolib.renderer.layer.GeoRenderLayer<GeoLayerArmorItem>> getRenderLayers() {
         return isGhostPass() ? java.util.List.of() : super.getRenderLayers();

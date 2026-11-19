@@ -38,7 +38,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  *
  * Saber si alguien está en un choque sale de ClashOrbEntity, que se sincroniza a cualquiera que
  * esté cerca (su roster de ids por lado, si admite gente, el tamaño máximo y la distancia). Es
- * solo una PISTA para enseñar el aviso: el servidor (ClashManager.join) lo valida todo de nuevo.
+ * solo una PISTA para enseñar el aviso: el servidor (ClashManager.join) lo valida por completo de nuevo.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ClashJoinClient {

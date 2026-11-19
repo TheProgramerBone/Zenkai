@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 /**
  * Piezas comunes de la plantilla de los minijuegos de Training (Shadow, Target Practice,
  * Meditation y sus resultados): la FICHA de opción y la INSIGNIA de pie. Viven aquí para no copiar
- * el dibujo en cuatro pantallas. Todo el texto va sobre la placa oscura, así que solo usa colores
+ * el dibujo en cuatro pantallas. El texto entero va sobre la placa oscura, así que solo usa colores
  * TEXT*, nunca los *_ON_PANEL.
  */
 public final class TrainingWidgets {
@@ -111,7 +111,7 @@ public final class TrainingWidgets {
     public static void badge(GuiGraphics g, Font font, int x, int y, int w, int glyphU, int glyphV,
                              Component label, Component value, int valueColor) {
         NineSlice.plateFrame(g, x, y, w, BADGE_H);
-        // Con cifras largas no cabe todo: el texto manda y se sacrifica el glifo, nunca la etiqueta.
+        // Con cifras largas no cabe completo: el texto manda y se sacrifica el glifo, nunca la etiqueta.
         boolean withGlyph = 14 + font.width(label) + 6 + font.width(value) + 4 <= w;
         if (withGlyph) {
             g.blit(NineSlice.PLATE_TEX, x + 3, y + 4, 8, 8, (float) glyphU, (float) glyphV, 16, 16, 256, 128);
@@ -162,7 +162,7 @@ public final class TrainingWidgets {
     }
 
     /**
-     * Pie de las pantallas de opciones: «Potential» encima de «Record», apiladas y a todo el ancho
+     * Pie de las pantallas de opciones: «Potential» encima de «Record», apiladas y de lado a lado
      * de las fichas (lado a lado no cabían cifras de 4-5 dígitos). La de abajo queda sobre los
      * iconos de esquina. {@code potential}/{@code record} null = aún sin dato («…»).
      */

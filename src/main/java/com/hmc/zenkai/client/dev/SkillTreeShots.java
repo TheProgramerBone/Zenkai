@@ -691,7 +691,7 @@ public final class SkillTreeShots {
     /**
      * Absorción del Majin como TÉCNICA con masa arrojada: (1) un zombi SANO muy por debajo del PL del Majin es absorbido
      * (dominado) lanzando la técnica por ActionResolver, el embudo real; (2) un objetivo FUERTE y sano se rechaza y sigue
-     * vivo; (3) el mismo objetivo fuerte al 20 % de vida se absorbe. Todo al log ([TREESHOTS] absorb).
+     * vivo; (3) el mismo objetivo fuerte al 20 % de vida se absorbe. Cada resultado va al log ([TREESHOTS] absorb).
      */
     private static void absorbPlan(Minecraft mc) {
         PLAN.add(() -> { setup(mc, Race.MAJIN, 2, false, false, false, sp -> {}); wait = WAIT; });

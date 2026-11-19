@@ -30,7 +30,7 @@ public class PlayerVisualAttachment {
     private int hairColorRgb   = 0x000000; // negro por defecto
     /**
      * Colores propios de los mechones de un pelo por código (StrandColors): true = como los trae
-     * el código (p. ej. blanco con dos mechones negros), false = todo del color de pelo. Por
+     * el código (p. ej. blanco con dos mechones negros), false = entero del color de pelo. Por
      * defecto true: es el aspecto que eligió el autor del peinado. Sin efecto si no trae colores.
      */
     private boolean hairStrandColors = true;
