@@ -284,86 +284,28 @@ public class ServerConfig {
             BUILDER.comment("Combat-mode dash: horizontal speed in blocks per tick (1.1 is roughly 5 blocks of travel)")
                     .defineInRange("dash.speed", 1.1D, 0.2D, 4.0D);
 
-    private static final ModConfigSpec.IntValue STEP_COOLDOWN_RAW =
-            BUILDER.comment("Quick Step (a skill bought from Korin that overrides the combat dash): base cooldown in ticks between uses (each skill level shortens it)")
-                    .defineInRange("step.cooldown_ticks", 60, 0, 1200);
 
-    private static final ModConfigSpec.DoubleValue STEP_SPEED_RAW =
-            BUILDER.comment("Quick Step: horizontal speed in blocks per tick (1.8 is roughly 8 blocks of travel)")
-                    .defineInRange("step.speed", 1.8D, 0.2D, 6.0D);
 
-    private static final ModConfigSpec.DoubleValue STEP_ENERGY_PCT_RAW =
-            BUILDER.comment("Quick Step: base ki cost as a fraction of the maximum ki pool (0.03 = 3%); each skill level lowers it")
-                    .defineInRange("step.energy_cost_pct", 0.03D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.IntValue STEP_INVISIBLE_RAW =
-            BUILDER.comment("Quick Step: ticks the player model stays invisible while moving")
-                    .defineInRange("step.invisible_ticks", 8, 1, 60);
 
-    private static final ModConfigSpec.IntValue STEP_IFRAME_RAW =
-            BUILDER.comment("Quick Step: ticks of invulnerability from the moment it starts")
-                    .defineInRange("step.iframe_ticks", 10, 0, 60);
 
     private static final ModConfigSpec.DoubleValue BLOCK_WEAPON_FACTOR_RAW =
             BUILDER.comment("Blocking with a melee weapon in the main hand: fraction of the normal damage reduction you keep (1.0 = same as bare hands)")
                     .defineInRange("block.weapon_factor", 0.6D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_BONUS_RAW =
-            BUILDER.comment("Blocking with a shield in the off hand: extra damage reduction as a fraction of the normal one (0.35 = 35% more)")
-                    .defineInRange("block.shield_bonus", 0.35D, 0.0D, 3.0D);
 
-    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_CAP_RAW =
-            BUILDER.comment("Blocking with a shield: the damage reduction can never exceed this (0.85 = at most 85% of the damage is cut)")
-                    .defineInRange("block.shield_cap", 0.85D, 0.0D, 0.95D);
 
-    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_SLOW_RAW =
-            BUILDER.comment("Blocking with a shield: fraction of movement speed lost while guarding (bare-handed blocking always loses 60%). 0 = no slowdown")
-                    .defineInRange("block.shield_slow", 0.0D, 0.0D, 0.9D);
 
-    private static final ModConfigSpec.IntValue BLOCK_SHIELD_DURABILITY_RAW =
-            BUILDER.comment("Blocking with a shield: durability points the shield loses per blocked hit. 0 = never wears out")
-                    .defineInRange("block.shield_durability_per_hit", 1, 0, 100);
 
-    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_KI_RAW =
-            BUILDER.comment("Ki-infused shield (Ki Infuse skill): ki spent per blocked hit as a fraction of your maximum ki. Without enough ki the shield is not infused")
-                    .defineInRange("block.shield_ki_cost_pct", 0.005D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_MAX_RAW =
-            BUILDER.comment("Guard stamina: base maximum. Every blocked hit drains it; at 0 the guard breaks and the defender is stunned. 0 disables guard stamina")
-                    .defineInRange("block.guard_max_base", 100.0D, 0.0D, 10000.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_CON_BONUS_RAW =
-            BUILDER.comment("Guard stamina: maximum extra stamina Constitution can add (1.0 = up to +100%). The bonus follows an ease-out curve and reaches exactly this maximum at guard_con_full")
-                    .defineInRange("block.guard_con_bonus", 1.0D, 0.0D, 20.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_CON_FULL_RAW =
-            BUILDER.comment("Guard stamina: effective Constitution (attribute x race/style multiplier) at which the full guard_con_bonus is reached (no further growth beyond it)")
-                    .defineInRange("block.guard_con_full", 500.0D, 1.0D, 1000000.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_DEX_BONUS_RAW =
-            BUILDER.comment("Guard stamina: maximum extra regeneration Dexterity can add (1.5 = up to +150%), same ease-out curve, reaching it at guard_dex_full")
-                    .defineInRange("block.guard_dex_bonus", 1.5D, 0.0D, 20.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_DEX_FULL_RAW =
-            BUILDER.comment("Guard stamina: effective defense (Dexterity, with form and power multipliers) at which the full guard_dex_bonus is reached")
-                    .defineInRange("block.guard_dex_full", 500.0D, 1.0D, 1000000.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_DRAIN_RAW =
-            BUILDER.comment("Guard stamina: drained per blocked hit = damage that got through the guard, as a % of the defender's max body health, x this multiplier.",
-                            "With the defaults (100 stamina, x3) the guard breaks after blocking ~33% of max health worth of damage")
-                    .defineInRange("block.guard_drain_mult", 3.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue GUARD_REGEN_RAW =
-            BUILDER.comment("Guard stamina: regenerated per tick while NOT blocking (after the regen delay)")
-                    .defineInRange("block.guard_regen_per_tick", 0.5D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.IntValue GUARD_REGEN_DELAY_RAW =
-            BUILDER.comment("Guard stamina: ticks after lowering the guard (or taking a blocked hit) before it starts regenerating")
-                    .defineInRange("block.guard_regen_delay_ticks", 40, 0, 600);
 
-    private static final ModConfigSpec.IntValue GUARD_BREAK_STUN_RAW =
-            BUILDER.comment("Guard stamina: ticks of guard break AND stun when the stamina runs out. 0 = no stun, only the guard break (uses 40 ticks)")
-                    .defineInRange("block.guard_break_stun_ticks", 40, 0, 400);
 
     private static final ModConfigSpec.BooleanValue STUN_PLAYERS_RAW =
             BUILDER.comment("Stun: whether players can be stunned (false = only mobs; players ignore any stun)")
@@ -398,109 +340,31 @@ public class ServerConfig {
             BUILDER.comment("Combo: number of hits after which the bonus stops growing")
                     .defineInRange("combo.max_hits", 10, 1, 100);
 
-    private static final ModConfigSpec.IntValue HEAVY_TICKS_RAW =
-            BUILDER.comment("Heavy blow charge: ticks holding the key per charge level (a quick tap = no charge)")
-                    .defineInRange("heavy.charge_ticks_per_level", 15, 1, 200);
 
-    private static final ModConfigSpec.IntValue HEAVY_LEVELS_RAW =
-            BUILDER.comment("Heavy blow charge: maximum charge level. 0 = charging disabled")
-                    .defineInRange("heavy.max_level", 3, 0, 10);
 
-    private static final ModConfigSpec.DoubleValue HEAVY_DMG_RAW =
-            BUILDER.comment("Heavy blow charge: extra damage per charge level (0.35 = +35% each)")
-                    .defineInRange("heavy.damage_mult_per_level", 0.35D, 0.0D, 5.0D);
 
-    private static final ModConfigSpec.DoubleValue HEAVY_KNOCK_RAW =
-            BUILDER.comment("Heavy blow charge: extra knockback per charge level")
-                    .defineInRange("heavy.knockback_per_level", 0.5D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue HEAVY_STAMINA_RAW =
-            BUILDER.comment("Heavy blow charge: extra stamina per charge level, as a fraction of the technique's base stamina cost")
-                    .defineInRange("heavy.stamina_fraction_per_level", 0.5D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue DIVE_MIN_HEIGHT_RAW =
-            BUILDER.comment("Dive: minimum height above the ground (blocks) required to start it. Only usable while flying")
-                    .defineInRange("dive.min_height", 8.0D, 1.0D, 256.0D);
 
-    private static final ModConfigSpec.DoubleValue DIVE_SPEED_RAW =
-            BUILDER.comment("Dive: speed, in blocks per tick, held during the dive")
-                    .defineInRange("dive.speed", 2.0D, 0.5D, 6.0D);
 
-    private static final ModConfigSpec.IntValue DIVE_MAX_TICKS_RAW =
-            BUILDER.comment("Dive: hard cap of ticks a dive can last (safety so it always ends)")
-                    .defineInRange("dive.max_ticks", 80, 5, 400);
 
-    private static final ModConfigSpec.DoubleValue DIVE_RADIUS_RAW =
-            BUILDER.comment("Dive: impact radius per block/tick of speed reached")
-                    .defineInRange("dive.radius_per_speed", 1.5D, 0.0D, 20.0D);
 
-    private static final ModConfigSpec.DoubleValue DIVE_MAX_RADIUS_RAW =
-            BUILDER.comment("Dive: maximum impact radius, in blocks")
-                    .defineInRange("dive.max_radius", 6.0D, 1.0D, 32.0D);
 
-    private static final ModConfigSpec.DoubleValue DIVE_KNOCK_RAW =
-            BUILDER.comment("Dive: radial knockback of the impact")
-                    .defineInRange("dive.knockback", 1.4D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.IntValue EVADE_TICKS_RAW =
-            BUILDER.comment("Evade (Super Explosive Wave): total ticks the user stays planted, from the start of the charge to the end of the cooldown pose. The user cannot be hurt during them")
-                    .defineInRange("evade.duration_ticks", 34, 6, 200);
 
-    private static final ModConfigSpec.IntValue EVADE_CHARGE_TICKS_RAW =
-            BUILDER.comment("Evade: ticks of the ki-compression charge before the wave goes off (the grab is released at that moment)")
-                    .defineInRange("evade.charge_ticks", 12, 1, 100);
 
-    private static final ModConfigSpec.DoubleValue GRAB_RANGE_RAW =
-            BUILDER.comment("Grab: reach in blocks. It works on any non-boss target in front of the user")
-                    .defineInRange("grab.range", 3.5D, 1.0D, 16.0D);
 
-    private static final ModConfigSpec.IntValue GRAB_HOLD_RAW =
-            BUILDER.comment("Grab: optional cap, in ticks, on how long a target is held before being thrown automatically. 0 = no cap: the hold lasts until the target breaks free (skill check, Evade, Instant Transmission) or the grabber throws them")
-                    .defineInRange("grab.max_hold_ticks", 0, 0, 72000);
 
-    private static final ModConfigSpec.DoubleValue GRAB_THROW_RAW =
-            BUILDER.comment("Grab: speed (blocks per tick) the target is thrown at")
-                    .defineInRange("grab.throw_speed", 1.8D, 0.2D, 6.0D);
 
-    private static final ModConfigSpec.IntValue GRAB_STUN_RAW =
-            BUILDER.comment("Grab: ticks the target stays stunned after the throw lands")
-                    .defineInRange("grab.landing_stun_ticks", 30, 0, 200);
 
-    private static final ModConfigSpec.IntValue GRAB_MOB_HOLD_RAW =
-            BUILDER.comment("Grab: ticks a MOB stays held before it breaks free on its own (mobs do not play the skill check). 300 = 15 s")
-                    .defineInRange("grab.mob_max_hold_ticks", 300, 20, 72000);
 
-    private static final ModConfigSpec.IntValue GRAB_CHECKS_RAW =
-            BUILDER.comment("Grab: skill checks the held PLAYER must hit to break free (mobs just wait out the timer)")
-                    .defineInRange("grab.checks_to_escape", 2, 1, 10);
 
-    private static final ModConfigSpec.DoubleValue GRAB_ZONE_RAW =
-            BUILDER.comment("Grab: size of the success zone of a skill check, as a fraction of the bar (0.2 = 20%)")
-                    .defineInRange("grab.zone_size", 0.2D, 0.05D, 0.6D);
 
-    private static final ModConfigSpec.IntValue GRAB_NEEDLE_RAW =
-            BUILDER.comment("Grab: ticks the needle takes to cross the bar once (lower = harder)")
-                    .defineInRange("grab.needle_ticks", 18, 4, 100);
 
-    private static final ModConfigSpec.IntValue GRAB_FAIL_RAW =
-            BUILDER.comment("Grab: extra ticks of pause before the next skill check every time the held player misses one")
-                    .defineInRange("grab.fail_penalty_ticks", 20, 0, 200);
 
-    private static final ModConfigSpec.IntValue GRAB_GAP_RAW =
-            BUILDER.comment("Grab: ticks of pause between one skill check and the next")
-                    .defineInRange("grab.check_gap_ticks", 12, 0, 100);
 
-    private static final ModConfigSpec.DoubleValue EVADE_WAVE_RADIUS_RAW =
-            BUILDER.comment("Evade: radius (blocks) of the shockwave that pushes everything away from the user. 0 = no wave")
-                    .defineInRange("evade.wave_radius", 9.0D, 0.0D, 24.0D);
 
-    private static final ModConfigSpec.DoubleValue EVADE_WAVE_KNOCK_RAW =
-            BUILDER.comment("Evade: horizontal knockback of the shockwave (it deals no damage)")
-                    .defineInRange("evade.wave_knockback", 3.2D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.IntValue EVADE_WAVE_STUN_RAW =
-            BUILDER.comment("Evade: ticks the shockwave stuns whoever it hits (stun rules apply: bosses, immunity and diminishing returns). 0 = no stun")
-                    .defineInRange("evade.wave_stun_ticks", 0, 0, 100);
 
     private static final ModConfigSpec.IntValue COMBO_FINISHER_EVERY_RAW =
             BUILDER.comment("Combo: every Nth consecutive bare-hand hit is a finisher that knocks the target away. 0 = no finisher")
@@ -538,45 +402,14 @@ public class ServerConfig {
             BUILDER.comment("Parry: ticks after starting to block during which the guard parries (6 = 0.3 s). Parry Mastery adds to this")
                     .defineInRange("parry.window_ticks", 6, 1, 40);
 
-    private static final ModConfigSpec.IntValue PARRY_COOLDOWN_RAW =
-            BUILDER.comment("Parry: ticks before a NEW block can open another parry window. Counted from the moment the previous window opened,",
-                            "whether or not it caught anything, so tapping the guard repeatedly cannot keep a parry up")
-                    .defineInRange("parry.cooldown_ticks", 40, 0, 400);
 
-    private static final ModConfigSpec.DoubleValue PARRY_KNOCKBACK_RAW =
-            BUILDER.comment("Parry: how far, in blocks, a melee attacker who got parried is thrown back (about; the push is",
-                            "computed from the vanilla drag and friction, so it lands near this distance on flat ground)")
-                    .defineInRange("parry.knockback_blocks", 2.5D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue PARRY_NPC_CHANCE_RAW =
-            BUILDER.comment("Parry: chance that an NPC whose kit includes kiai parries an incoming melee hit (0 disables NPC parries).",
-                            "Each NPC then waits parry.cooldown_ticks before it can parry again")
-                    .defineInRange("parry.npc_chance", 0.3D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue PARRY_REFLECT_RAW =
-            BUILDER.comment("Parry: damage returned to a melee attacker who got parried, as a fraction of the defender's own",
-                            "melee strength (0 disables it). Goes through the normal defense of the target")
-                    .defineInRange("parry.reflect_fraction", 0.25D, 0.0D, 3.0D);
 
-    private static final ModConfigSpec.IntValue PARRY_STUN_RAW =
-            BUILDER.comment("Parry: ticks a parried NPC cannot start a new attack (players are only knocked back)")
-                    .defineInRange("parry.stun_ticks", 30, 0, 400);
 
-    private static final ModConfigSpec.IntValue PARRY_COUNTER_TICKS_RAW =
-            BUILDER.comment("Parry: ticks after a successful parry during which the defender's next hit is boosted")
-                    .defineInRange("parry.counter_ticks", 40, 0, 400);
 
-    private static final ModConfigSpec.DoubleValue PARRY_COUNTER_MULT_RAW =
-            BUILDER.comment("Parry: damage multiplier of the counter-attack hit (Parry Mastery adds to it)")
-                    .defineInRange("parry.counter_mult", 1.5D, 1.0D, 10.0D);
 
-    private static final ModConfigSpec.IntValue PARRY_PERFECT_TICKS_RAW =
-            BUILDER.comment("Parry: a hit caught within this many ticks of OPENING the window is a perfect parry (0 disables it)")
-                    .defineInRange("parry.perfect_ticks", 2, 0, 10);
 
-    private static final ModConfigSpec.DoubleValue PARRY_PERFECT_BONUS_RAW =
-            BUILDER.comment("Parry: extra damage multiplier added to the counter-attack hit after a perfect parry")
-                    .defineInRange("parry.perfect_counter_bonus", 0.5D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.BooleanValue CLASH_ENABLED_RAW =
             BUILDER.comment("Beam clash: two ki projectiles from different owners that cross freeze in place and start a",
@@ -587,67 +420,23 @@ public class ServerConfig {
             BUILDER.comment("Beam clash: length of the timing minigame in ticks (100 = 5 seconds)")
                     .defineInRange("clash.duration_ticks", 100, 20, 1200);
 
-    private static final ModConfigSpec.IntValue CLASH_CONTACT_RAW =
-            BUILDER.comment("Beam clash: ticks between the beams meeting and the bar starting (the sphere grows meanwhile)")
-                    .defineInRange("clash.contact_ticks", 10, 0, 100);
 
-    private static final ModConfigSpec.IntValue CLASH_RESOLVE_RAW =
-            BUILDER.comment("Beam clash: ticks the final numbers stay on screen before the winner's beam is fired back")
-                    .defineInRange("clash.resolve_ticks", 14, 0, 100);
 
-    private static final ModConfigSpec.IntValue CLASH_PERIOD_SLOW_RAW =
-            BUILDER.comment("Beam clash: ticks per full up-and-down sweep of the bar when the slow speed is drawn")
-                    .defineInRange("clash.period_slow_ticks", 30, 4, 200);
 
-    private static final ModConfigSpec.IntValue CLASH_PERIOD_MEDIUM_RAW =
-            BUILDER.comment("Beam clash: ticks per full sweep when the medium speed is drawn")
-                    .defineInRange("clash.period_medium_ticks", 18, 4, 200);
 
-    private static final ModConfigSpec.IntValue CLASH_PERIOD_FAST_RAW =
-            BUILDER.comment("Beam clash: ticks per full sweep when the fast speed is drawn")
-                    .defineInRange("clash.period_fast_ticks", 10, 4, 200);
 
-    private static final ModConfigSpec.IntValue CLASH_FIXED_SPEED_RAW =
-            BUILDER.comment("Beam clash: the bar speed is drawn ONCE per clash and is the same for both fighters until it ends.",
-                            "-1 = random between the three speeds, 0 = always slow, 1 = always medium, 2 = always fast")
-                    .defineInRange("clash.fixed_speed", -1, -1, 2);
 
-    private static final ModConfigSpec.IntValue CLASH_PING_GRACE_RAW =
-            BUILDER.comment("Beam clash: maximum ticks the server will rewind a player's button press to compensate for latency.",
-                            "The press is evaluated at the tick the client reports, clamped to this window and to the player's real ping,",
-                            "so a modified client cannot pick its own score. 0 disables compensation")
-                    .defineInRange("clash.ping_grace_ticks", 6, 0, 20);
 
-    private static final ModConfigSpec.DoubleValue CLASH_NO_PRESS_RAW =
-            BUILDER.comment("Beam clash: multiplier applied to the bar value of a player who never pressed (0 = they score nothing)")
-                    .defineInRange("clash.no_press_multiplier", 0.5D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_STAT_BONUS_CAP_RAW =
-            BUILDER.comment("Beam clash: the stronger beam gets up to this many bar points of bonus (out of 1000) so power level matters without deciding the minigame. 0 disables it")
-                    .defineInRange("clash.stat_bonus_cap", 100.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_TIE_MARGIN_RAW =
-            BUILDER.comment("Beam clash: bar-point difference below which the clash is a tie and both beams detonate")
-                    .defineInRange("clash.tie_margin", 10.0D, 0.0D, 200.0D);
 
     private static final ModConfigSpec.IntValue CLASH_TEAM_MAX_RAW =
             BUILDER.comment("Beam clash in teams: maximum fighters per side (the two who fired count). Other players join by",
                             "right-clicking a fighter while aiming at them. 1 disables joining")
                     .defineInRange("clash.team_max_size", 3, 1, 3);
 
-    private static final ModConfigSpec.DoubleValue CLASH_JOIN_RANGE_RAW =
-            BUILDER.comment("Beam clash in teams: how close (blocks) a player must be to a fighter to join their side")
-                    .defineInRange("clash.join_range", 6.0D, 1.0D, 32.0D);
 
-    private static final ModConfigSpec.BooleanValue CLASH_JOIN_RESETS_RAW =
-            BUILDER.comment("Beam clash in teams: what happens to the minigame when someone joins.",
-                            "false (default) = presses already made are KEPT, the newcomer gets a full bar of their own and the deadline",
-                            "is extended until it ends. true = the minigame restarts for everyone (all presses are wiped)")
-                    .define("clash.join_resets_minigame", false);
 
-    private static final ModConfigSpec.DoubleValue CLASH_OUTNUMBERED_BONUS_RAW =
-            BUILDER.comment("Beam clash in teams: base multiplier B for each member of the SMALLER team. Each one's bar value is multiplied by 1 + (bigger - smaller) * (B - 1) / smaller (2 vs 1 with B = 1.6: the lone player scores x1.6). 1 disables the handicap")
-                    .defineInRange("clash.outnumbered_bonus", 1.6D, 1.0D, 3.0D);
 
     private static final ModConfigSpec.DoubleValue CLASH_TIE_DAMAGE_RAW =
             BUILDER.comment("Beam clash: fraction of its damage each beam still deals when the clash is a tie")
@@ -657,26 +446,13 @@ public class ServerConfig {
             BUILDER.comment("Beam clash: fraction of the LOSER's beam damage added to the winner's returning beam (1.0 = full sum)")
                     .defineInRange("clash.damage_sum_fraction", 1.0D, 0.0D, 3.0D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_RETURN_SPEED_RAW =
-            BUILDER.comment("Beam clash: speed of the returning beam as a fraction of the technique's normal speed. Lower gives the loser more time to dodge (for example with Instant Transmission)")
-                    .defineInRange("clash.return_speed_multiplier", 0.9D, 0.1D, 2.0D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_HOMING_RAW =
-            BUILDER.comment("Beam clash: how strongly the returning beam curves toward the loser each tick (0 = flies straight, 0.08 = gentle, 0.15 = strong).",
-                            "It only steers while the loser is within clash.return_homing_range, so getting far enough away still dodges it")
-                    .defineInRange("clash.return_homing_strength", 0.08D, 0.0D, 0.5D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_HOMING_RANGE_RAW =
-            BUILDER.comment("Beam clash: distance in blocks within which the returning beam homes on the loser")
-                    .defineInRange("clash.return_homing_range", 24.0D, 1.0D, 128.0D);
 
     private static final ModConfigSpec.DoubleValue CLASH_MIN_DAMAGE_RAW =
             BUILDER.comment("Beam clash: projectiles dealing less damage than this never start a clash (they pass through each other)")
                     .defineInRange("clash.min_damage", 1.0D, 0.0D, 1.0E6D);
 
-    private static final ModConfigSpec.DoubleValue CLASH_MOB_SKILL_RAW =
-            BUILDER.comment("Beam clash: how well mobs time their press (0 = random, 1 = almost always near the peak)")
-                    .defineInRange("clash.mob_skill", 0.35D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.IntValue KI_LIFE_RAW =
             BUILDER.comment("Lifetime in ticks of the ki techniques that travel (20 ticks = 1 s). A projectile flies in a",
@@ -732,33 +508,14 @@ public class ServerConfig {
             BUILDER.comment("How DEX-derived FlySpeed translates to fly % per 100 points")
                     .defineInRange("scaling.fly", 0.25D, 0.01D, 8.0D);
 
-    private static final ModConfigSpec.DoubleValue FLY_BASE_SPEED_RAW =
-            BUILDER.comment("Base flying speed before stat/skill multipliers (vanilla creative = 0.05).",
-                            "Blocks per second ~= speed * 202")
-                    .defineInRange("fly.base_speed", 0.05D, 0.01D, 0.5D);
 
     private static final ModConfigSpec.DoubleValue FLY_KI_DRAIN_RAW =
             BUILDER.comment("Ki drained per TICK while flying in turbo (before the Fly skill reduction)")
                     .defineInRange("fly.ki_drain_per_tick", 0.15D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue FLY_TAKEOFF_IMPULSE_RAW =
-            BUILDER.comment("Vertical velocity (blocks/tick) granted once when flight starts from the",
-                            "ground (\"ki jump\"), on top of whatever vertical speed the player already has")
-                    .defineInRange("fly.takeoff_impulse", 0.55D, 0.0D, 3.0D);
 
-    private static final ModConfigSpec.DoubleValue FLY_TAKEOFF_KI_COST_RAW =
-            BUILDER.comment("One-time ki cost of the takeoff impulse (before the Fly skill reduction)")
-                    .defineInRange("fly.takeoff_ki_cost", 2.0D, 0.0D, 200.0D);
 
-    private static final ModConfigSpec.IntValue FLY_RAMP_UP_RAW =
-            BUILDER.comment("Ticks of sustained thrust (forward held, or cruise) for flight to reach its full speed bonus.",
-                            "Flight starts at vanilla creative speed and ramps up. 0 = instant (old behaviour)")
-                    .defineInRange("fly.ramp_up_ticks", 30, 0, 400);
 
-    private static final ModConfigSpec.IntValue FLY_RAMP_DOWN_RAW =
-            BUILDER.comment("Ticks without thrust for the flight speed bonus to fall back to vanilla creative speed.",
-                            "Shorter than ramp_up on purpose (braking is faster than accelerating). 0 = instant")
-                    .defineInRange("fly.ramp_down_ticks", 12, 0, 400);
 
     private static final ModConfigSpec.DoubleValue TURBO_DRAIN_PCT_PER_SEC_RAW =
             BUILDER.comment("Energy drained per second while in turbo, as a fraction of energyMax (0.005 = 0.5%/s)")
@@ -776,43 +533,13 @@ public class ServerConfig {
     // SPEC — Generador de energía
     // =====================================================================
 
-    private static final ModConfigSpec.IntValue ENERGY_GENERATOR_CAPACITY_RAW =
-            BUILDER.comment("FE buffer of the energy generator block. See GeneratorEnergy.")
-                    .defineInRange("energy.generator_capacity", 100_000, 1, 10_000_000);
 
-    private static final ModConfigSpec.IntValue ENERGY_GENERATOR_MAX_EXTRACT_RAW =
-            BUILDER.comment("Ceiling of FE per tick and per face that the generator pushes to a neighbor. Lets you watch the bar drop instead of emptying at once when a hungry machine is connected.")
-                    .defineInRange("energy.generator_max_extract", 1_000, 1, 1_000_000);
 
     // =====================================================================
     // SPEC — Cables, tuberías y tanques (energía y fluidos)
     // =====================================================================
     // Lectura con .get() directo: las consulta un block entity cada tick, pero son enteros baratos.
 
-    private static final ModConfigSpec.IntValue ENERGY_CABLE_CAPACITY =
-            BUILDER.comment("FE each energy cable adds to the shared buffer of its network (connected cables add up, like Mekanism).")
-                    .defineInRange("transport.energy_cable_capacity", 4_000, 1, 10_000_000);
-    private static final ModConfigSpec.IntValue ENERGY_CABLE_RATE =
-            BUILDER.comment("Max FE per tick an energy cable moves through each face.")
-                    .defineInRange("transport.energy_cable_rate", 2_000, 1, 10_000_000);
-    private static final ModConfigSpec.IntValue ENERGY_TANK_CAPACITY =
-            BUILDER.comment("FE an energy tank block can store.")
-                    .defineInRange("transport.energy_tank_capacity", 2_000_000, 1, 1_000_000_000);
-    private static final ModConfigSpec.IntValue ENERGY_TANK_RATE =
-            BUILDER.comment("Max FE per tick an energy tank moves through each face.")
-                    .defineInRange("transport.energy_tank_rate", 10_000, 1, 100_000_000);
-    private static final ModConfigSpec.IntValue FLUID_PIPE_CAPACITY =
-            BUILDER.comment("mB each fluid pipe adds to the shared buffer of its network (connected pipes add up, like Mekanism).")
-                    .defineInRange("transport.fluid_pipe_capacity", 1_000, 1, 1_000_000);
-    private static final ModConfigSpec.IntValue FLUID_PIPE_RATE =
-            BUILDER.comment("Max mB per tick a fluid pipe moves through each face.")
-                    .defineInRange("transport.fluid_pipe_rate", 500, 1, 1_000_000);
-    private static final ModConfigSpec.IntValue FLUID_TANK_CAPACITY =
-            BUILDER.comment("mB a fluid tank block can store.")
-                    .defineInRange("transport.fluid_tank_capacity", 32_000, 1, 100_000_000);
-    private static final ModConfigSpec.IntValue FLUID_TANK_RATE =
-            BUILDER.comment("Max mB per tick a fluid tank moves through each face.")
-                    .defineInRange("transport.fluid_tank_rate", 2_000, 1, 10_000_000);
 
     // =====================================================================
     // SPEC — Cámara de contención de ki (Fase 2a de la 0.7.0)
@@ -820,9 +547,6 @@ public class ServerConfig {
     // Opciones de baja frecuencia: las lee una máquina con un jugador dentro, no cada golpe.
     // Por eso van con .get() directo (ver config-y-red.md) y sin copia volatile.
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_CHARGE_PERCENT =
-            BUILDER.comment("Percent of the player's MAXIMUM ki the containment chamber drains per second while charging. More ki pool = more Ki fluid.")
-                    .defineInRange("ki_chamber.charge_percent_per_second", 5.0, 0.1, 100.0);
 
     private static final ModConfigSpec.DoubleValue KI_CHAMBER_RESERVE_PERCENT =
             BUILDER.comment("Charging stops by itself when the player's ki falls to this percent of the maximum, and the cooldown starts.")
@@ -832,188 +556,130 @@ public class ServerConfig {
             BUILDER.comment("Per-player cooldown after a charge reaches the ki reserve. Charging again before it ends is only possible with the chamber's Force setting, which drains health.")
                     .defineInRange("ki_chamber.cooldown_seconds", 60, 0, 3600);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_FORCE_BODY_DRAIN =
-            BUILDER.comment("Forced charge: once the player's ki reaches 0 the chamber keeps going on health. Percent of maximum body converted to Ki per second in that phase. It never kills: it stops at 1.")
-                    .defineInRange("ki_chamber.force_body_drain_percent_per_second", 2.0, 0.0, 100.0);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_FORCE_COOLDOWN_SECONDS =
-            BUILDER.comment("Extra cooldown seconds added after a forced charge, scaled by the share of maximum body given (100% of body = this many extra seconds).")
-                    .defineInRange("ki_chamber.force_extra_cooldown_seconds", 300, 0, 7200);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MB_PER_KI =
-            BUILDER.comment("Millibuckets of Ki fluid produced per point of ki drained.")
-                    .defineInRange("ki_chamber.mb_per_ki", 1.0, 0.001, 1000.0);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_TANK_CAPACITY =
-            BUILDER.comment("Capacity of the chamber's Ki fluid tank, in millibuckets.")
-                    .defineInRange("ki_chamber.tank_capacity_mb", 16_000, 1_000, 10_000_000);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_CAPACITY =
-            BUILDER.comment("FE buffer of the containment chamber.")
-                    .defineInRange("ki_chamber.fe_capacity", 100_000, 1, 10_000_000);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_MAX_PER_TICK =
-            BUILDER.comment("Ceiling of FE per tick the chamber converts from Ki fluid and pushes to neighbors.")
-                    .defineInRange("ki_chamber.fe_max_per_tick", 64, 1, 1_000_000);
 
     private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_BASE =
             BUILDER.comment("FE obtained per millibucket of Base Ki.")
                     .defineInRange("ki_chamber.fe_per_mb_base", 1, 1, 100_000);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_SUPER =
-            BUILDER.comment("FE obtained per millibucket of Super Ki.")
-                    .defineInRange("ki_chamber.fe_per_mb_super", 8, 1, 100_000);
 
     private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_DIVINE =
             BUILDER.comment("FE obtained per millibucket of Divine Ki.")
                     .defineInRange("ki_chamber.fe_per_mb_divine", 24, 1, 100_000);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_FE_PER_MB_LEGENDARY =
-            BUILDER.comment("FE obtained per millibucket of Legendary Ki. Higher than Divine on purpose: it is the unstable one.")
-                    .defineInRange("ki_chamber.fe_per_mb_legendary", 32, 1, 100_000);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MOB_HEALTH_PERCENT =
-            BUILDER.comment("Percent of a mob's MAXIMUM health the containment chamber drains per second from a mob locked inside. It never kills: it stops at 1 health.")
-                    .defineInRange("ki_chamber.mob_health_percent_per_second", 5.0, 0.1, 100.0);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_MB_PER_MOB_HEALTH =
-            BUILDER.comment("Millibuckets of Base Ki produced per point of health drained from a mob (a zombie has 20).")
-                    .defineInRange("ki_chamber.mb_per_mob_health", 10.0, 0.0, 100_000.0);
 
     // ── Fase 2b: mejoras, sobrecarga y batería ───────────────────────────────
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_SPEED_MULT =
-            BUILDER.comment("Each speed upgrade in the chamber multiplies its FE-per-tick ceiling by this (up to 3 upgrades: 64 -> 256 -> 1024 -> 4096 with the defaults).")
-                    .defineInRange("ki_chamber.speed_upgrade_multiplier", 4.0, 1.0, 64.0);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_STORAGE_PERCENT =
-            BUILDER.comment("Each storage upgrade in the chamber adds this percent of the base tank and FE capacity (up to 4 upgrades).")
-                    .defineInRange("ki_chamber.storage_upgrade_percent", 100.0, 0.0, 10_000.0);
 
-    private static final ModConfigSpec.IntValue KI_CHAMBER_OVERLOAD_SECONDS =
-            BUILDER.comment("Seconds of charging a Ki type WITHOUT its tolerance upgrade before the chamber explodes. Smoke first, alarm from 40% on.")
-                    .defineInRange("ki_chamber.overload_seconds", 12, 1, 3600);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_OVERLOAD_BODY_PERCENT =
-            BUILDER.comment("Percent of maximum body the overload explosion takes from whoever was charging. It never kills: it stops at 1.")
-                    .defineInRange("ki_chamber.overload_body_damage_percent", 50.0, 0.0, 100.0);
 
-    private static final ModConfigSpec.DoubleValue KI_CHAMBER_OVERLOAD_POWER =
-            BUILDER.comment("Explosion power of an overloaded chamber (TNT is 4). Whether it breaks blocks is the gamerule zenkai_kiOverloadGriefing.")
-                    .defineInRange("ki_chamber.overload_explosion_power", 3.0, 0.0, 16.0);
 
-    private static final ModConfigSpec.IntValue BATTERY_CAPACITY =
-            BUILDER.comment("FE capacity of the energy battery item.")
-                    .defineInRange("energy.battery_capacity", 100_000, 1, 100_000_000);
 
-    private static final ModConfigSpec.IntValue BATTERY_MAX_TRANSFER =
-            BUILDER.comment("FE per tick the battery accepts or gives through its energy capability (chargers and machines of any mod).")
-                    .defineInRange("energy.battery_max_transfer", 1_000, 1, 10_000_000);
 
     // ── Motor de Ki (compat opcional con Create, 0.7.0) ──────────────────────
 
-    private static final ModConfigSpec.IntValue KI_MOTOR_RATED_SU =
-            BUILDER.comment("Create stress units (SU) the Ki Motor provides in motor mode, whatever RPM is chosen (the capacity per RPM is this divided by the RPM).")
-                    .defineInRange("ki_motor.rated_su", 4096, 1, 1_000_000);
 
-    private static final ModConfigSpec.DoubleValue KI_MOTOR_FE_PER_SU =
-            BUILDER.comment("FE per tick the motor burns per SU of load actually used (it only pays for the network load, not for the rated SU).")
-                    .defineInRange("ki_motor.fe_per_su", 0.05, 0.0001, 1000.0);
 
-    private static final ModConfigSpec.IntValue KI_MOTOR_GENERATOR_IMPACT =
-            BUILDER.comment("Stress impact per RPM of the motor in generator mode (rotation to FE): SU = this x RPM.")
-                    .defineInRange("ki_motor.generator_impact", 32, 1, 100_000);
 
-    private static final ModConfigSpec.DoubleValue KI_MOTOR_GENERATOR_FE_PER_SU =
-            BUILDER.comment("FE per tick produced per SU absorbed in generator mode. Keep it below ki_motor.fe_per_su so a motor and a generator chained together cannot create energy.")
-                    .defineInRange("ki_motor.generator_fe_per_su", 0.04, 0.0001, 1000.0);
 
-    private static final ModConfigSpec.IntValue KI_MOTOR_FE_CAPACITY =
-            BUILDER.comment("FE buffer of the Ki Motor.")
-                    .defineInRange("ki_motor.fe_capacity", 50_000, 1, 100_000_000);
 
-    private static final ModConfigSpec.IntValue KI_MOTOR_TANK_CAPACITY =
-            BUILDER.comment("Ki fluid tank of the Ki Motor, in mB.")
-                    .defineInRange("ki_motor.tank_capacity", 4_000, 1, 1_000_000);
 
-    private static final ModConfigSpec.IntValue KI_MOTOR_IO_PER_TICK =
-            BUILDER.comment("Ceiling of FE per tick the motor takes in (ports and fluid conversion) or pushes out (generator mode).")
-                    .defineInRange("ki_motor.io_per_tick", 2_048, 1, 10_000_000);
 
     // ── Fluidos de Ki derramados en el mundo (0.7.0) ─────────────────────────
-    private static final ModConfigSpec.DoubleValue KI_FLUID_RECHARGE_BASE =
-            BUILDER.comment("Ki recharged per second, as % of the pool, while standing in Ki Base you have affinity with (any player with ki).")
-                    .defineInRange("ki_fluid.recharge_base_percent", 5.0, 0.0, 100.0);
 
-    private static final ModConfigSpec.DoubleValue KI_FLUID_RECHARGE_STRONG =
-            BUILDER.comment("Ki recharged per second, as % of the pool, in Super, Divine and Legendary Ki you have affinity with.")
-                    .defineInRange("ki_fluid.recharge_strong_percent", 10.0, 0.0, 100.0);
 
-    private static final ModConfigSpec.DoubleValue KI_FLUID_LEGENDARY_OVERCHARGE =
-            BUILDER.comment("Legendary Ki lets a Legendary player overfill their ki up to this % ABOVE the pool. The extra fades over ki_fluid.overcharge_fade_seconds after leaving the fluid.")
-                    .defineInRange("ki_fluid.legendary_overcharge_percent", 25.0, 0.0, 400.0);
 
-    private static final ModConfigSpec.IntValue KI_FLUID_OVERCHARGE_FADE =
-            BUILDER.comment("Seconds the Legendary overcharge takes to fade after leaving the fluid.")
-                    .defineInRange("ki_fluid.overcharge_fade_seconds", 30, 1, 3600);
 
-    private static final ModConfigSpec.DoubleValue KI_FLUID_DRAIN =
-            BUILDER.comment("Ki swallowed per second, as % of the pool, from a player WITHOUT affinity for that ki (Super: no Super form bought; Divine: no God Ki; Legendary: not Legendary).")
-                    .defineInRange("ki_fluid.drain_percent", 8.0, 0.0, 100.0);
 
-    private static final ModConfigSpec.DoubleValue KI_FLUID_DAMAGE =
-            BUILDER.comment("Damage per second the ki deals to mobs without ki, and to players without affinity once their ki is empty.")
-                    .defineInRange("ki_fluid.damage_per_second", 2.0, 0.0, 1000.0);
 
-    public static double kiFluidRechargeBase()       { return KI_FLUID_RECHARGE_BASE.get(); }
-    public static double kiFluidRechargeStrong()     { return KI_FLUID_RECHARGE_STRONG.get(); }
-    public static double kiFluidLegendaryOvercharge() { return KI_FLUID_LEGENDARY_OVERCHARGE.get(); }
-    public static int    kiFluidOverchargeFadeSeconds() { return KI_FLUID_OVERCHARGE_FADE.get(); }
-    public static double kiFluidDrain()              { return KI_FLUID_DRAIN.get(); }
-    public static double kiFluidDamage()             { return KI_FLUID_DAMAGE.get(); }
+    public static double kiFluidRechargeBase()       { return (5.0); }
+    public static double kiFluidRechargeStrong()     { return (10.0); }
+    public static double kiFluidLegendaryOvercharge() { return (25.0); }
+    public static int    kiFluidOverchargeFadeSeconds() { return (30); }
+    public static double kiFluidDrain()              { return (8.0); }
+    public static double kiFluidDamage()             { return (2.0); }
 
-    public static int    kiMotorRatedSu()          { return KI_MOTOR_RATED_SU.get(); }
-    public static double kiMotorFePerSu()          { return KI_MOTOR_FE_PER_SU.get(); }
-    public static int    kiMotorGeneratorImpact()  { return KI_MOTOR_GENERATOR_IMPACT.get(); }
-    public static double kiMotorGeneratorFePerSu() { return KI_MOTOR_GENERATOR_FE_PER_SU.get(); }
-    public static int    kiMotorFeCapacity()       { return KI_MOTOR_FE_CAPACITY.get(); }
-    public static int    kiMotorTankCapacity()     { return SPEC.isLoaded() ? KI_MOTOR_TANK_CAPACITY.get() : 4_000; }
-    public static int    kiMotorIoPerTick()        { return KI_MOTOR_IO_PER_TICK.get(); }
 
-    public static double kiChamberSpeedMult()          { return KI_CHAMBER_SPEED_MULT.get(); }
-    public static double kiChamberStoragePercent()     { return KI_CHAMBER_STORAGE_PERCENT.get(); }
-    public static int    kiChamberOverloadSeconds()    { return KI_CHAMBER_OVERLOAD_SECONDS.get(); }
-    public static double kiChamberOverloadBodyPercent() { return KI_CHAMBER_OVERLOAD_BODY_PERCENT.get(); }
-    public static double kiChamberOverloadPower()      { return KI_CHAMBER_OVERLOAD_POWER.get(); }
+    /** Capacidad de un bloque tecnológico con el multiplicador global (1.0 si la config aún no cargó). */
+    private static int techCap(int base) {
+        double m = SPEC.isLoaded() ? TECH_CAPACITY_MULTIPLIER.get() : 1.0D;
+        return (int) Math.max(1L, Math.min(Integer.MAX_VALUE, Math.round(base * m)));
+    }
+    /** Caudal por tick de un bloque tecnológico con el multiplicador global. */
+    private static int techRate(int base) {
+        double m = SPEC.isLoaded() ? TECH_RATE_MULTIPLIER.get() : 1.0D;
+        return (int) Math.max(1L, Math.min(Integer.MAX_VALUE, Math.round(base * m)));
+    }
+    private static double regenMult() { return SPEC.isLoaded() ? REGEN_MULTIPLIER.get() : 1.0D; }
+
+    /** Minutos de maestría de la intensidad {@code index} (0 low … 3 exceptional). */
+    public static double rageMinutes(int index) {
+        List<? extends Number> l = RAGE_MINUTES.get();
+        double[] def = {5.0D, 15.0D, 30.0D, 60.0D};
+        return index >= 0 && index < l.size() ? l.get(index).doubleValue() : def[Math.max(0, Math.min(3, index))];
+    }
+
+    public static int    kiMotorRatedSu()          { return (4096); }
+    public static double kiMotorFePerSu()          { return (0.05); }
+    public static int    kiMotorGeneratorImpact()  { return (32); }
+    public static double kiMotorGeneratorFePerSu() { return (0.04); }
+
+    // Cámara de gravedad (Fase 3 de la 0.7.0). Constantes por la regla de «pocas opciones»; los
+    // mandos globales tech.* escalan capacidad y entrada como en el resto de máquinas.
+    /** FE por tick por cada punto de g por encima de 1, con el radio mínimo (5). */
+    public static double gravityChamberFePerG()        { return (2.0); }
+    /** Cuánto sube el coste por cada bloque de radio por encima de 5 (radio 10 = ×2,25). */
+    public static double gravityChamberFeRadiusStep()  { return (0.25); }
+    public static int    gravityChamberFeCapacity()    { return techCap(200_000); }
+    public static int    gravityChamberMaxReceive()    { return techRate(4_096); }
+    /** % del máximo (body o vida) que drena por segundo pasada r = 2,0; nunca baja de 1. */
+    public static double gravityChamberDrainPercent()  { return (1.0); }
+    public static double gravityChamberDrainLoad()     { return (2.0); }
+    public static int    kiMotorFeCapacity()       { return techCap(50_000); }
+    public static int    kiMotorTankCapacity()     { return techCap(4_000); }
+    public static int    kiMotorIoPerTick()        { return techRate(2_048); }
+
+    public static double kiChamberSpeedMult()          { return (4.0); }
+    public static double kiChamberStoragePercent()     { return (100.0); }
+    public static int    kiChamberOverloadSeconds()    { return (12); }
+    public static double kiChamberOverloadBodyPercent() { return (50.0); }
+    public static double kiChamberOverloadPower()      { return (3.0); }
     // Las dos de la batería las lee su tooltip, que puede pintarse sin mundo cargado (lista de
     // recetas, pantalla de un mod): con el config de servidor sin cargar .get() lanza, así que
     // caen al valor por defecto.
-    public static int batteryCapacity()    { return SPEC.isLoaded() ? BATTERY_CAPACITY.get() : 100_000; }
-    public static int batteryMaxTransfer() { return SPEC.isLoaded() ? BATTERY_MAX_TRANSFER.get() : 1_000; }
+    public static int batteryCapacity()    { return techCap(100_000); }
+    public static int batteryMaxTransfer() { return techRate(1_000); }
 
-    public static double kiChamberMobHealthPercent() { return KI_CHAMBER_MOB_HEALTH_PERCENT.get(); }
-    public static double kiChamberMbPerMobHealth()   { return KI_CHAMBER_MB_PER_MOB_HEALTH.get(); }
-    public static double kiChamberChargePercent()   { return KI_CHAMBER_CHARGE_PERCENT.get(); }
+    public static double kiChamberMobHealthPercent() { return (5.0); }
+    public static double kiChamberMbPerMobHealth()   { return (10.0); }
+    public static double kiChamberChargePercent()   { return (5.0); }
     public static double kiChamberReservePercent()  { return KI_CHAMBER_RESERVE_PERCENT.get(); }
     public static int    kiChamberCooldownSeconds() { return KI_CHAMBER_COOLDOWN_SECONDS.get(); }
-    public static double kiChamberForceBodyDrain()  { return KI_CHAMBER_FORCE_BODY_DRAIN.get(); }
-    public static int    kiChamberForceExtraCooldownSeconds() { return KI_CHAMBER_FORCE_COOLDOWN_SECONDS.get(); }
-    public static int energyCableCapacity() { return ENERGY_CABLE_CAPACITY.get(); }
-    public static int energyCableRate()     { return ENERGY_CABLE_RATE.get(); }
-    public static int energyTankCapacity()  { return ENERGY_TANK_CAPACITY.get(); }
-    public static int energyTankRate()      { return ENERGY_TANK_RATE.get(); }
-    public static int fluidPipeCapacity()   { return FLUID_PIPE_CAPACITY.get(); }
-    public static int fluidPipeRate()       { return FLUID_PIPE_RATE.get(); }
-    public static int fluidTankCapacity()   { return FLUID_TANK_CAPACITY.get(); }
-    public static int fluidTankRate()       { return FLUID_TANK_RATE.get(); }
-    public static double kiChamberMbPerKi()         { return KI_CHAMBER_MB_PER_KI.get(); }
-    public static int    kiChamberTankCapacity()    { return KI_CHAMBER_TANK_CAPACITY.get(); }
-    public static int    kiChamberFeCapacity()      { return KI_CHAMBER_FE_CAPACITY.get(); }
-    public static int    kiChamberFeMaxPerTick()    { return KI_CHAMBER_FE_MAX_PER_TICK.get(); }
+    public static double kiChamberForceBodyDrain()  { return (5.0); }
+    public static int    kiChamberForceExtraCooldownSeconds() { return (300); }
+    public static int energyCableCapacity() { return techCap(4_000); }
+    public static int energyCableRate()     { return techRate(2_000); }
+    public static int energyTankCapacity()  { return techCap(2_000_000); }
+    public static int energyTankRate()      { return techRate(10_000); }
+    public static int fluidPipeCapacity()   { return techCap(1_000); }
+    public static int fluidPipeRate()       { return techRate(500); }
+    public static int fluidTankCapacity()   { return techCap(32_000); }
+    public static int fluidTankRate()       { return techRate(2_000); }
+    public static double kiChamberMbPerKi()         { return (1.0); }
+    public static int    kiChamberTankCapacity()    { return techCap(16_000); }
+    public static int    kiChamberFeCapacity()      { return techCap(100_000); }
+    public static int    kiChamberFeMaxPerTick()    { return techRate(64); }
     public static int    kiChamberFePerMbBase()      { return KI_CHAMBER_FE_PER_MB_BASE.get(); }
-    public static int    kiChamberFePerMbSuper()     { return KI_CHAMBER_FE_PER_MB_SUPER.get(); }
+    public static int    kiChamberFePerMbSuper()     { return (8); }
     public static int    kiChamberFePerMbDivine()    { return KI_CHAMBER_FE_PER_MB_DIVINE.get(); }
-    public static int    kiChamberFePerMbLegendary() { return KI_CHAMBER_FE_PER_MB_LEGENDARY.get(); }
+    public static int    kiChamberFePerMbLegendary() { return (32); }
 
     // =====================================================================
     // SPEC — Entidades sin stats propias
@@ -1063,17 +729,8 @@ public class ServerConfig {
             BUILDER.comment("energyMax = 90 + SPI * scale")
                     .defineInRange("pools.energy_scale", 1.0D, 0.1D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue REGEN_BODY_RAW =
-            BUILDER.comment("Body regen percent per second (1.0 = 1% of max per second)")
-                    .defineInRange("regen.base_per_second.body_percent", 1.5D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue REGEN_STAMINA_RAW =
-            BUILDER.comment("Stamina regen percent per second (1.0 = 1% of max per second)")
-                    .defineInRange("regen.base_per_second.stamina_percent", 3.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue REGEN_ENERGY_RAW =
-            BUILDER.comment("Energy/Ki regen percent per second (1.0 = 1%). Meditation multiplies this, and also drives the charge rate")
-                    .defineInRange("regen.base_per_second.energy_percent", 1.0D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue FOOD_KI_RAW =
             BUILDER.comment("Ki restored per nutrition point when finishing a food item, as % of energyMax (2.0 = 2%)")
@@ -1166,11 +823,6 @@ public class ServerConfig {
                             + "instead of relative to where the camera looks.")
                     .define("lock_on.directed_dash", true);
 
-    private static final ModConfigSpec.DoubleValue TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW =
-            BUILDER.comment("Ki techniques: global ceiling (in blocks) for the explosion radius of any technique.",
-                            "0 = no ceiling (default): big fights are meant to be disproportionate.",
-                            "Only worth setting on servers where a max-size Supernova (radius ~19.5) is too much.")
-                    .defineInRange("technique.explosion_radius_cap", 0.0D, 0.0D, 256.0D);
 
     private static final ModConfigSpec.DoubleValue VANILLA_PL_FACTOR_RAW =
             BUILDER.comment("PL of vanilla mobs / raceless players = max_health * factor")
@@ -1270,21 +922,9 @@ public class ServerConfig {
             BUILDER.comment("Black Flash: damage multiplier, applied to the RAW hit before defense. Because defense is proportional, x3 raw lands between x3.9 (even match) and x7.3 (against a mastered SSJ4) in effective terms - but absolute damage still DROPS the more outclassed you are, so this is not a giant-killer. It turns a useless hit into a normal one.")
                     .defineInRange("black_flash.multiplier", 3.0D, 1.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue BF_CHARGE_EXPONENT_RAW =
-            BUILDER.comment("Black Flash: chance = base * charge^exponent, using the RAW vanilla attack ticker. 3.0 means a 75% charge hit is at 42% of the chance and a 50% hit at 12.5%. Lower it to reward timing less; 0 makes charge irrelevant and turns the mechanic into a spam lottery.")
-                    .defineInRange("black_flash.charge_exponent", 3.0D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue BF_LUCK_FACTOR_RAW =
-            BUILDER.comment("Black Flash: how much each point of the vanilla LUCK attribute multiplies the chance. 0.5 = Luck I takes 3% to 4.5%, Unlucky takes it to 1.5%. Any mod that grants luck feeds into this for free. 0 ignores luck.")
-                    .defineInRange("black_flash.luck_factor", 0.5D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue BF_MAX_CHANCE_RAW =
-            BUILDER.comment("Black Flash: hard ceiling after luck is applied. Exists because LUCK is unbounded - a modded +40 luck would otherwise mean a proc on every perfect hit.")
-                    .defineInRange("black_flash.max_chance", 0.25D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue BF_STAT_FACTOR_RAW =
-            BUILDER.comment("Black Flash: extra damage pulled from the player's BEST of STR/WIL/SPI, valued in melee scale, added on top of the multiplier. Exists so a WIL build - whose bare fists are worthless - gets a Black Flash worth landing. 1.0 = adds one full best-stat hit at the current charge. 0 disables the term and leaves a pure multiplier.")
-                    .defineInRange("black_flash.stat_factor", 1.0D, 0.0D, 10.0D);
 
     // =====================================================================
     // SPEC — Maestría y efecto Majin
@@ -1323,9 +963,6 @@ public class ServerConfig {
                             "Additive with the form and Kaioken bonuses.")
                     .defineInRange("namekian.giant_stat_bonus", 0.60D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_STAT_BONUS_RAW =
-            BUILDER.comment("Stat bonus fraction while under the Majin effect (0.20 = +20%, 0.15 = +15%). The downside is that the effect pins alignment at -100.")
-                    .defineInRange("majin.effect_stat_bonus", 0.20D, 0.0D, 5.0D);
 
     private static final ModConfigSpec.DoubleValue NAMEK_LEGEND_REGEN_RAW =
             BUILDER.comment("Namekian God form (namek_god): extra body regeneration per second while it is worn, as a percent of max body (1.0 = 1%/s). It scales from 50% (mastery 0) to 100% (mastery 100) and ignores the in-combat regen penalty: the value is in enduring.")
@@ -1355,45 +992,15 @@ public class ServerConfig {
             BUILDER.comment("Human God form: radius in blocks in which allies count.")
                     .defineInRange("human_god.ally_radius", 24.0D, 1.0D, 128.0D);
 
-    private static final ModConfigSpec.IntValue MAJIN_LEGEND_EXTRA_CAP_RAW =
-            BUILDER.comment("Majin Legendary form (Devouring Majin): extra mass stacks it can hold above majin.mass_cap.")
-                    .defineInRange("majin_legendary.extra_cap", 6, 0, 50);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_DURATION_MULT_RAW =
-            BUILDER.comment("Majin Legendary form: multiplier on how long the mass lasts after the last absorption (the charges decay slowly).")
-                    .defineInRange("majin_legendary.duration_mult", 3.0D, 1.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_RAW =
-            BUILDER.comment("Majin Legendary form: each absorption steals this fraction of the target/self power-level ratio as a temporary stat bonus (0.25 = absorbing an equal-PL target gives +25%, before the per-absorption cap).")
-                    .defineInRange("majin_legendary.steal_ratio", 0.25D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_MAX_RAW =
-            BUILDER.comment("Majin Legendary form: most stat bonus a single absorption can steal (0.10 = +10%).")
-                    .defineInRange("majin_legendary.steal_per_absorb_max", 0.10D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_CAP_RAW =
-            BUILDER.comment("Majin Legendary form: cap of the total stolen stat bonus (0.50 = +50%). It expires with the mass.")
-                    .defineInRange("majin_legendary.steal_cap", 0.50D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_KI_REFUND_RAW =
-            BUILDER.comment("Majin Legendary form: percent of max ki restored by each absorption. It prolongs the form, whose duration is the ki it burns.")
-                    .defineInRange("majin_legendary.ki_refund_percent", 10.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_LEGEND_PERCENT_RAW =
-            BUILDER.comment("Arcosian Legendary form (Broken Restraint): FIXED stat percent while it is worn (14.0 = +1400%). It does not grow with TP or mastery; God Ki resonance (legendary.divine_resonance_mult) still multiplies it.")
-                    .defineInRange("arcosian.legendary.stat_percent", 14.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_RAW =
-            BUILDER.comment("Arcosian Legendary form: seconds of TENSION once transformed. When it runs out the form collapses (back to Base with ki and stamina at zero) and a long cooldown starts. No continuous ki drain.")
-                    .defineInRange("arcosian.legendary.tension_seconds", 45.0D, 1.0D, 3600.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_MASTERY_RAW =
-            BUILDER.comment("Arcosian Legendary form: extra tension from the shared mastery (1.0 = up to x2 of the tension at 100% mastery of the form it starts from).")
-                    .defineInRange("arcosian.legendary.tension_mastery_bonus", 1.0D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_LEGEND_COOLDOWN_RAW =
-            BUILDER.comment("Arcosian Legendary form: cooldown in seconds after a collapse. Leaving on your own earlier gives a cooldown proportional to the tension used.")
-                    .defineInRange("arcosian.legendary.cooldown_seconds", 600.0D, 0.0D, 86400.0D);
 
     private static final ModConfigSpec.DoubleValue HUMAN_LEGEND_DEFENSE_RAW =
             BUILDER.comment("Human Legendary form (Reckless): extra damage taken while it is worn, as a fraction (0.25 = takes +25% damage). The price of its power: whoever hits first wins.")
@@ -1407,17 +1014,8 @@ public class ServerConfig {
             BUILDER.comment("Namekian Legendary form (Ancestors): if true, natural body regeneration (including the Namekian passive) is off while it is worn; healing only comes from fighting.")
                     .define("namek_legendary.block_natural_regen", true);
 
-    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_CAP_RAW =
-            BUILDER.comment("Arcosian God (divine tank): multiplier on the Power Point tank capacity once the form is UNLOCKED (the tank charges in Base, so it must apply there too). A bigger tank lasts longer because the Power Points are spent in absolute amounts per second.")
-                    .defineInRange("arcosian.god.pp_capacity_mult", 1.5D, 1.0D, 20.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_DRAIN_RAW =
-            BUILDER.comment("Arcosian God (divine tank): multiplier on how fast the Power Point tank drains while the form is WORN (0.5 = half as fast).")
-                    .defineInRange("arcosian.god.pp_drain_mult", 0.5D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_STAT_RAW =
-            BUILDER.comment("Arcosian God (divine tank): multiplier on the stat bonus the Power Point tank grants while the form is WORN.")
-                    .defineInRange("arcosian.god.pp_stat_mult", 1.5D, 0.0D, 20.0D);
 
     private static final ModConfigSpec.DoubleValue LEGENDARY_STATE_BONUS_RAW =
             BUILDER.comment("Stat bonus fraction for being Legendary (the Shenlong wish), whatever the race and form worn (0.10 = +10%). It opens more paths, so it is smaller than the Majin bonus.")
@@ -1427,13 +1025,7 @@ public class ServerConfig {
             BUILDER.comment("Percent chance (0-100) of being BORN Legendary: rolled once when a character is created and again on every reincarnation, for any race. It grants the Legendary STATE (the same one as the Shenlong wish), not a transformation. 0 = off.")
                     .defineInRange("legendary.birth_chance_percent", 5.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_ENV_FIRE_RAW =
-            BUILDER.comment("Arcosian (hostile environments): fraction of FIRE damage ignored (fire, burning, lava, magma; 0.2 = takes 20% less). Cold immunity is the race passive and is not configured here.")
-                    .defineInRange("arcosian.environment.fire_damage_reduction", 0.2D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.BooleanValue MAJIN_LEGENDARY_EXCLUSIVE_RAW =
-            BUILDER.comment("If true, the Majin effect and being Legendary are mutually exclusive: a Majin cannot make the Legendary wish and a Legendary cannot be put under the Majin effect.")
-                    .define("majin.legendary_mutually_exclusive", true);
 
     // =====================================================================
     // SPEC — Entrenamiento
@@ -1458,35 +1050,10 @@ public class ServerConfig {
                             "entry's comment for why.")
                     .defineInRange("entity.tp_per_pl", 0.25D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue TRAIN_AIR_TP_RAW =
-            BUILDER.comment("Training: TP per air punch = own PL * factor")
-                    .defineInRange("training.air_tp_factor", 0.0001D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue TRAIN_AIR_COST_RAW =
-            BUILDER.comment("Training: air punch stamina cost as fraction of max stamina")
-                    .defineInRange("training.air_stamina_cost_pct", 0.04D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.IntValue TRAIN_AIR_TICKS_RAW =
-            BUILDER.comment("Training: min ticks between counted air punches")
-                    .defineInRange("training.air_min_ticks", 10, 1, 200);
 
-    private static final ModConfigSpec.DoubleValue TRAIN_HALF_LIFE_RAW =
-            BUILDER.comment("Training: fatigue (session TP / own PL) at which efficiency halves")
-                    .defineInRange("training.fatigue_half_life", 0.10D, 0.001D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue TRAIN_DECAY_RAW =
-            BUILDER.comment("Training: fatigue recovered per real minute of play.",
-                            "Recalibrated 2026-08-20 (0.01 -> 0.2, x20): it is the DOMINANT lever of the system. In sustained",
-                            "farming, TP/hour = 60 x this value x your PL -- the combat pace (fast or slow) cancels itself out",
-                            "and does NOT affect that number (checked by simulation: from 2s to 40s per kill gave the same",
-                            "result with the old 0.01). Raising damage_tp_factor/entity.tp_per_pl without touching",
-                            "this is of little use: the extra reward is cancelled by the extra fatigue it generates.",
-                            "It is still an ESTIMATE of the model (assumes ~15s per 'leveled' kill); real playtesting is needed",
-                            "to tune it -- see the balance simulation (tools/tp_economy_sim.py).",
-                            "Raised 2026-10-08 (0.2 -> 0.3): at 0.2 a player with no buffs needed ~153h to reach 5,000,000 TP.",
-                            "At 0.3 it is ~102h with no buffs, ~51h in the HTC and ~20h in the HTC with full weights.",
-                            "Hours scale as 1 / this value. Existing worlds keep the value saved in their serverconfig file.")
-                    .defineInRange("training.fatigue_decay_per_minute", 0.30D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =
             BUILDER.comment("Training: TP multiplier while inside the HTC")
@@ -1496,78 +1063,18 @@ public class ServerConfig {
             BUILDER.comment("Training: efficiency floor (never drops to 0)")
                     .defineInRange("training.min_efficiency", 0.05D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_CAP_DIV_RAW =
-            BUILDER.comment("Weights: carry capacity (tons) = (cleanPL / divisor) ^ exponent")
-                    .defineInRange("training.weight_capacity_divisor", 3.4D, 0.01D, 10000.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_CAP_EXP_RAW =
-            BUILDER.comment("Weights: capacity exponent. Below 1 keeps weights relevant at high PL")
-                    .defineInRange("training.weight_capacity_exponent", 0.6D, 0.05D, 4.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_STAT_PEN_RAW =
-            BUILDER.comment("Weights: melee/defense/ki power lost at full load (0.25 = -25%)")
-                    .defineInRange("training.weight_stat_penalty", 0.25D, 0.0D, 0.95D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_MOVE_PEN_RAW =
-            BUILDER.comment("Weights: ground/fly speed lost at full load")
-                    .defineInRange("training.weight_move_penalty", 0.60D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_JUMP_PEN_RAW =
-            BUILDER.comment("Weights: jump height lost at full load")
-                    .defineInRange("training.weight_jump_penalty", 0.40D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_GRAVITY_JUMP_FACTOR_RAW =
-            BUILDER.comment("Weights: how much AMBIENT gravity tons (Kaiosama/HTC, not equipped " +
-                    "gear) count towards the jump penalty specifically, relative to how much they " +
-                    "count for everything else (move/stat/TP, always 100%). 1.0 = same as equipped " +
-                    "weight; 0.0 = gravity never touches jump height at all. Default 0.25: gravity " +
-                    "still slows you and boosts TP at full weight, but doesn't crush your jump the " +
-                    "way carrying literal dead weight does -- user feedback 2026-09-10, needs " +
-                    "playtesting calibration, see .claude/pendiente/gravedad-planeta-kaiosama.md")
-                    .defineInRange("training.weight_gravity_jump_factor", 0.25D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_TP_BONUS_RAW =
-            BUILDER.comment("Weights: extra TP at full load (1.5 = x2.5 TP)")
-                    .defineInRange("training.weight_tp_bonus", 1.5D, 0.0D, 20.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_OVER_THRESH_RAW =
-            BUILDER.comment("Weights: load ratio above which the player is overloaded")
-                    .defineInRange("training.weight_overload_threshold", 1.2D, 1.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_OVER_MOVE_RAW =
-            BUILDER.comment("Weights: movement multiplier while overloaded (drag)")
-                    .defineInRange("training.weight_overload_move_factor", 0.15D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_KAIOSAMA_TONS_RAW =
-            BUILDER.comment("Weights: ambient tons added by Kaiosama's planet natural gravity " +
-                    "(stacks with equipped weighted gear -- see .claude/pendiente/gravedad-planeta-kaiosama.md). " +
-                    "200 -> 100 (2026-09-10): confirmed in-game by the user at PL ~20k, still needs more " +
-                    "playtesting at other PL ranges. 100 -> 40 (2026-11-01, user report: too punishing for " +
-                    "the PL at which the planet is reached; 40 t is comfortable from PL ~1.6k and overloads " +
-                    "below ~1.9k, instead of ~5.4k). Key renamed to _v2 on 2026-11-01 so stale 100/200 values in old serverconfig files stop overriding it")
-                    .defineInRange("training.weight_kaiosama_ambient_tons_v2", 40.0D, 0.0D, 1.0E7D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_KAIOSAMA_GRAVITY_MULT_RAW =
-            BUILDER.comment("Weights: DISPLAY-ONLY gravity multiplier shown for Kaiosama's planet " +
-                    "(the generic \"Gravity\" row in the Training Hub, e.g. \"x10\"). Purely cosmetic " +
-                    "flavor text -- does NOT feed the load math, which always uses the flat ambient " +
-                    "tons above so its effect keeps shrinking at high PL regardless of this number.")
-                    .defineInRange("training.weight_kaiosama_gravity_multiplier", 10.0D, 1.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_HTC_TONS_RAW =
-            BUILDER.comment("Weights: ambient tons added by the Hyperbolic Time Chamber's own " +
-                    "natural gravity (the DIMENSION itself, not the future gravity chamber block -- " +
-                    "stacks with equipped weighted gear, see .claude/pendiente/gravedad-planeta-kaiosama.md). " +
-                    "40 -> 3 (2026-09-10): tp_economy_sim.py showed 40t overloaded (r > weight_overload_threshold, " +
-                    "TP bonus ZEROED, not capped) any player below PL ~1,000-2,500 -- the HTC has no PL gate, " +
-                    "used from early game, so that overloaded almost everyone who trained there")
-                    .defineInRange("training.weight_htc_ambient_tons", 3.0D, 0.0D, 1.0E7D);
 
-    private static final ModConfigSpec.DoubleValue WEIGHT_HTC_GRAVITY_MULT_RAW =
-            BUILDER.comment("Weights: DISPLAY-ONLY gravity multiplier shown for the Hyperbolic Time " +
-                    "Chamber (the generic \"Gravity\" row in the Training Hub, e.g. \"x2\"). Purely " +
-                    "cosmetic flavor text, same caveat as weight_kaiosama_gravity_multiplier.")
-                    .defineInRange("training.weight_htc_gravity_multiplier", 2.0D, 1.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue PU_TP_MULT_RAW =
             BUILDER.comment("TP multiplier while Potential Unlock is ACTIVE. You are using your potential, not training it.")
@@ -1585,25 +1092,10 @@ public class ServerConfig {
     // SPEC — Power Points arcosianos, Ultra Instinct (calor), Ultra Ego (daño)
     // =====================================================================
 
-    private static final ModConfigSpec.DoubleValue ARC_PP_GAIN_RAW =
-            BUILDER.comment("Arcosian Power Points gained per second while in BASE form and power below 50%. Second form charges at half this rate and Third form at a quarter (the lower the form, the faster the tank charges, as in DBC).")
-                    .defineInRange("arcosian.pp_gain_per_second", 4.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_PP_DRAIN_RAW =
-            BUILDER.comment("Power Points spent PER SECOND in the Final Form while they are being applied (Final Form or higher with power at 100% OR MORE, overdrive included). Higher forms multiply it (Golden/Black x1.5, 5th x2, Golden/Black 5th x2.75). It is an absolute amount, so a bigger tank lasts longer.")
-                    .defineInRange("arcosian.pp_cost_per_second", 4.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_PP_COMBAT_DEALT_RAW =
-            BUILDER.comment("Second and Third form (restraint forms): Power Points gained per hit you DEAL while your power is below 100%.")
-                    .defineInRange("arcosian.pp_combat_gain_dealt", 2.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_PP_COMBAT_TAKEN_RAW =
-            BUILDER.comment("Second and Third form (restraint forms): Power Points gained per hit you TAKE while your power is below 100%.")
-                    .defineInRange("arcosian.pp_combat_gain_taken", 3.0D, 0.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_GOD_REFILL_RAW =
-            BUILDER.comment("Arcosian God: Power Points refilled per hit you deal, at any power level (the divine tank keeps feeding itself in combat).")
-                    .defineInRange("arcosian.god.pp_refill_per_hit", 2.0D, 0.0D, 1000.0D);
 
     // =====================================================================
     // SPEC — Majin: absorción innata y masa (feature/race/MajinAbsorption)
@@ -1613,61 +1105,22 @@ public class ServerConfig {
             BUILDER.comment("Majin innate Absorption: master switch. When off the key does nothing.")
                     .define("majin.absorb_enabled", true);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_DOMINANT_PL_RATIO_RAW =
-            BUILDER.comment("Majin Absorption: if the Majin power level is at least this many times the target power level, the target can be absorbed even at full health (1.5 = 50% more power; 2.0 = double). Below that, the health and max power level rules apply.")
-                    .defineInRange("majin.absorb_dominant_pl_ratio", 1.5D, 1.0D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_MAX_HEALTH_PCT_RAW =
-            BUILDER.comment("Majin Absorption: the target must be at or below this percent of its max health to be absorbed.")
-                    .defineInRange("majin.absorb_max_health_percent", 30.0D, 1.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_MAX_PL_RATIO_RAW =
-            BUILDER.comment("Majin Absorption: the target power level may not exceed this multiple of the Majin power level.")
-                    .defineInRange("majin.absorb_max_pl_ratio", 1.5D, 0.1D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_KI_COST_PCT_RAW =
-            BUILDER.comment("Majin Absorption: ki spent per absorption, as a percent of the max ki pool.")
-                    .defineInRange("majin.absorb_ki_cost_percent", 15.0D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.BooleanValue MAJIN_ABSORB_PVP_RAW =
             BUILDER.comment("Majin Absorption: whether other PLAYERS can be absorbed (they die). Off by default; mobs are always valid.")
                     .define("majin.absorb_pvp", false);
 
-    private static final ModConfigSpec.IntValue MAJIN_MASS_CAP_RAW =
-            BUILDER.comment("Majin mass: maximum stacks of temporary mass (Mass Voracious adds majin.voraz_extra_cap on top).")
-                    .defineInRange("majin.mass_cap", 5, 1, 50);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_MASS_SECONDS_RAW =
-            BUILDER.comment("Majin mass: seconds all the stacks last after the LAST absorption (forms scale this).")
-                    .defineInRange("majin.mass_seconds", 120.0D, 1.0D, 36000.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_MASS_STAT_PER_STACK_RAW =
-            BUILDER.comment("Majin mass: stat bonus per stack, added to the form multiplier (0.04 = +4% each, +20% at 5 stacks).")
-                    .defineInRange("majin.mass_stat_per_stack", 0.04D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_MASS_PERM_PER_ABSORB_RAW =
-            BUILDER.comment("Majin mass: PERMANENT stat bonus gained per absorption (0.002 = +0.2% each).")
-                    .defineInRange("majin.mass_permanent_per_absorb", 0.002D, 0.0D, 1.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_MASS_PERM_CAP_RAW =
-            BUILDER.comment("Majin mass: ceiling of the permanent bonus (0.05 = +5%).")
-                    .defineInRange("majin.mass_permanent_cap", 0.05D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.IntValue MAJIN_VORAZ_EXTRA_CAP_RAW =
-            BUILDER.comment("Majin mass: extra stacks Mass Voracious (majin_super) can hold above majin.mass_cap.")
-                    .defineInRange("majin.voraz_extra_cap", 2, 0, 50);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_SACIADO_DURATION_MULT_RAW =
-            BUILDER.comment("Majin mass: Satiated Majin (majin_harmony) RETAINS mass: it lasts this many times longer.")
-                    .defineInRange("majin.saciado_duration_mult", 2.0D, 0.1D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_PRIMITIVO_BONUS_MULT_RAW =
-            BUILDER.comment("Majin mass: Primitive Majin (majin_pure_chaos) RELEASES mass: every stack is worth this many times more...")
-                    .defineInRange("majin.primitivo_bonus_mult", 1.5D, 0.1D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue MAJIN_PRIMITIVO_DURATION_MULT_RAW =
-            BUILDER.comment("...but lasts only this fraction of the normal time.")
-                    .defineInRange("majin.primitivo_duration_mult", 0.5D, 0.05D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue FORM_DRAIN_SCALE_RAW =
             BUILDER.comment("Form ki drain per SECOND = ki_drain (percent, from the form datapack) / 100 * (STR + WIL, race-weighted) * this scale * SPI multiplier. Higher = every form costs more ki to hold, at any power level.")
@@ -1685,81 +1138,30 @@ public class ServerConfig {
             BUILDER.comment("Minimum form ki drain, as a fraction of the ki pool (energyMax) multiplied by the form's ki_drain percent: floor/s = ki_drain / 100 * this * energyMax. Stops a huge pool from making a form free. 0 disables the floor.")
                     .defineInRange("forms.drain_floor", 0.25D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue ARC_PP_STAT_RAW =
-            BUILDER.comment("Stat multiplier bonus (added, 2.0 = +200%) granted when the Power Point tank is full and being applied; scales linearly with the tank.")
-                    .defineInRange("arcosian.pp_stat_bonus_max", 2.0D, 0.0D, 20.0D);
 
     private static final ModConfigSpec.DoubleValue UI_HEAT_RATE_RAW =
             BUILDER.comment("Ultra Instinct heat bar: percent filled per second while in an Ultra Instinct form. At 100% dodging stops (the form is kept) until the bar cools down.")
                     .defineInRange("ultra_instinct.heat_percent_per_second", 2.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_HEAT_PER_DODGE_RAW =
-            BUILDER.comment("Ultra Instinct heat bar: percent of heat added by EVERY dodged hit, on top of the time-based fill. The HUD shows the bar the other way round (full = fresh, empty = about to overheat), so dodging more hits drains it faster.")
-                    .defineInRange("ultra_instinct.heat_per_dodge_percent", 3.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_HEAT_SLOW_RAW =
-            BUILDER.comment("Fraction of the heat fill rate removed per Ultra Instinct skill level above 1 (0.06 = -6% per level).")
-                    .defineInRange("ultra_instinct.heat_slowdown_per_skill_level", 0.06D, 0.0D, 0.1D);
 
-    private static final ModConfigSpec.DoubleValue UI_HEAT_COOL_RAW =
-            BUILDER.comment("Heat percent removed per second while NOT in an Ultra Instinct form.")
-                    .defineInRange("ultra_instinct.heat_cooldown_per_second", 4.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_DODGE_COST_RAW =
-            BUILDER.comment("Ki spent per automatic dodge, as percent of the max ki pool, at skill level 1.")
-                    .defineInRange("ultra_instinct.dodge_ki_cost_percent", 8.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_DODGE_REDUCE_RAW =
-            BUILDER.comment("Fraction of the dodge ki cost removed per skill level above 1 (levels 1-4 only).")
-                    .defineInRange("ultra_instinct.dodge_cost_reduction_per_level", 0.1D, 0.0D, 0.3D);
 
     private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_RAW =
             BUILDER.comment("Chance (percent) that Ultra Instinct dodges a hit, at skill level 1.")
                     .defineInRange("ultra_instinct.dodge_chance_percent", 40.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_LEVEL_RAW =
-            BUILDER.comment("Percent points of dodge chance added per Ultra Instinct skill level above 1.")
-                    .defineInRange("ultra_instinct.dodge_chance_per_skill_level", 3.3333D, 0.0D, 50.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_MAX_RAW =
-            BUILDER.comment("Upper limit (percent) of the Ultra Instinct dodge chance.")
-                    .defineInRange("ultra_instinct.dodge_chance_max_percent", 90.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_HEAT_RECOVER_RAW =
-            BUILDER.comment("Ultra Instinct: when the heat bar hits 100% the form is NOT lost, but dodging stops until the bar cools down to this percent. The bar cools at heat_cooldown_per_second while exhausted.")
-                    .defineInRange("ultra_instinct.heat_recover_percent", 50.0D, 0.0D, 99.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_MASTERY_DODGE_RAW =
-            BUILDER.comment("Ultra Instinct: percent points of dodge chance added at 100% mastery of the Ultra Instinct forms (scales linearly with mastery; the best of the two forms counts, also for the technique).")
-                    .defineInRange("ultra_instinct.mastery_dodge_chance_bonus", 20.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UI_MASTERY_HEAT_RAW =
-            BUILDER.comment("Ultra Instinct: fraction of the heat fill rate removed at 100% mastery (0.4 = heat fills 40% slower when mastered).")
-                    .defineInRange("ultra_instinct.mastery_heat_slowdown", 0.4D, 0.0D, 0.9D);
 
-    private static final ModConfigSpec.DoubleValue UE_MASTERY_BONUS_RAW =
-            BUILDER.comment("Ultra Ego: bonus applied to BOTH the physical defense penetration and the damage-bar stat bonus at 100% mastery of the Ultra Ego form (0.5 = +50%).")
-                    .defineInRange("ultra_ego.mastery_bonus", 0.5D, 0.0D, 5.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_CHARGE_RAW =
-            BUILDER.comment("Ultra Ego damage bar: percent gained per percent of max body lost in a hit.")
-                    .defineInRange("ultra_ego.charge_per_damage", 2.0D, 0.0D, 50.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_DECAY_RAW =
-            BUILDER.comment("Ultra Ego damage bar percent lost per second.")
-                    .defineInRange("ultra_ego.charge_decay_per_second", 1.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_STAT_LV5_RAW =
-            BUILDER.comment("Ultra Ego: stat bonus (added to the stat factor) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5. It is added to the form's own percent (16-22), so it has to be in whole numbers to matter: 3.0 = about +13% on a ~x23 form (level 5 full bar = Ultra Instinct), 7.0 = about +30% (level 10). Was 1.0/3.0 until 2026-10-31 (+4%/+13%, not noticeable). See tools/forms_sim_all.py.")
-                    .defineInRange("ultra_ego.max_stat_bonus_level5", 3.0D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_STAT_LV10_RAW =
-            BUILDER.comment("Ultra Ego: stat bonus (added) granted by a FULL damage bar at skill level 10. Levels 6-9 interpolate linearly between the level 5 and level 10 values.")
-                    .defineInRange("ultra_ego.max_stat_bonus_level10", 7.0D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_PEN_RAW =
-            BUILDER.comment("Ultra Ego: fraction of the target's defense ignored by PHYSICAL techniques at skill level 10 (0.2 = 20%). Scales linearly from level 1 (1/10 of this value). Applies while the Ultra Ego technique is on or the Ultra Ego form is worn.")
-                    .defineInRange("ultra_ego.max_armor_penetration", 0.2D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.DoubleValue BEAST_OD_STAT_RAW =
             BUILDER.comment("Extra stat multiplier bonus (added, 0.5 = +50%) while wearing Beast with power above 100% (overdrive). Stacks with Beast's cheaper overdrive drain.")
@@ -1787,24 +1189,12 @@ public class ServerConfig {
 
     // God Ki (skill tree F5): prueba del maestro y ritual de N jugadores. Sustituye a la vieja
     // arcosian.god_ki_levels (niveles placeholder sin forma): desde F5 las cinco razas tienen forma divina.
-    private static final ModConfigSpec.DoubleValue GODKI_TRIAL_FRACTION_RAW =
-            BUILDER.comment("God Ki master trial: power of the shadow you must defeat, as a fraction of your power level wearing your highest mortal form (1.0 = an exact copy). The trial is offered by the master after the divine audience.")
-                    .defineInRange("god_ki.trial_shadow_fraction", 1.5D, 0.1D, 5.0D);
     private static final ModConfigSpec.IntValue GODKI_RITUAL_PARTICIPANTS_RAW =
             BUILDER.comment("God Ki ritual: players (besides the candidate) that must charge ki around the candidate at the same time. Set it to 1 to test alone with a friend, or on a small server.")
                     .defineInRange("god_ki.ritual_participants", 5, 1, 20);
-    private static final ModConfigSpec.BooleanValue GODKI_RITUAL_SAME_RACE_RAW =
-            BUILDER.comment("God Ki ritual: participants must share the candidate's race.")
-                    .define("god_ki.ritual_same_race", false);
-    private static final ModConfigSpec.IntValue GODKI_RITUAL_MIN_ALIGNMENT_RAW =
-            BUILDER.comment("God Ki ritual: minimum alignment every participant (and the candidate) needs. -100 = any alignment (default).")
-                    .defineInRange("god_ki.ritual_min_alignment", -100, -100, 100);
     private static final ModConfigSpec.DoubleValue GODKI_RITUAL_RADIUS_RAW =
             BUILDER.comment("God Ki ritual: radius in blocks around the candidate in which participants count.")
                     .defineInRange("god_ki.ritual_radius", 8.0D, 2.0D, 64.0D);
-    private static final ModConfigSpec.IntValue GODKI_RITUAL_SECONDS_RAW =
-            BUILDER.comment("God Ki ritual: seconds everyone must keep charging ki without interruption.")
-                    .defineInRange("god_ki.ritual_seconds", 10, 1, 120);
 
     private static final ModConfigSpec.BooleanValue ALLOW_CUSTOM_HAIR_RAW =
             BUILDER.comment("Players can import hair codes (DragonMineZ codes and Dragon Block C / HairSalon strings) in the Hair tab of the appearance screen, keep them in a personal library and wear them; everyone sees them, no files needed. When false the import UI is hidden, the server rejects new imports and anyone wearing an imported hair falls back to the default style.")
@@ -1817,24 +1207,12 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_VISIT_DAYS =
             BUILDER.comment("Days (24000 ticks each) a dead player may visit the Earth through Uranai Baba. The clock only runs while the player is online.")
                     .defineInRange("permadeath.visit_days", 7, 1, 365);
-    public static final ModConfigSpec.IntValue PERMADEATH_VISIT_COOLDOWN_DAYS =
-            BUILDER.comment("Days (24000 ticks each) a dead player must wait after a visit to the Earth ends before Uranai Baba grants another one. Like the visit itself, the wait only runs while the player is online. 0 = no wait. Reviving (Dragon Balls) or /zenkai reset visit clears it.")
-                    .defineInRange("permadeath.visit_cooldown_days", 2, 0, 365);
-    public static final ModConfigSpec.IntValue PERMADEATH_VISIT_SOUL_COST =
-            BUILDER.comment("Souls (dropped by the HFIL ogres) Uranai Baba charges for each visit to the Earth. 0 = free. The souls are taken from the player's inventory when the visit starts.")
-                    .defineInRange("permadeath.visit_soul_cost", 1, 0, 64);
     public static final ModConfigSpec.IntValue PERMADEATH_BODY_CAP =
             BUILDER.comment("Maximum bodies one player can have in the world. When exceeded, the oldest one is emptied onto the ground and removed.")
                     .defineInRange("permadeath.body_cap_per_player", 3, 1, 32);
     public static final ModConfigSpec.BooleanValue PERMADEATH_BODY_GRIEFING =
             BUILDER.comment("Body griefing. When true, ANY player can open and loot another player's body, and ki techniques that hit a body disintegrate it (its items fall to the ground). When false (default) only the owner and, if permadeath.body_open_party is on, their party can touch the body, and ki cannot destroy it.")
                     .define("permadeath.body_griefing", false);
-    public static final ModConfigSpec.IntValue PERMADEATH_BURY_ALIGNMENT =
-            BUILDER.comment("Alignment gained by burying ANOTHER player's empty body. Burying your own body gives nothing (otherwise dying on purpose would farm alignment).")
-                    .defineInRange("permadeath.bury_alignment", 2, 0, 100);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_BODY_OPEN_PARTY =
-            BUILDER.comment("Party members of the owner can open the body too. When false only the owner can.")
-                    .define("permadeath.body_open_party", true);
 
     /** Qué hace el cuerpo con los objetos del jugador. AUTO = los guarda, salvo que haya un mod de tumbas cargado (ver TOMB_MOD_IDS). */
     public enum BodyItemsMode { AUTO, ALWAYS, NEVER }
@@ -1850,70 +1228,23 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_XP_RETENTION =
             BUILDER.comment("Percent of the player's experience points the body keeps when the player dies (the vanilla orbs are replaced). Only the owner can claim it. 0 disables.")
                     .defineInRange("permadeath.xp_retention_percent", 50, 0, 100);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_XP_PARTY_CAN_TAKE =
-            BUILDER.comment("Party members can also claim the experience stored in a body. When false (default) only the owner can.")
-                    .define("permadeath.xp_party_can_take", false);
     public static final ModConfigSpec.IntValue PERMADEATH_BODY_LIFETIME_DAYS =
             BUILDER.comment("Minecraft days (24000 ticks) a body lasts before it is emptied on the ground and removed. 0 = never.")
                     .defineInRange("permadeath.body_lifetime_days", 0, 0, 3650);
-    public static final ModConfigSpec.IntValue PERMADEATH_OWNER_GRACE_SECONDS =
-            BUILDER.comment("Seconds after death during which ONLY the owner can touch the body (even with body_griefing on, and not the party). 0 = no protection window.")
-                    .defineInRange("permadeath.owner_grace_seconds", 0, 0, 86400);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_CARRY_ENABLED =
-            BUILDER.comment("Players can pick up a body (Shift + right click) and carry it in their arms.")
-                    .define("permadeath.carry_enabled", true);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_CARRY_RESTRICTIONS =
-            BUILDER.comment("While carrying a body the player's hands are busy: no attacking, mining, placing, using items or interacting, and no combat actions, ki charge or transformations (CarryOn-like). Flying, jumping, turbo and instant transmission stay allowed. Turn off to carry freely.")
-                    .define("permadeath.carry_restrictions", true);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_TAKE_ALL_SWAP_ARMOR =
-            BUILDER.comment("Take all on a body swaps the armor the player wears for the body piece when that piece is clearly better (armor + toughness + knockback resistance, then durability, then enchantments) and the old piece fits in the inventory. Items in the zenkai:no_armor_swap tag (scouter, halo, weights) are never removed. When false, a worn slot is never touched: the body piece goes to the inventory.")
-                    .define("permadeath.take_all_swap_armor", true);
-    public static final ModConfigSpec.IntValue PERMADEATH_CARRY_SLOWNESS =
-            BUILDER.comment("Slowness level applied while carrying a body. 0 = none.")
-                    .defineInRange("permadeath.carry_slowness_level", 2, 0, 5);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_NOTIFY_PARTY =
-            BUILDER.comment("Tell the owner's party when a body is created.")
-                    .define("permadeath.notify_party", true);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_NOTIFY_COORDS =
-            BUILDER.comment("Include coordinates and dimension in the party notice. Hardcore servers may want this off.")
-                    .define("permadeath.notify_show_coords", true);
     public static final ModConfigSpec.IntValue PERMADEATH_ITEM_LOSS_PERCENT =
             BUILDER.comment("Chance (percent) that each item stack is LOST on death instead of going to the body. 0 = nothing is lost.")
                     .defineInRange("permadeath.item_loss_percent", 0, 0, 100);
-    public static final ModConfigSpec.IntValue PERMADEATH_DURABILITY_LOSS_PERCENT =
-            BUILDER.comment("Percent of its max durability every damageable item loses on death (never breaks it: it keeps at least 1). 0 = none.")
-                    .defineInRange("permadeath.durability_loss_percent", 0, 0, 100);
-    public static final ModConfigSpec.IntValue PERMADEATH_BURY_TICKS =
-            BUILDER.comment("Ticks it takes to bury a body (progress shown on the action bar; moving away or dropping the shovel cancels). 0 = instant.")
-                    .defineInRange("permadeath.bury_duration_ticks", 0, 0, 1200);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_BURY_NEEDS_SHOVEL =
-            BUILDER.comment("A shovel in the main hand is required to bury a body.")
-                    .define("permadeath.bury_requires_shovel", false);
-    public static final ModConfigSpec.IntValue PERMADEATH_WORLD_BODY_CAP =
-            BUILDER.comment("Maximum bodies in the whole world (each one stores its inventory as NBT). Over the cap the oldest ones are emptied on the ground and removed. 0 = unlimited.")
-                    .defineInRange("permadeath.world_body_cap", 256, 0, 100000);
 
-    public static final ModConfigSpec.IntValue PERMADEATH_WITNESS_RADIUS =
-            BUILDER.comment("Blocks around a dying player within which party members count as witnesses of the death (PartyMemberDiedEvent, the hook for rage forms). 0 = no witnesses.")
-                    .defineInRange("permadeath.witness_radius", 24, 0, 512);
 
     // ── Rage Forms (despertares por acontecimientos emocionales) ─────────────
     public static final ModConfigSpec.BooleanValue RAGE_ENABLED =
             BUILDER.comment("Rage Forms: unlock or advance transformations through emotional events (an ally dying, being downed, being saved in time, surviving the edge). false = the system does nothing.")
                     .define("rage.enabled", true);
 
-    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_LOW =
-            BUILDER.comment("Rage Forms: form mastery granted by a LOW intensity event, in minutes of transformed time (the form's own mastery_gain still applies, so the same event is worth less percent in a slow form).")
-                    .defineInRange("rage.minutes_low", 5.0D, 0.0D, 1000.0D);
-    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_MEDIUM =
-            BUILDER.comment("Rage Forms: mastery minutes for a MEDIUM intensity event (an ally goes down near you).")
-                    .defineInRange("rage.minutes_medium", 15.0D, 0.0D, 1000.0D);
-    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_HIGH =
-            BUILDER.comment("Rage Forms: mastery minutes for a HIGH intensity event (an ally dies, or you save one inside the 5 s downed window).")
-                    .defineInRange("rage.minutes_high", 30.0D, 0.0D, 1000.0D);
-    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_EXCEPTIONAL =
-            BUILDER.comment("Rage Forms: mastery minutes for an EXCEPTIONAL intensity event (you survive the edge with a fallen ally nearby, or an ally dies while you are downed).")
-                    .defineInRange("rage.minutes_exceptional", 60.0D, 0.0D, 1000.0D);
+    public static final ModConfigSpec.ConfigValue<List<? extends Number>> RAGE_MINUTES =
+            BUILDER.comment("Rage Forms: form mastery granted by an event, in minutes of transformed time (the form's own mastery_gain still applies), for the four intensities IN THIS ORDER: [low, medium, high, exceptional]. Low = minor events; medium = an ally goes down near you; high = an ally dies, or you save one inside the 5 s downed window; exceptional = you survive the edge with a fallen ally nearby, or an ally dies while you are downed.")
+                    .defineList("rage.minutes", List.of(5.0D, 15.0D, 30.0D, 60.0D), () -> 0.0D,
+                            o -> o instanceof Number n && n.doubleValue() >= 0.0D && n.doubleValue() <= 1000.0D);
 
     public static final ModConfigSpec.IntValue RAGE_AWAKENING_PROTECTION_TICKS =
             BUILDER.comment("Rage Forms: ticks of invulnerability and no actions/movement during the LONG sequence, the first time a player turns into each form (any route). 60 = 3 s, the length of the sequence. 0 = no protection. /kill and the void still work.")
@@ -1938,6 +1269,30 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_REINC_ALIGNMENT_PERCENT =
             BUILDER.comment("Reincarnation: percent of the alignment (karma) that the new life keeps, pulled toward neutral. 100 = keeps it all.")
                     .defineInRange("permadeath.reincarnation_alignment_percent", 50, 0, 100);
+
+    public static final ModConfigSpec.IntValue PERMADEATH_WORLD_BODY_CAP =
+            BUILDER.comment("Maximum bodies in the whole world (each one stores its inventory as NBT). Over the cap the oldest ones are emptied on the ground and removed. 0 = unlimited.")
+                    .defineInRange("permadeath.world_body_cap", 256, 0, 100000);
+    public static final ModConfigSpec.IntValue PERMADEATH_WITNESS_RADIUS =
+            BUILDER.comment("Blocks around a dying player within which party members count as witnesses of the death (PartyMemberDiedEvent, the hook for rage forms). 0 = no witnesses.")
+                    .defineInRange("permadeath.witness_radius", 24, 0, 512);
+    public static final ModConfigSpec.IntValue PERMADEATH_OWNER_GRACE_SECONDS =
+            BUILDER.comment("Seconds after death during which ONLY the owner can touch the body (even with body_griefing on, and not the party). 0 = no protection window.")
+                    .defineInRange("permadeath.owner_grace_seconds", 0, 0, 86400);
+    public static final ModConfigSpec.IntValue PERMADEATH_DURABILITY_LOSS_PERCENT =
+            BUILDER.comment("Percent of its max durability every damageable item loses on death (never breaks it: it keeps at least 1). 0 = none.")
+                    .defineInRange("permadeath.durability_loss_percent", 0, 0, 100);
+
+    // ── Multiplicadores globales (sustituyen a ~50 opciones sueltas de máquinas y de regeneración) ──
+    public static final ModConfigSpec.DoubleValue TECH_CAPACITY_MULTIPLIER =
+            BUILDER.comment("Multiplies the capacity of EVERY tech block at once: cables, pipes, tanks, batteries, generator, Ki Motor and Ki Containment Chamber buffers. 1.0 = default.")
+                    .defineInRange("tech.capacity_multiplier", 1.0D, 0.01D, 1000.0D);
+    public static final ModConfigSpec.DoubleValue TECH_RATE_MULTIPLIER =
+            BUILDER.comment("Multiplies the transfer rate (per tick) of EVERY tech block at once: cables, pipes, tanks, batteries, generator output, Ki Motor and Ki Containment Chamber. 1.0 = default.")
+                    .defineInRange("tech.rate_multiplier", 1.0D, 0.01D, 1000.0D);
+    public static final ModConfigSpec.DoubleValue REGEN_MULTIPLIER =
+            BUILDER.comment("Multiplies the passive per-second regeneration of Body, Stamina and Ki together (the base values stay 1.5 / 3.0 / 1.0 percent per second). 1.0 = default.")
+                    .defineInRange("regen.multiplier", 1.0D, 0.0D, 100.0D);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -1981,26 +1336,26 @@ public class ServerConfig {
     private static volatile double RUN_STAMINA_DRAIN = 2.0D;
     private static volatile int DASH_COOLDOWN = 15;
     private static volatile double DASH_SPEED = 1.1D;
-    private static volatile int STEP_COOLDOWN = 60;
-    private static volatile double STEP_SPEED = 1.8D;
-    private static volatile double STEP_ENERGY_PCT = 0.03D;
-    private static volatile int STEP_INVISIBLE = 8;
-    private static volatile int STEP_IFRAME = 10;
+    private static final int STEP_COOLDOWN = 60;
+    private static final double STEP_SPEED = 1.8D;
+    private static final double STEP_ENERGY_PCT = 0.03D;
+    private static final int STEP_INVISIBLE = 8;
+    private static final int STEP_IFRAME = 10;
     private static volatile double BLOCK_WEAPON_FACTOR = 0.6D;
-    private static volatile double BLOCK_SHIELD_BONUS = 0.35D;
-    private static volatile double BLOCK_SHIELD_CAP = 0.85D;
-    private static volatile double BLOCK_SHIELD_SLOW = 0.0D;
-    private static volatile int BLOCK_SHIELD_DURABILITY = 1;
-    private static volatile double BLOCK_SHIELD_KI = 0.005D;
-    private static volatile double GUARD_MAX = 100.0D;
-    private static volatile double GUARD_DRAIN = 3.0D;
-    private static volatile double GUARD_CON_BONUS = 1.0D;
-    private static volatile double GUARD_CON_FULL = 500.0D;
-    private static volatile double GUARD_DEX_BONUS = 1.5D;
-    private static volatile double GUARD_DEX_FULL = 500.0D;
-    private static volatile double GUARD_REGEN = 0.5D;
-    private static volatile int GUARD_REGEN_DELAY = 40;
-    private static volatile int GUARD_BREAK_STUN = 40;
+    private static final double BLOCK_SHIELD_BONUS = 0.35D;
+    private static final double BLOCK_SHIELD_CAP = 0.85D;
+    private static final double BLOCK_SHIELD_SLOW = 0.0D;
+    private static final int BLOCK_SHIELD_DURABILITY = 1;
+    private static final double BLOCK_SHIELD_KI = 0.005D;
+    private static final double GUARD_MAX = 100.0D;
+    private static final double GUARD_DRAIN = 3.0D;
+    private static final double GUARD_CON_BONUS = 1.0D;
+    private static final double GUARD_CON_FULL = 500.0D;
+    private static final double GUARD_DEX_BONUS = 1.5D;
+    private static final double GUARD_DEX_FULL = 500.0D;
+    private static final double GUARD_REGEN = 0.5D;
+    private static final int GUARD_REGEN_DELAY = 40;
+    private static final int GUARD_BREAK_STUN = 40;
     private static volatile boolean STUN_PLAYERS = true;
     private static volatile int STUN_MAX = 100;
     private static volatile double STUN_DR = 0.5D;
@@ -2009,73 +1364,73 @@ public class ServerConfig {
     private static volatile int COMBO_WINDOW = 30;
     private static volatile double COMBO_DMG = 0.05D;
     private static volatile int COMBO_MAX = 10;
-    private static volatile int HEAVY_TICKS = 15;
-    private static volatile int HEAVY_LEVELS = 3;
-    private static volatile double HEAVY_DMG = 0.35D;
-    private static volatile double HEAVY_KNOCK = 0.5D;
-    private static volatile double HEAVY_STAMINA = 0.5D;
-    private static volatile double DIVE_MIN_HEIGHT = 8.0D;
-    private static volatile double DIVE_SPEED = 2.0D;
-    private static volatile int DIVE_MAX_TICKS = 80;
-    private static volatile double DIVE_RADIUS = 1.5D;
-    private static volatile double DIVE_MAX_RADIUS = 6.0D;
-    private static volatile double DIVE_KNOCK = 1.4D;
-    private static volatile int EVADE_TICKS = 34;
-    private static volatile int EVADE_CHARGE_TICKS = 12;
-    private static volatile double GRAB_RANGE = 3.5D;
-    private static volatile int GRAB_HOLD = 0;
-    private static volatile int GRAB_MOB_HOLD = 300;
-    private static volatile int GRAB_CHECKS = 2;
-    private static volatile double GRAB_ZONE = 0.2D;
-    private static volatile int GRAB_NEEDLE = 18;
-    private static volatile int GRAB_FAIL = 20;
-    private static volatile int GRAB_GAP = 12;
-    private static volatile double EVADE_WAVE_RADIUS = 9.0D;
-    private static volatile double EVADE_WAVE_KNOCK = 3.2D;
-    private static volatile int EVADE_WAVE_STUN = 0;
+    private static final int HEAVY_TICKS = 15;
+    private static final int HEAVY_LEVELS = 3;
+    private static final double HEAVY_DMG = 0.35D;
+    private static final double HEAVY_KNOCK = 0.5D;
+    private static final double HEAVY_STAMINA = 0.5D;
+    private static final double DIVE_MIN_HEIGHT = 8.0D;
+    private static final double DIVE_SPEED = 2.0D;
+    private static final int DIVE_MAX_TICKS = 80;
+    private static final double DIVE_RADIUS = 1.5D;
+    private static final double DIVE_MAX_RADIUS = 6.0D;
+    private static final double DIVE_KNOCK = 1.4D;
+    private static final int EVADE_TICKS = 34;
+    private static final int EVADE_CHARGE_TICKS = 12;
+    private static final double GRAB_RANGE = 3.5D;
+    private static final int GRAB_HOLD = 0;
+    private static final int GRAB_MOB_HOLD = 300;
+    private static final int GRAB_CHECKS = 2;
+    private static final double GRAB_ZONE = 0.2D;
+    private static final int GRAB_NEEDLE = 18;
+    private static final int GRAB_FAIL = 20;
+    private static final int GRAB_GAP = 12;
+    private static final double EVADE_WAVE_RADIUS = 9.0D;
+    private static final double EVADE_WAVE_KNOCK = 3.2D;
+    private static final int EVADE_WAVE_STUN = 0;
     private static volatile int COMBO_FINISHER_EVERY = 4;
     private static volatile double COMBO_FINISHER_KNOCK = 1.4D;
     private static volatile double BARE_ATTACK_SPEED = 3.2D;
-    private static volatile double GRAB_THROW = 1.8D;
-    private static volatile int GRAB_STUN = 30;
+    private static final double GRAB_THROW = 1.8D;
+    private static final int GRAB_STUN = 30;
     private static volatile boolean KIAI_OMNI = true;
     private static volatile double KIAI_EXTRA_STAMINA = 0.12D;
     private static volatile int KIAI_EXTRA_CAP = 6;
     private static volatile int KIAI_GUARD_BREAK = 40;
     private static volatile boolean PARRY_ENABLED = true;
     private static volatile int PARRY_WINDOW = 6;
-    private static volatile int PARRY_COOLDOWN = 40;
-    private static volatile double PARRY_KNOCKBACK = 2.5D;
-    private static volatile double PARRY_REFLECT = 0.25D;
-    private static volatile double PARRY_NPC_CHANCE = 0.3D;
-    private static volatile int PARRY_STUN = 30;
-    private static volatile int PARRY_COUNTER_TICKS = 40;
-    private static volatile double PARRY_COUNTER_MULT = 1.5D;
-    private static volatile int PARRY_PERFECT_TICKS = 2;
-    private static volatile double PARRY_PERFECT_BONUS = 0.5D;
-    private static volatile int CLASH_CONTACT = 10;
-    private static volatile int CLASH_RESOLVE = 14;
+    private static final int PARRY_COOLDOWN = 40;
+    private static final double PARRY_KNOCKBACK = 2.5D;
+    private static final double PARRY_REFLECT = 0.25D;
+    private static final double PARRY_NPC_CHANCE = 0.3D;
+    private static final int PARRY_STUN = 30;
+    private static final int PARRY_COUNTER_TICKS = 40;
+    private static final double PARRY_COUNTER_MULT = 1.5D;
+    private static final int PARRY_PERFECT_TICKS = 2;
+    private static final double PARRY_PERFECT_BONUS = 0.5D;
+    private static final int CLASH_CONTACT = 10;
+    private static final int CLASH_RESOLVE = 14;
     private static volatile boolean CLASH_ENABLED = true;
     private static volatile int CLASH_DURATION = 100;
-    private static volatile int CLASH_PERIOD_SLOW = 30;
-    private static volatile int CLASH_PERIOD_MEDIUM = 18;
-    private static volatile int CLASH_PERIOD_FAST = 10;
-    private static volatile int CLASH_FIXED_SPEED = -1;
-    private static volatile int CLASH_PING_GRACE = 6;
-    private static volatile double CLASH_NO_PRESS = 0.5D;
-    private static volatile double CLASH_STAT_BONUS_CAP = 100.0D;
-    private static volatile double CLASH_TIE_MARGIN = 10.0D;
-    private static volatile double CLASH_OUTNUMBERED_BONUS = 1.6D;
+    private static final int CLASH_PERIOD_SLOW = 30;
+    private static final int CLASH_PERIOD_MEDIUM = 18;
+    private static final int CLASH_PERIOD_FAST = 10;
+    private static final int CLASH_FIXED_SPEED = -1;
+    private static final int CLASH_PING_GRACE = 6;
+    private static final double CLASH_NO_PRESS = 0.5D;
+    private static final double CLASH_STAT_BONUS_CAP = 100.0D;
+    private static final double CLASH_TIE_MARGIN = 10.0D;
+    private static final double CLASH_OUTNUMBERED_BONUS = 1.6D;
     private static volatile int CLASH_TEAM_MAX = 3;
-    private static volatile double CLASH_JOIN_RANGE = 6.0D;
-    private static volatile boolean CLASH_JOIN_RESETS = false;
+    private static final double CLASH_JOIN_RANGE = 6.0D;
+    private static final boolean CLASH_JOIN_RESETS = false;
     private static volatile double CLASH_TIE_DAMAGE = 0.5D;
     private static volatile double CLASH_SUM = 1.0D;
-    private static volatile double CLASH_RETURN_SPEED = 0.9D;
-    private static volatile double CLASH_HOMING = 0.08D;
-    private static volatile double CLASH_HOMING_RANGE = 24.0D;
+    private static final double CLASH_RETURN_SPEED = 0.9D;
+    private static final double CLASH_HOMING = 0.08D;
+    private static final double CLASH_HOMING_RANGE = 24.0D;
     private static volatile double CLASH_MIN_DAMAGE = 1.0D;
-    private static volatile double CLASH_MOB_SKILL = 0.35D;
+    private static final double CLASH_MOB_SKILL = 0.35D;
     private static volatile double SB_RADIUS = 32.0D;
     private static volatile int KI_LIFE = 200;
     private static volatile double SB_GAIN = 0.03D;
@@ -2085,16 +1440,16 @@ public class ServerConfig {
     private static volatile double SB_PARTY_RADIUS = 0.0D;
     private static volatile double FLY_MULT_CAP = 15.0D;
     private static volatile double FLY_SCALING = 0.25D;
-    private static volatile double FLY_BASE_SPEED = 0.05D;
+    private static final double FLY_BASE_SPEED = 0.05D;
     private static volatile double FLY_KI_DRAIN = 0.15D;
-    private static volatile double FLY_TAKEOFF_IMPULSE = 0.55D;
-    private static volatile double FLY_TAKEOFF_KI_COST = 2.0D;
-    private static volatile int FLY_RAMP_UP = 30;
-    private static volatile int FLY_RAMP_DOWN = 12;
+    private static final double FLY_TAKEOFF_IMPULSE = 0.55D;
+    private static final double FLY_TAKEOFF_KI_COST = 2.0D;
+    private static final int FLY_RAMP_UP = 30;
+    private static final int FLY_RAMP_DOWN = 12;
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.005D;
 
     private static volatile double BODY_SCALE = 1.0D, STAMINA_SCALE = 1.0D, ENERGY_SCALE = 1.0D;
-    private static volatile double REGEN_BODY = 1.5, REGEN_STAMINA = 3.0, REGEN_ENERGY = 1.0;
+    private static final double REGEN_BODY = 1.5, REGEN_STAMINA = 3.0, REGEN_ENERGY = 1.0;
     private static volatile double FOOD_KI_PCT = 2.0, FOOD_STAMINA_PCT = 3.0;
     private static volatile double MOB_PROJECTILE_FACTOR = 0.6D;
     private static volatile double EXPLOSION_REFERENCE_DAMAGE = 12.0D;
@@ -2106,7 +1461,7 @@ public class ServerConfig {
     private static volatile boolean LOCK_ON_ENABLED = true, LOCK_ON_WHILE_FLYING = true;
     private static volatile int    LOCK_ON_RANGE = 64;
     private static volatile double LOCK_ON_HOMING_TURN = 0.20D;
-    private static volatile double TECHNIQUE_EXPLOSION_RADIUS_CAP = 0.0D;
+    private static final double TECHNIQUE_EXPLOSION_RADIUS_CAP = 0.0D;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
     private static volatile double ATTRIBUTE_BASE_COST = 1.0D;
@@ -2116,8 +1471,8 @@ public class ServerConfig {
     private static volatile double REGEN_STAMINA_EXHAUSTION = 0.15D;
     private static volatile int    REGEN_MIN_FOOD = 6;
     private static volatile int    PARTY_MAX_SIZE_CEILING = 32;
-    private static volatile int    ENERGY_GENERATOR_CAPACITY = 100_000;
-    private static volatile int    ENERGY_GENERATOR_MAX_EXTRACT = 1_000;
+    private static final int    ENERGY_GENERATOR_CAPACITY = 100_000;
+    private static final int    ENERGY_GENERATOR_MAX_EXTRACT = 1_000;
 
     private static volatile boolean MIRROR_HEALTH = true;
     private static volatile double ABSORPTION_WEIGHT = 1.0D;
@@ -2143,26 +1498,26 @@ public class ServerConfig {
     private static volatile double COMBAT_ATTACK_SPEED = 1.6D;
     private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
-    private static volatile double MAJIN_STAT_BONUS = 0.20D;
+    private static final double MAJIN_STAT_BONUS = 0.20D;
     private static volatile double LEGENDARY_STATE_BONUS = 0.10D;
     private static volatile double LEGENDARY_BIRTH_CHANCE = 5.0D;
-    private static volatile double ARC_ENV_FIRE = 0.2D;
-    private static volatile double ARC_GOD_PP_CAP = 1.5D;
-    private static volatile double ARC_GOD_PP_DRAIN = 0.5D;
-    private static volatile double ARC_GOD_PP_STAT = 1.5D;
+    private static final double ARC_ENV_FIRE = 0.2D;
+    private static final double ARC_GOD_PP_CAP = 1.5D;
+    private static final double ARC_GOD_PP_DRAIN = 0.5D;
+    private static final double ARC_GOD_PP_STAT = 1.5D;
     private static volatile double HUMAN_LEGEND_DAMAGE_TAKEN = 0.25D;
     private static volatile double NAMEK_LEGEND_LIFESTEAL = 0.15D;
     private static volatile boolean NAMEK_LEGEND_NO_REGEN = true;
-    private static volatile double ARC_LEGEND_PERCENT = 14.0D;
-    private static volatile double ARC_LEGEND_TENSION = 45.0D;
-    private static volatile double ARC_LEGEND_TENSION_MASTERY = 1.0D;
-    private static volatile double ARC_LEGEND_COOLDOWN = 600.0D;
-    private static volatile int MAJIN_LEGEND_EXTRA_CAP = 6;
-    private static volatile double MAJIN_LEGEND_DURATION = 3.0D;
-    private static volatile double MAJIN_LEGEND_STEAL = 0.25D;
-    private static volatile double MAJIN_LEGEND_STEAL_MAX = 0.10D;
-    private static volatile double MAJIN_LEGEND_STEAL_CAP = 0.50D;
-    private static volatile double MAJIN_LEGEND_KI_REFUND = 10.0D;
+    private static final double ARC_LEGEND_PERCENT = 14.0D;
+    private static final double ARC_LEGEND_TENSION = 45.0D;
+    private static final double ARC_LEGEND_TENSION_MASTERY = 1.0D;
+    private static final double ARC_LEGEND_COOLDOWN = 600.0D;
+    private static final int MAJIN_LEGEND_EXTRA_CAP = 6;
+    private static final double MAJIN_LEGEND_DURATION = 3.0D;
+    private static final double MAJIN_LEGEND_STEAL = 0.25D;
+    private static final double MAJIN_LEGEND_STEAL_MAX = 0.10D;
+    private static final double MAJIN_LEGEND_STEAL_CAP = 0.50D;
+    private static final double MAJIN_LEGEND_KI_REFUND = 10.0D;
     private static volatile double HUMAN_WILL_ALLY = 0.08D;
     private static volatile double HUMAN_WILL_HIT = 0.04D;
     private static volatile double HUMAN_WILL_MAX = 0.40D;
@@ -2170,7 +1525,7 @@ public class ServerConfig {
     private static volatile double NAMEK_LEGEND_REGEN = 1.0D;
     private static volatile double NAMEK_LEGEND_REGEN_KI = 0.15D;
     private static volatile double NAMEK_LEGEND_PASSIVE_COST = 0.25D;
-    private static volatile boolean MAJIN_LEGENDARY_EXCLUSIVE = true;
+    private static final boolean MAJIN_LEGENDARY_EXCLUSIVE = true;
     private static volatile double NAMEK_GIANT_STAT = 0.60D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
     private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
@@ -2180,81 +1535,84 @@ public class ServerConfig {
     private static volatile double VANILLA_DAMAGE_RATIO = 0.4D;
     private static volatile double BF_CHANCE = 0.03D;
     private static volatile double BF_MULTIPLIER = 3.0D;
-    private static volatile double BF_CHARGE_EXPONENT = 3.0D;
-    private static volatile double BF_LUCK_FACTOR = 0.5D;
-    private static volatile double BF_MAX_CHANCE = 0.25D;
-    private static volatile double BF_STAT_FACTOR = 1.0D;
+    private static final double BF_CHARGE_EXPONENT = 3.0D;
+    private static final double BF_LUCK_FACTOR = 0.5D;
+    private static final double BF_MAX_CHANCE = 0.25D;
+    private static final double BF_STAT_FACTOR = 1.0D;
     private static volatile double EXPLOSION_SACRIFICE_CONVERSION = 0.5;
 
     private static volatile double TRAIN_DMG_TP = 0.10D, TRAIN_AIR_TP = 0.0001D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.30D,
             TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
     private static volatile double TP_PER_PL = 0.25D;
-    private static volatile int TRAIN_AIR_TICKS = 10;
-    private static volatile double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
+    private static final int TRAIN_AIR_TICKS = 10;
+    private static final double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
             WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
             WEIGHT_GRAVITY_JUMP_FACTOR = 0.25D,
             WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D,
-            WEIGHT_KAIOSAMA_TONS = 40.0D, WEIGHT_KAIOSAMA_GRAVITY_MULT = 10.0D,
-            WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
+            WEIGHT_KAIOSAMA_GRAVITY_MULT = 10.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D,
+            // Toneladas ambientales por punto de g por encima de 1 (diseño de la Fase 3, 2026-11-16):
+            // ×10 = 40 t (Kaiosama), ×2 = 4,4 t (HTC), ×500 = 2 216 t. Las toneladas de cada sitio
+            // se CALCULAN con esto desde su g: etiqueta del hub y carga nunca se contradicen.
+            GRAVITY_TONS_PER_G = 4.44D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
     private static volatile double PU_MAX_STAT = 12.0D;
-    private static volatile double GODKI_TRIAL_FRACTION = 1.5D;
+    private static final double GODKI_TRIAL_FRACTION = 1.5D;
     private static volatile int GODKI_RITUAL_PARTICIPANTS = 5;
-    private static volatile boolean GODKI_RITUAL_SAME_RACE = false;
-    private static volatile int GODKI_RITUAL_MIN_ALIGNMENT = -100;
+    private static final boolean GODKI_RITUAL_SAME_RACE = false;
+    private static final int GODKI_RITUAL_MIN_ALIGNMENT = -100;
     private static volatile double GODKI_RITUAL_RADIUS = 8.0D;
-    private static volatile int GODKI_RITUAL_SECONDS = 10;
+    private static final int GODKI_RITUAL_SECONDS = 10;
     private static volatile double BEAST_OD_STAT = 0.5D;
     private static volatile double LEGENDARY_OD_STAT = 0.3D;
     private static volatile double LEGENDARY_GROWTH = 1.5D;
     private static volatile double LEGENDARY_CEILING = 12.5D;
     private static volatile double LEGENDARY_RESONANCE = 1.45D;
     private static volatile double BEAST_MASTERY_REQ = 50.0D;
-    private static volatile double ARC_PP_GAIN = 4.0D;
-    private static volatile double ARC_PP_DRAIN = 4.0D;
-    private static volatile double ARC_PP_COMBAT_DEALT = 2.0D;
-    private static volatile double ARC_PP_COMBAT_TAKEN = 3.0D;
-    private static volatile double ARC_GOD_REFILL = 2.0D;
-    private static volatile double ARC_PP_STAT = 2.0D;
+    private static final double ARC_PP_GAIN = 4.0D;
+    private static final double ARC_PP_DRAIN = 4.0D;
+    private static final double ARC_PP_COMBAT_DEALT = 2.0D;
+    private static final double ARC_PP_COMBAT_TAKEN = 3.0D;
+    private static final double ARC_GOD_REFILL = 2.0D;
+    private static final double ARC_PP_STAT = 2.0D;
     private static volatile boolean MAJIN_ABSORB_ENABLED = true;
-    private static volatile double MAJIN_ABSORB_DOMINANT_PL_RATIO = 1.5D;
-    private static volatile double MAJIN_ABSORB_MAX_HEALTH_PCT = 30.0D;
-    private static volatile double MAJIN_ABSORB_MAX_PL_RATIO = 1.5D;
-    private static volatile double MAJIN_ABSORB_KI_COST_PCT = 15.0D;
+    private static final double MAJIN_ABSORB_DOMINANT_PL_RATIO = 1.5D;
+    private static final double MAJIN_ABSORB_MAX_HEALTH_PCT = 30.0D;
+    private static final double MAJIN_ABSORB_MAX_PL_RATIO = 1.5D;
+    private static final double MAJIN_ABSORB_KI_COST_PCT = 15.0D;
     private static volatile boolean MAJIN_ABSORB_PVP = false;
-    private static volatile int MAJIN_MASS_CAP = 5;
-    private static volatile double MAJIN_MASS_SECONDS = 120.0D;
-    private static volatile double MAJIN_MASS_STAT_PER_STACK = 0.04D;
-    private static volatile double MAJIN_MASS_PERM_PER_ABSORB = 0.002D;
-    private static volatile double MAJIN_MASS_PERM_CAP = 0.05D;
-    private static volatile int MAJIN_VORAZ_EXTRA_CAP = 2;
-    private static volatile double MAJIN_SACIADO_DURATION_MULT = 2.0D;
-    private static volatile double MAJIN_PRIMITIVO_BONUS_MULT = 1.5D;
-    private static volatile double MAJIN_PRIMITIVO_DURATION_MULT = 0.5D;
+    private static final int MAJIN_MASS_CAP = 5;
+    private static final double MAJIN_MASS_SECONDS = 120.0D;
+    private static final double MAJIN_MASS_STAT_PER_STACK = 0.04D;
+    private static final double MAJIN_MASS_PERM_PER_ABSORB = 0.002D;
+    private static final double MAJIN_MASS_PERM_CAP = 0.05D;
+    private static final int MAJIN_VORAZ_EXTRA_CAP = 2;
+    private static final double MAJIN_SACIADO_DURATION_MULT = 2.0D;
+    private static final double MAJIN_PRIMITIVO_BONUS_MULT = 1.5D;
+    private static final double MAJIN_PRIMITIVO_DURATION_MULT = 0.5D;
     private static volatile double FORM_DRAIN_SCALE = 4.0D;
     private static volatile double FORM_DRAIN_SPI_MIN = 1.0D;
     private static volatile double FORM_DRAIN_SPI_MAX = 1.5D;
     private static volatile double FORM_DRAIN_FLOOR = 0.25D;
     private static volatile double UI_HEAT_RATE = 2.0D;
-    private static volatile double UI_HEAT_PER_DODGE = 3.0D;
-    private static volatile double UI_HEAT_SLOW = 0.06D;
-    private static volatile double UI_HEAT_COOL = 4.0D;
-    private static volatile double UI_DODGE_COST = 8.0D;
-    private static volatile double UI_DODGE_REDUCE = 0.1D;
+    private static final double UI_HEAT_PER_DODGE = 3.0D;
+    private static final double UI_HEAT_SLOW = 0.06D;
+    private static final double UI_HEAT_COOL = 4.0D;
+    private static final double UI_DODGE_COST = 8.0D;
+    private static final double UI_DODGE_REDUCE = 0.1D;
     private static volatile double UI_DODGE_CHANCE = 40.0D;
-    private static volatile double UI_DODGE_CHANCE_LEVEL = 3.3333D;
-    private static volatile double UI_DODGE_CHANCE_MAX = 90.0D;
-    private static volatile double UI_HEAT_RECOVER = 50.0D;
-    private static volatile double UI_MASTERY_DODGE = 20.0D;
-    private static volatile double UI_MASTERY_HEAT = 0.4D;
-    private static volatile double UE_MASTERY_BONUS = 0.5D;
-    private static volatile double UE_CHARGE = 2.0D;
-    private static volatile double UE_DECAY = 1.0D;
-    private static volatile double UE_STAT_LV5 = 1.0D;
-    private static volatile double UE_STAT_LV10 = 3.0D;
-    private static volatile double UE_PEN = 0.2D;
+    private static final double UI_DODGE_CHANCE_LEVEL = 3.3333D;
+    private static final double UI_DODGE_CHANCE_MAX = 90.0D;
+    private static final double UI_HEAT_RECOVER = 50.0D;
+    private static final double UI_MASTERY_DODGE = 20.0D;
+    private static final double UI_MASTERY_HEAT = 0.4D;
+    private static final double UE_MASTERY_BONUS = 0.5D;
+    private static final double UE_CHARGE = 2.0D;
+    private static final double UE_DECAY = 1.0D;
+    private static final double UE_STAT_LV5 = 1.0D;
+    private static final double UE_STAT_LV10 = 3.0D;
+    private static final double UE_PEN = 0.2D;
 
 
     @SubscribeEvent
@@ -2276,26 +1634,7 @@ public class ServerConfig {
         RUN_STAMINA_DRAIN = RUN_STAMINA_DRAIN_RAW.get();
         DASH_COOLDOWN     = DASH_COOLDOWN_RAW.get();
         DASH_SPEED        = DASH_SPEED_RAW.get();
-        STEP_COOLDOWN     = STEP_COOLDOWN_RAW.get();
-        STEP_SPEED        = STEP_SPEED_RAW.get();
-        STEP_ENERGY_PCT   = STEP_ENERGY_PCT_RAW.get();
-        STEP_INVISIBLE    = STEP_INVISIBLE_RAW.get();
-        STEP_IFRAME       = STEP_IFRAME_RAW.get();
         BLOCK_WEAPON_FACTOR = BLOCK_WEAPON_FACTOR_RAW.get();
-        BLOCK_SHIELD_BONUS = BLOCK_SHIELD_BONUS_RAW.get();
-        BLOCK_SHIELD_CAP  = BLOCK_SHIELD_CAP_RAW.get();
-        BLOCK_SHIELD_SLOW = BLOCK_SHIELD_SLOW_RAW.get();
-        BLOCK_SHIELD_DURABILITY = BLOCK_SHIELD_DURABILITY_RAW.get();
-        BLOCK_SHIELD_KI   = BLOCK_SHIELD_KI_RAW.get();
-        GUARD_MAX         = GUARD_MAX_RAW.get();
-        GUARD_DRAIN       = GUARD_DRAIN_RAW.get();
-        GUARD_CON_BONUS   = GUARD_CON_BONUS_RAW.get();
-        GUARD_CON_FULL    = GUARD_CON_FULL_RAW.get();
-        GUARD_DEX_BONUS   = GUARD_DEX_BONUS_RAW.get();
-        GUARD_DEX_FULL    = GUARD_DEX_FULL_RAW.get();
-        GUARD_REGEN       = GUARD_REGEN_RAW.get();
-        GUARD_REGEN_DELAY = GUARD_REGEN_DELAY_RAW.get();
-        GUARD_BREAK_STUN  = GUARD_BREAK_STUN_RAW.get();
         STUN_PLAYERS      = STUN_PLAYERS_RAW.get();
         STUN_MAX          = STUN_MAX_RAW.get();
         STUN_DR           = STUN_DR_RAW.get();
@@ -2304,32 +1643,6 @@ public class ServerConfig {
         COMBO_WINDOW      = COMBO_WINDOW_RAW.get();
         COMBO_DMG         = COMBO_DMG_RAW.get();
         COMBO_MAX         = COMBO_MAX_RAW.get();
-        HEAVY_TICKS       = HEAVY_TICKS_RAW.get();
-        HEAVY_LEVELS      = HEAVY_LEVELS_RAW.get();
-        HEAVY_DMG         = HEAVY_DMG_RAW.get();
-        HEAVY_KNOCK       = HEAVY_KNOCK_RAW.get();
-        HEAVY_STAMINA     = HEAVY_STAMINA_RAW.get();
-        DIVE_MIN_HEIGHT   = DIVE_MIN_HEIGHT_RAW.get();
-        DIVE_SPEED        = DIVE_SPEED_RAW.get();
-        DIVE_MAX_TICKS    = DIVE_MAX_TICKS_RAW.get();
-        DIVE_RADIUS       = DIVE_RADIUS_RAW.get();
-        DIVE_MAX_RADIUS   = DIVE_MAX_RADIUS_RAW.get();
-        DIVE_KNOCK        = DIVE_KNOCK_RAW.get();
-        EVADE_TICKS       = EVADE_TICKS_RAW.get();
-        EVADE_CHARGE_TICKS = EVADE_CHARGE_TICKS_RAW.get();
-        GRAB_RANGE        = GRAB_RANGE_RAW.get();
-        GRAB_HOLD         = GRAB_HOLD_RAW.get();
-        GRAB_THROW        = GRAB_THROW_RAW.get();
-        GRAB_STUN         = GRAB_STUN_RAW.get();
-        GRAB_MOB_HOLD     = GRAB_MOB_HOLD_RAW.get();
-        GRAB_CHECKS       = GRAB_CHECKS_RAW.get();
-        GRAB_ZONE         = GRAB_ZONE_RAW.get();
-        GRAB_NEEDLE       = GRAB_NEEDLE_RAW.get();
-        GRAB_FAIL         = GRAB_FAIL_RAW.get();
-        GRAB_GAP          = GRAB_GAP_RAW.get();
-        EVADE_WAVE_RADIUS = EVADE_WAVE_RADIUS_RAW.get();
-        EVADE_WAVE_KNOCK  = EVADE_WAVE_KNOCK_RAW.get();
-        EVADE_WAVE_STUN   = EVADE_WAVE_STUN_RAW.get();
         COMBO_FINISHER_EVERY = COMBO_FINISHER_EVERY_RAW.get();
         COMBO_FINISHER_KNOCK = COMBO_FINISHER_KNOCK_RAW.get();
         BARE_ATTACK_SPEED = BARE_ATTACK_SPEED_RAW.get();
@@ -2339,38 +1652,12 @@ public class ServerConfig {
         KIAI_GUARD_BREAK  = KIAI_GUARD_BREAK_RAW.get();
         PARRY_ENABLED     = PARRY_ENABLED_RAW.get();
         PARRY_WINDOW      = PARRY_WINDOW_RAW.get();
-        PARRY_COOLDOWN    = PARRY_COOLDOWN_RAW.get();
-        PARRY_KNOCKBACK   = PARRY_KNOCKBACK_RAW.get();
-        PARRY_REFLECT     = PARRY_REFLECT_RAW.get();
-        PARRY_NPC_CHANCE  = PARRY_NPC_CHANCE_RAW.get();
-        PARRY_STUN        = PARRY_STUN_RAW.get();
-        PARRY_COUNTER_TICKS = PARRY_COUNTER_TICKS_RAW.get();
-        PARRY_COUNTER_MULT = PARRY_COUNTER_MULT_RAW.get();
-        PARRY_PERFECT_TICKS = PARRY_PERFECT_TICKS_RAW.get();
-        PARRY_PERFECT_BONUS = PARRY_PERFECT_BONUS_RAW.get();
-        CLASH_CONTACT     = CLASH_CONTACT_RAW.get();
-        CLASH_RESOLVE     = CLASH_RESOLVE_RAW.get();
         CLASH_ENABLED     = CLASH_ENABLED_RAW.get();
         CLASH_DURATION    = CLASH_DURATION_RAW.get();
-        CLASH_PERIOD_SLOW = CLASH_PERIOD_SLOW_RAW.get();
-        CLASH_PERIOD_MEDIUM = CLASH_PERIOD_MEDIUM_RAW.get();
-        CLASH_PERIOD_FAST = CLASH_PERIOD_FAST_RAW.get();
-        CLASH_FIXED_SPEED = CLASH_FIXED_SPEED_RAW.get();
-        CLASH_PING_GRACE  = CLASH_PING_GRACE_RAW.get();
-        CLASH_NO_PRESS    = CLASH_NO_PRESS_RAW.get();
-        CLASH_STAT_BONUS_CAP = CLASH_STAT_BONUS_CAP_RAW.get();
-        CLASH_TIE_MARGIN  = CLASH_TIE_MARGIN_RAW.get();
-        CLASH_OUTNUMBERED_BONUS = CLASH_OUTNUMBERED_BONUS_RAW.get();
         CLASH_TEAM_MAX    = CLASH_TEAM_MAX_RAW.get();
-        CLASH_JOIN_RANGE  = CLASH_JOIN_RANGE_RAW.get();
-        CLASH_JOIN_RESETS = CLASH_JOIN_RESETS_RAW.get();
         CLASH_TIE_DAMAGE  = CLASH_TIE_DAMAGE_RAW.get();
         CLASH_SUM         = CLASH_SUM_RAW.get();
-        CLASH_RETURN_SPEED = CLASH_RETURN_SPEED_RAW.get();
-        CLASH_HOMING      = CLASH_HOMING_RAW.get();
-        CLASH_HOMING_RANGE = CLASH_HOMING_RANGE_RAW.get();
         CLASH_MIN_DAMAGE  = CLASH_MIN_DAMAGE_RAW.get();
-        CLASH_MOB_SKILL   = CLASH_MOB_SKILL_RAW.get();
         SB_RADIUS         = SB_RADIUS_RAW.get();
         KI_LIFE           = KI_LIFE_RAW.get();
         SB_GAIN           = SB_GAIN_RAW.get();
@@ -2380,27 +1667,17 @@ public class ServerConfig {
         SB_PARTY_RADIUS   = SB_PARTY_RADIUS_RAW.get();
         FLY_MULT_CAP      = FLY_MULT_CAP_RAW.get();
         FLY_SCALING       = FLY_SCALING_RAW.get();
-        FLY_BASE_SPEED    = FLY_BASE_SPEED_RAW.get();
         FLY_KI_DRAIN      = FLY_KI_DRAIN_RAW.get();
-        FLY_TAKEOFF_IMPULSE = FLY_TAKEOFF_IMPULSE_RAW.get();
-        FLY_TAKEOFF_KI_COST = FLY_TAKEOFF_KI_COST_RAW.get();
-        FLY_RAMP_UP = FLY_RAMP_UP_RAW.get();
-        FLY_RAMP_DOWN = FLY_RAMP_DOWN_RAW.get();
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
         TRAINING_PL_RATIO_FULL   = TRAINING_PL_RATIO_FULL_RAW.get();
         REGEN_BODY_EXHAUSTION    = REGEN_BODY_EXHAUSTION_RAW.get();
         REGEN_STAMINA_EXHAUSTION = REGEN_STAMINA_EXHAUSTION_RAW.get();
         REGEN_MIN_FOOD           = REGEN_MIN_FOOD_RAW.get();
         PARTY_MAX_SIZE_CEILING   = PARTY_MAX_SIZE_CEILING_RAW.get();
-        ENERGY_GENERATOR_CAPACITY    = ENERGY_GENERATOR_CAPACITY_RAW.get();
-        ENERGY_GENERATOR_MAX_EXTRACT = ENERGY_GENERATOR_MAX_EXTRACT_RAW.get();
 
         BODY_SCALE    = BODY_SCALE_RAW.get();
         STAMINA_SCALE = STAMINA_SCALE_RAW.get();
         ENERGY_SCALE  = ENERGY_SCALE_RAW.get();
-        REGEN_BODY    = REGEN_BODY_RAW.get();
-        REGEN_STAMINA = REGEN_STAMINA_RAW.get();
-        REGEN_ENERGY  = REGEN_ENERGY_RAW.get();
         FOOD_KI_PCT      = FOOD_KI_RAW.get();
         FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
@@ -2422,7 +1699,6 @@ public class ServerConfig {
         LOCK_ON_WHILE_FLYING = LOCK_ON_WHILE_FLYING_RAW.get();
         LOCK_ON_RANGE       = LOCK_ON_RANGE_RAW.get();
         LOCK_ON_HOMING_TURN = LOCK_ON_HOMING_TURN_RAW.get();
-        TECHNIQUE_EXPLOSION_RADIUS_CAP = TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW.get();
         VANILLA_PL_FACTOR   = VANILLA_PL_FACTOR_RAW.get();
         SCOUTER_RANGE       = SCOUTER_RANGE_RAW.get();
 
@@ -2433,26 +1709,11 @@ public class ServerConfig {
         M_TECH_DMG       = MASTERY_TECH_DMG_RAW.get();
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
         M_TECH_CAST      = MASTERY_TECH_CAST_RAW.get();
-        MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
         LEGENDARY_STATE_BONUS = LEGENDARY_STATE_BONUS_RAW.get();
         LEGENDARY_BIRTH_CHANCE = LEGENDARY_BIRTH_CHANCE_RAW.get();
-        ARC_ENV_FIRE = ARC_ENV_FIRE_RAW.get();
-        ARC_GOD_PP_CAP = ARC_GOD_PP_CAP_RAW.get();
-        ARC_GOD_PP_DRAIN = ARC_GOD_PP_DRAIN_RAW.get();
-        ARC_GOD_PP_STAT = ARC_GOD_PP_STAT_RAW.get();
         HUMAN_LEGEND_DAMAGE_TAKEN = HUMAN_LEGEND_DEFENSE_RAW.get();
         NAMEK_LEGEND_LIFESTEAL = NAMEK_LEGEND_LIFESTEAL_RAW.get();
         NAMEK_LEGEND_NO_REGEN = NAMEK_LEGEND_NO_REGEN_RAW.get();
-        ARC_LEGEND_PERCENT = ARC_LEGEND_PERCENT_RAW.get();
-        ARC_LEGEND_TENSION = ARC_LEGEND_TENSION_RAW.get();
-        ARC_LEGEND_TENSION_MASTERY = ARC_LEGEND_TENSION_MASTERY_RAW.get();
-        ARC_LEGEND_COOLDOWN = ARC_LEGEND_COOLDOWN_RAW.get();
-        MAJIN_LEGEND_EXTRA_CAP = MAJIN_LEGEND_EXTRA_CAP_RAW.get();
-        MAJIN_LEGEND_DURATION = MAJIN_LEGEND_DURATION_MULT_RAW.get();
-        MAJIN_LEGEND_STEAL = MAJIN_LEGEND_STEAL_RAW.get();
-        MAJIN_LEGEND_STEAL_MAX = MAJIN_LEGEND_STEAL_MAX_RAW.get();
-        MAJIN_LEGEND_STEAL_CAP = MAJIN_LEGEND_STEAL_CAP_RAW.get();
-        MAJIN_LEGEND_KI_REFUND = MAJIN_LEGEND_KI_REFUND_RAW.get();
         HUMAN_WILL_ALLY = HUMAN_WILL_ALLY_BONUS_RAW.get();
         HUMAN_WILL_HIT = HUMAN_WILL_HIT_BONUS_RAW.get();
         HUMAN_WILL_MAX = HUMAN_WILL_MAX_RAW.get();
@@ -2460,92 +1721,34 @@ public class ServerConfig {
         NAMEK_LEGEND_REGEN = NAMEK_LEGEND_REGEN_RAW.get();
         NAMEK_LEGEND_REGEN_KI = NAMEK_LEGEND_REGEN_KI_RAW.get();
         NAMEK_LEGEND_PASSIVE_COST = NAMEK_LEGEND_PASSIVE_COST_RAW.get();
-        MAJIN_LEGENDARY_EXCLUSIVE = MAJIN_LEGENDARY_EXCLUSIVE_RAW.get();
         NAMEK_GIANT_STAT = NAMEK_GIANT_STAT_RAW.get();
 
         TRAIN_DMG_TP    = TRAIN_DMG_TP_RAW.get();
         TP_PER_PL       = TP_PER_PL_RAW.get();
-        TRAIN_AIR_TP    = TRAIN_AIR_TP_RAW.get();
-        TRAIN_AIR_COST  = TRAIN_AIR_COST_RAW.get();
-        TRAIN_AIR_TICKS = TRAIN_AIR_TICKS_RAW.get();
-        TRAIN_HALF_LIFE = TRAIN_HALF_LIFE_RAW.get();
-        TRAIN_DECAY     = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT  = TRAIN_HTC_MULT_RAW.get();
         TRAIN_MIN_EFF   = TRAIN_MIN_EFF_RAW.get();
         MIRROR_HEALTH = MIRROR_HEALTH_RAW.get();
         ABSORPTION_WEIGHT = ABSORPTION_WEIGHT_RAW.get();
 
-        WEIGHT_CAP_DIV     = WEIGHT_CAP_DIV_RAW.get();
-        WEIGHT_CAP_EXP     = WEIGHT_CAP_EXP_RAW.get();
-        WEIGHT_STAT_PEN    = WEIGHT_STAT_PEN_RAW.get();
-        WEIGHT_MOVE_PEN    = WEIGHT_MOVE_PEN_RAW.get();
-        WEIGHT_JUMP_PEN    = WEIGHT_JUMP_PEN_RAW.get();
-        WEIGHT_GRAVITY_JUMP_FACTOR = WEIGHT_GRAVITY_JUMP_FACTOR_RAW.get();
-        WEIGHT_TP_BONUS    = WEIGHT_TP_BONUS_RAW.get();
-        WEIGHT_OVER_THRESH = WEIGHT_OVER_THRESH_RAW.get();
-        WEIGHT_OVER_MOVE   = WEIGHT_OVER_MOVE_RAW.get();
-        WEIGHT_KAIOSAMA_TONS = WEIGHT_KAIOSAMA_TONS_RAW.get();
-        WEIGHT_KAIOSAMA_GRAVITY_MULT = WEIGHT_KAIOSAMA_GRAVITY_MULT_RAW.get();
-        WEIGHT_HTC_TONS = WEIGHT_HTC_TONS_RAW.get();
-        WEIGHT_HTC_GRAVITY_MULT = WEIGHT_HTC_GRAVITY_MULT_RAW.get();
         PU_TP_MULT       = PU_TP_MULT_RAW.get();
         PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
         PU_MAX_STAT      = PU_MAX_STAT_RAW.get();
-        GODKI_TRIAL_FRACTION = GODKI_TRIAL_FRACTION_RAW.get();
         GODKI_RITUAL_PARTICIPANTS = GODKI_RITUAL_PARTICIPANTS_RAW.get();
-        GODKI_RITUAL_SAME_RACE = GODKI_RITUAL_SAME_RACE_RAW.get();
-        GODKI_RITUAL_MIN_ALIGNMENT = GODKI_RITUAL_MIN_ALIGNMENT_RAW.get();
         GODKI_RITUAL_RADIUS = GODKI_RITUAL_RADIUS_RAW.get();
-        GODKI_RITUAL_SECONDS = GODKI_RITUAL_SECONDS_RAW.get();
         BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
         LEGENDARY_OD_STAT = LEGENDARY_OD_STAT_RAW.get();
         LEGENDARY_GROWTH = LEGENDARY_GROWTH_RAW.get();
         LEGENDARY_CEILING = LEGENDARY_CEILING_RAW.get();
         LEGENDARY_RESONANCE = LEGENDARY_RESONANCE_RAW.get();
         BEAST_MASTERY_REQ = BEAST_MASTERY_REQ_RAW.get();
-        ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
-        ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
-        ARC_PP_COMBAT_DEALT = ARC_PP_COMBAT_DEALT_RAW.get();
-        ARC_PP_COMBAT_TAKEN = ARC_PP_COMBAT_TAKEN_RAW.get();
-        ARC_GOD_REFILL = ARC_GOD_REFILL_RAW.get();
-        ARC_PP_STAT = ARC_PP_STAT_RAW.get();
         MAJIN_ABSORB_ENABLED = MAJIN_ABSORB_ENABLED_RAW.get();
-        MAJIN_ABSORB_MAX_HEALTH_PCT = MAJIN_ABSORB_MAX_HEALTH_PCT_RAW.get();
-        MAJIN_ABSORB_DOMINANT_PL_RATIO = MAJIN_ABSORB_DOMINANT_PL_RATIO_RAW.get();
-        MAJIN_ABSORB_MAX_PL_RATIO = MAJIN_ABSORB_MAX_PL_RATIO_RAW.get();
-        MAJIN_ABSORB_KI_COST_PCT = MAJIN_ABSORB_KI_COST_PCT_RAW.get();
         MAJIN_ABSORB_PVP = MAJIN_ABSORB_PVP_RAW.get();
-        MAJIN_MASS_CAP = MAJIN_MASS_CAP_RAW.get();
-        MAJIN_MASS_SECONDS = MAJIN_MASS_SECONDS_RAW.get();
-        MAJIN_MASS_STAT_PER_STACK = MAJIN_MASS_STAT_PER_STACK_RAW.get();
-        MAJIN_MASS_PERM_PER_ABSORB = MAJIN_MASS_PERM_PER_ABSORB_RAW.get();
-        MAJIN_MASS_PERM_CAP = MAJIN_MASS_PERM_CAP_RAW.get();
-        MAJIN_VORAZ_EXTRA_CAP = MAJIN_VORAZ_EXTRA_CAP_RAW.get();
-        MAJIN_SACIADO_DURATION_MULT = MAJIN_SACIADO_DURATION_MULT_RAW.get();
-        MAJIN_PRIMITIVO_BONUS_MULT = MAJIN_PRIMITIVO_BONUS_MULT_RAW.get();
-        MAJIN_PRIMITIVO_DURATION_MULT = MAJIN_PRIMITIVO_DURATION_MULT_RAW.get();
         FORM_DRAIN_SCALE = FORM_DRAIN_SCALE_RAW.get();
         FORM_DRAIN_SPI_MIN = FORM_DRAIN_SPI_MIN_RAW.get();
         FORM_DRAIN_SPI_MAX = FORM_DRAIN_SPI_MAX_RAW.get();
         FORM_DRAIN_FLOOR = FORM_DRAIN_FLOOR_RAW.get();
         UI_HEAT_RATE = UI_HEAT_RATE_RAW.get();
-        UI_HEAT_PER_DODGE = UI_HEAT_PER_DODGE_RAW.get();
-        UI_HEAT_SLOW = UI_HEAT_SLOW_RAW.get();
-        UI_HEAT_COOL = UI_HEAT_COOL_RAW.get();
-        UI_DODGE_COST = UI_DODGE_COST_RAW.get();
-        UI_DODGE_REDUCE = UI_DODGE_REDUCE_RAW.get();
         UI_DODGE_CHANCE = UI_DODGE_CHANCE_RAW.get();
-        UI_DODGE_CHANCE_LEVEL = UI_DODGE_CHANCE_LEVEL_RAW.get();
-        UI_DODGE_CHANCE_MAX = UI_DODGE_CHANCE_MAX_RAW.get();
-        UI_HEAT_RECOVER = UI_HEAT_RECOVER_RAW.get();
-        UI_MASTERY_DODGE = UI_MASTERY_DODGE_RAW.get();
-        UI_MASTERY_HEAT = UI_MASTERY_HEAT_RAW.get();
-        UE_MASTERY_BONUS = UE_MASTERY_BONUS_RAW.get();
-        UE_CHARGE = UE_CHARGE_RAW.get();
-        UE_DECAY = UE_DECAY_RAW.get();
-        UE_STAT_LV5 = UE_STAT_LV5_RAW.get();
-        UE_STAT_LV10 = UE_STAT_LV10_RAW.get();
-        UE_PEN = UE_PEN_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
@@ -2563,12 +1766,8 @@ public class ServerConfig {
         COMBAT_ATTACK_SPEED   = COMBAT_ATTACK_SPEED_RAW.get();
         OVERCHARGE_TIME_MULT  = OVERCHARGE_TIME_MULT_RAW.get();
         OVERCHARGE_COST_MULT  = OVERCHARGE_COST_MULT_RAW.get();
-        BF_LUCK_FACTOR = BF_LUCK_FACTOR_RAW.get();
         BF_CHANCE          = BF_CHANCE_RAW.get();
-        BF_CHARGE_EXPONENT = BF_CHARGE_EXPONENT_RAW.get();
-        BF_MAX_CHANCE        = BF_MAX_CHANCE_RAW.get();
         BF_MULTIPLIER        = BF_MULTIPLIER_RAW.get();
-        BF_STAT_FACTOR        = BF_STAT_FACTOR_RAW.get();
 
         Map<ResourceLocation, Integer> parsedOverrides = new HashMap<>();
         for (String line : STACK_OVERRIDES_RAW.get()) {
@@ -2700,9 +1899,9 @@ public class ServerConfig {
     /** Tope admin para /zparty maxsize — ver el comentario de PARTY_MAX_SIZE_CEILING_RAW. */
     public static int    partyMaxSizeCeiling()     { return PARTY_MAX_SIZE_CEILING; }
     /** Búfer de FE del generador de energía. Ver GeneratorEnergy. */
-    public static int    energyGeneratorCapacity()   { return ENERGY_GENERATOR_CAPACITY; }
+    public static int    energyGeneratorCapacity()   { return techCap(ENERGY_GENERATOR_CAPACITY); }
     /** Techo de FE por tick y por cara que el generador empuja a un vecino. */
-    public static int    energyGeneratorMaxExtract() { return ENERGY_GENERATOR_MAX_EXTRACT; }
+    public static int    energyGeneratorMaxExtract() { return techRate(ENERGY_GENERATOR_MAX_EXTRACT); }
 
     public static double speedMultiplierCap()       { return SPEED_MULT_CAP; }
     public static double movementScaling()          { return MOVE_SCALING; }
@@ -2838,9 +2037,9 @@ public class ServerConfig {
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }
     public static double energyScale()    { return ENERGY_SCALE; }
-    public static double baseRegenBody()    { return REGEN_BODY; }
-    public static double baseRegenStamina() { return REGEN_STAMINA; }
-    public static double baseRegenEnergy()  { return REGEN_ENERGY; }
+    public static double baseRegenBody()    { return REGEN_BODY * regenMult(); }
+    public static double baseRegenStamina() { return REGEN_STAMINA * regenMult(); }
+    public static double baseRegenEnergy()  { return REGEN_ENERGY * regenMult(); }
     public static double foodKiPercentPerNutrition()      { return FOOD_KI_PCT; }
     public static double foodStaminaPercentPerNutrition() { return FOOD_STAMINA_PCT; }
 
@@ -3011,10 +2210,9 @@ public class ServerConfig {
     public static double weightTpBonus()           { return WEIGHT_TP_BONUS; }
     public static double weightOverloadThreshold() { return WEIGHT_OVER_THRESH; }
     public static double weightOverloadMoveFactor(){ return WEIGHT_OVER_MOVE; }
-    public static double weightKaiosamaAmbientTons(){ return WEIGHT_KAIOSAMA_TONS; }
     public static double weightKaiosamaGravityMultiplier(){ return WEIGHT_KAIOSAMA_GRAVITY_MULT; }
-    public static double weightHtcAmbientTons(){ return WEIGHT_HTC_TONS; }
     public static double weightHtcGravityMultiplier(){ return WEIGHT_HTC_GRAVITY_MULT; }
+    public static double gravityTonsPerG()          { return GRAVITY_TONS_PER_G; }
 
     // === LÓGICA FINAL: aplica overrides con las nuevas opciones ===
     public static ItemStack resolveWishStack(ItemStack chosen) {

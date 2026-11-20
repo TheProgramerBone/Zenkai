@@ -191,6 +191,8 @@ public final class PlayerCommands {
         // (Antes esto guardaba la DURACIÓN del cooldown como si fuera un instante: tras un reset
         // el jugador quedaba bloqueado para invocar hasta que el mundo cumpliera esos días.)
         att.setLastSummonTick(Long.MIN_VALUE);
+        // Cooldown de la cámara de contención de ki: un personaje nuevo no arrastra el enfriamiento.
+        att.flags().setKiChamberCooldownUntil(0L);
         // No se queda cargando ki ni con el % de poder subido: vuelve al 50% base (el mismo
         // que da SkillEffects.maxPowerPercent con Ki Control en 0, que es donde acaba de
         // dejarlo skills().clear() de arriba).

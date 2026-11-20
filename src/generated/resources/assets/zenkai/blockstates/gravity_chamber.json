@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "active=false,facing=east": {
+      "model": "zenkai:block/gravity_chamber",
+      "y": 90
+    },
+    "active=false,facing=north": {
+      "model": "zenkai:block/gravity_chamber"
+    },
+    "active=false,facing=south": {
+      "model": "zenkai:block/gravity_chamber",
+      "y": 180
+    },
+    "active=false,facing=west": {
+      "model": "zenkai:block/gravity_chamber",
+      "y": 270
+    },
+    "active=true,facing=east": {
+      "model": "zenkai:block/gravity_chamber_on",
+      "y": 90
+    },
+    "active=true,facing=north": {
+      "model": "zenkai:block/gravity_chamber_on"
+    },
+    "active=true,facing=south": {
+      "model": "zenkai:block/gravity_chamber_on",
+      "y": 180
+    },
+    "active=true,facing=west": {
+      "model": "zenkai:block/gravity_chamber_on",
+      "y": 270
+    }
+  }
+}

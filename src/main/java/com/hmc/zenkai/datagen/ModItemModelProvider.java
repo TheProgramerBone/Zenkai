@@ -67,6 +67,13 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("ajisa_pressure_plate", modLoc("block/ajisa_pressure_plate"));
         withExistingParent("energy_generator", modLoc("block/energy_generator"));
         withExistingParent("piece_connector", modLoc("block/piece_connector"));
+        withExistingParent("gravity_chamber", modLoc("block/gravity_chamber"));
+        basicItem(ModItems.GRAVITY_UPGRADE_COPPER.get());
+        basicItem(ModItems.GRAVITY_UPGRADE_IRON.get());
+        basicItem(ModItems.GRAVITY_UPGRADE_ENERGY_CRYSTAL.get());
+        basicItem(ModItems.GRAVITY_UPGRADE_DIAMOND.get());
+        basicItem(ModItems.GRAVITY_UPGRADE_KATCHIN.get());
+        basicItem(ModItems.GRAVITY_UPGRADE_NETHERITE.get());
 
         withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));

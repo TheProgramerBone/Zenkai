@@ -37,7 +37,7 @@ public final class PlayerBodyCarry {
     }
 
     public static void pickUp(ServerPlayer sp, PlayerBodyEntity body) {
-        if (!com.hmc.zenkai.config.ServerConfig.PERMADEATH_CARRY_ENABLED.get()) {
+        if (!(true)) {
             sp.displayClientMessage(Component.translatable("zenkai.body.carry_disabled"), true);
             return;
         }
@@ -78,7 +78,7 @@ public final class PlayerBodyCarry {
      */
     public static boolean restricted(net.minecraft.world.entity.player.Player p) {
         return !p.getData(ZenkaiDataAttachments.CARRIED_BODY.get()).isNone()
-                && com.hmc.zenkai.config.ServerConfig.PERMADEATH_CARRY_RESTRICTIONS.get();
+                && (true);
     }
 
     /** Aviso de «manos ocupadas» en la action bar, como mucho una vez por segundo para no saturar. */
@@ -151,7 +151,7 @@ public final class PlayerBodyCarry {
     @SubscribeEvent
     public static void onTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer sp) || sp.tickCount % 20 != 0 || carried(sp).isNone()) return;
-        int level = com.hmc.zenkai.config.ServerConfig.PERMADEATH_CARRY_SLOWNESS.get();
+        int level = (2);
         if (level > 0) sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, level - 1, true, false, false));
     }
 

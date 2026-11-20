@@ -208,7 +208,7 @@ public class WeightScreen extends Screen {
         if (mc.player == null) return;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
 
-        double cap = WeightSystem.capacityTons(att.getPowerLevelRaw());
+        double cap = WeightSystem.playerCapacity(att);
         double r = cap <= 0 ? 0 : tons / cap;
         boolean over = WeightSystem.isOverloaded(r);
 

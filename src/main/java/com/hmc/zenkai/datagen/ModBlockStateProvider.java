@@ -198,6 +198,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         modLoc("block/energy_generator_front"),
                         modLoc("block/energy_generator_top")));
 
+        // Cámara de gravedad: el modelo de pedestal es a mano (models/block/gravity_chamber*.json);
+        // aquí solo la orientación y la pantalla encendida. El puerto es un cubo con una textura.
+        horizontalBlock(ModBlocks.GRAVITY_CHAMBER.get(), state ->
+                models().getExistingFile(modLoc(state.getValue(com.hmc.zenkai.content.block.GravityChamberBlock.ACTIVE)
+                        ? "block/gravity_chamber_on" : "block/gravity_chamber")));
+        simpleBlockWithItem(ModBlocks.GRAVITY_CHAMBER_PORT.get(),
+                models().cubeAll("gravity_chamber_port", modLoc("block/gravity_chamber_port")));
+
         transportCable(ModBlocks.ENERGY_CABLE, "energy_cable");
         transportCable(ModBlocks.FLUID_PIPE, "fluid_pipe");
         transportTank(ModBlocks.ENERGY_TANK, "energy_tank");

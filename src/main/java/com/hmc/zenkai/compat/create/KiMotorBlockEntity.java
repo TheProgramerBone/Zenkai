@@ -121,6 +121,12 @@ public class KiMotorBlockEntity extends GeneratingKineticBlockEntity
         mode = m;
         active = false;
         carry = 0.0;
+        // Las caras que solo servían al modo anterior se vuelven Normal: una cara en Tirar (útil en
+        // motor) no puede dar FE, y el generador parecía mudo al conmutar sin que se viera por qué.
+        for (int i = 0; i < 6; i++) {
+            if (!sideModeUseful(Channel.ENERGY, energyModes[i])) energyModes[i] = SideMode.NORMAL;
+            if (!sideModeUseful(Channel.FLUID, fluidModes[i])) fluidModes[i] = SideMode.NORMAL;
+        }
         // El papel cambia (fuente <-> consumidor): Create tiene que volver a sumar la red.
         detachKinetics();
         appliedSpeed = 0f;
@@ -132,6 +138,15 @@ public class KiMotorBlockEntity extends GeneratingKineticBlockEntity
     public void setSpeedStep(int step) {
         speedStep = Math.floorMod(step, RPM_STEPS.length);
         syncAll();
+    }
+
+    @Override
+    public void rotateKinetics(Runnable change) {
+        detachKinetics();
+        appliedSpeed = 0f;
+        change.run();
+        attachKinetics();
+        reActivateSource = true;
     }
 
     public void toggleReversed() {
@@ -277,7 +292,8 @@ public class KiMotorBlockEntity extends GeneratingKineticBlockEntity
         }
     }
 
-    private void tickGenerator() {
+    /** Un tick del modo generador. Público para los gametests, donde no hay red de Create que dé velocidad. */
+    public void tickGenerator() {
         if (!overStressed && speed != 0f) {
             carry += Math.abs(speed) * ServerConfig.kiMotorGeneratorImpact() * ServerConfig.kiMotorGeneratorFePerSu();
             int whole = (int) carry;

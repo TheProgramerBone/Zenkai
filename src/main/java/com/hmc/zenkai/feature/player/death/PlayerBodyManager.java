@@ -193,7 +193,7 @@ public final class PlayerBodyManager {
      * la muerte normal ({@link #onDrops}) y la muerte durante la visita de Uranai Baba (que no pasa por los drops).
      */
     public static void registerCreated(ServerPlayer sp, PlayerBodyEntity body) {
-        if (ServerConfig.PERMADEATH_NOTIFY_PARTY.get()) notifyParty(sp, body);
+        if ((true)) notifyParty(sp, body);
         NeoForge.EVENT_BUS.post(new PlayerBodyCreatedEvent(sp, body, ServerConfig.PERMADEATH_ENABLED.get()));
         announceWitnesses(sp);
         enforceCap(sp.server, sp.getUUID(), body.getUUID());
@@ -325,7 +325,7 @@ public final class PlayerBodyManager {
         PartyManager.Party party = PartyManager.get(owner.server).partyOf(owner.getUUID());
         if (party == null) return;
         BlockPos p = body.blockPosition();
-        Component msg = ServerConfig.PERMADEATH_NOTIFY_COORDS.get()
+        Component msg = (true)
                 ? Component.translatable("zenkai.body.party_notice", owner.getDisplayName(),
                         p.getX(), p.getY(), p.getZ(), body.level().dimension().location().toString())
                 : Component.translatable("zenkai.body.party_notice_nocoords", owner.getDisplayName());

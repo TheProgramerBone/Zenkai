@@ -64,6 +64,8 @@ public class ModTags {
         /** Seres con ki divino (Ángeles, Janemba…): el Ki Sense de quien no tiene God Ki los
          *  percibe como una firma desconocida y tenue (skill tree F5). */
         public static final TagKey<EntityType<?>> DIVINE = createTag("divine");
+        /** No les afecta la gravedad de la cámara de gravedad (maestros y NPC). Ampliable por datapack. */
+        public static final TagKey<EntityType<?>> GRAVITY_IMMUNE = createTag("gravity_immune");
 
         private static TagKey<EntityType<?>> createTag(String name) {
             return TagKey.create(Registries.ENTITY_TYPE,

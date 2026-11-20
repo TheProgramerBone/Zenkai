@@ -598,6 +598,25 @@ public class ModBlocks {
                     .sound(SoundType.METAL)
                     .strength(3.5f, 6f)));
 
+    /** Consola de la cámara de gravedad (0.7.0, Fase 3): va en el CENTRO del suelo de una sala
+     *  esférica cerrada. Modelo de pedestal, no ocupa el bloque entero (noOcclusion). */
+    public static final DeferredBlock<Block> GRAVITY_CHAMBER = registerBlock("gravity_chamber",
+            () -> new com.hmc.zenkai.content.block.GravityChamberBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.GravityChamberBlock.ACTIVE) ? 9 : 0)));
+
+    /** Puerto de energía de la cámara de gravedad: bloque de pared que pasa la FE de fuera a la consola. */
+    public static final DeferredBlock<Block> GRAVITY_CHAMBER_PORT = registerBlock("gravity_chamber_port",
+            () -> new com.hmc.zenkai.content.block.GravityChamberPortBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()));
+
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)

@@ -1,6 +1,10 @@
 {
   "values": [
     "zenkai:scouter",
-    "zenkai:halo"
+    "zenkai:halo",
+    {
+      "id": "create:goggles",
+      "required": false
+    }
   ]
 }

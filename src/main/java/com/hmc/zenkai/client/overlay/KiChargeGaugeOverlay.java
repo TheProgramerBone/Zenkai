@@ -50,6 +50,13 @@ public final class KiChargeGaugeOverlay {
     private static int lastSeenPercent = Integer.MIN_VALUE;
     private static long lastChangeTick = Long.MIN_VALUE;
 
+    /** ¿El jugador local está dentro de una cámara de contención con la puerta cerrada? */
+    private static boolean insideClosedChamber(Minecraft mc) {
+        net.minecraft.world.level.block.state.BlockState st = mc.player.level().getBlockState(mc.player.blockPosition());
+        return st.getBlock() instanceof com.hmc.zenkai.content.block.KiContainmentChamberBlock
+                && !st.getValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.OPEN);
+    }
+
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
@@ -67,6 +74,11 @@ public final class KiChargeGaugeOverlay {
 
         // Durante el ritual de God Ki el anillo NO se pinta (solo ahí): el aviso de progreso ocupa su sitio.
         if (now < att.flags().getGodKiRitualUntil()) return;
+
+        // Dentro de la cámara de contención el jugador «carga» (pose y aura) pero no con la tecla: el
+        // anillo de poder no pinta nada ahí. El servidor lo sujeta con la puerta cerrada, así que se
+        // detecta por el bloque en el que está (la columna de 2 bloques comparte estado).
+        if (insideClosedChamber(mc)) return;
 
         boolean charging = att.isChargingKi();
         boolean flashing = (now - lastChangeTick) < FLASH_TICKS;

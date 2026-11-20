@@ -60,7 +60,7 @@ public class KiChamberMenu extends AbstractContainerMenu {
     /** Puerta abierta, ajuste Forzar encendido y alguien sujeto dentro. */
     public static final int F_OPEN = 8, F_FORCE_SET = 16, F_OCCUPIED = 32;
 
-    public static final int BTN_DOOR = 0, BTN_FORCE = 1, BTN_CONVERT = 2;
+    public static final int BTN_DOOR = 0, BTN_FORCE = 1, BTN_CONVERT = 2, BTN_DUMP = 3;
 
     public static final int MACHINE_SLOTS = KiContainmentChamberBlockEntity.UPGRADE_SLOTS;
     public static final int INV_FIRST = MACHINE_SLOTS, INV_END = MACHINE_SLOTS + 36;
@@ -179,6 +179,7 @@ public class KiChamberMenu extends AbstractContainerMenu {
             case BTN_DOOR -> be.toggleDoor();
             case BTN_FORCE -> be.toggleForce();
             case BTN_CONVERT -> be.toggleConvert();
+            case BTN_DUMP -> be.dumpTank();
             default -> { return false; }
         }
         return true;

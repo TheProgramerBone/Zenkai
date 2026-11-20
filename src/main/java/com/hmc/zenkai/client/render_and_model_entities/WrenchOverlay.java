@@ -41,6 +41,8 @@ import org.joml.Matrix4f;
 public final class WrenchOverlay {
     private WrenchOverlay() {}
 
+    private static final net.neoforged.neoforge.common.ItemAbility CONFIGURE =
+            net.neoforged.neoforge.common.ItemAbility.get("wrench_configure");
     private static final float ALPHA = 0.38f;
     private static final float LIFT = 0.003f;
 
@@ -52,9 +54,14 @@ public final class WrenchOverlay {
                 || hit.getType() != HitResult.Type.BLOCK) return;
         ItemStack wrench = held(mc);
         if (wrench.isEmpty() || WrenchItem.rotating(wrench)) return;   // en modo Rotar no hay puertos que enseñar
+        // Configurator de Mekanism: solo en sus modos de energía y fluidos (en los demás no es cosa nuestra).
+        if (!(wrench.getItem() instanceof WrenchItem) && wrench.canPerformAction(CONFIGURE)) {
+            WrenchItem.Mode mek = WrenchItem.mekanismMode(wrench);
+            if (mek != WrenchItem.Mode.ENERGY && mek != WrenchItem.Mode.FLUID) return;
+        }
         BlockPos pos = hit.getBlockPos();
         if (!(mc.level.getBlockEntity(pos) instanceof SideConfigurable cfg) || cfg.sideChannels().isEmpty()) return;
-        SideConfigurable.Channel channel = wrench.getItem() instanceof WrenchItem
+        SideConfigurable.Channel channel = wrench.getItem() instanceof WrenchItem || wrench.canPerformAction(CONFIGURE)
                 ? WrenchItem.channelFor(wrench, cfg) : cfg.sideChannels().get(0);
         boolean cable = cfg instanceof TransportBlockEntity t && t.isCableBlock();
 
@@ -88,7 +95,7 @@ public final class WrenchOverlay {
     private static ItemStack held(Minecraft mc) {
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack s = mc.player.getItemInHand(h);
-            if (s.getItem() instanceof WrenchItem || s.is(Tags.Items.TOOLS_WRENCH)) return s;
+            if (s.getItem() instanceof WrenchItem || s.is(Tags.Items.TOOLS_WRENCH) || s.canPerformAction(CONFIGURE)) return s;
         }
         return ItemStack.EMPTY;
     }

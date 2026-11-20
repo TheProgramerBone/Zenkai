@@ -6,14 +6,9 @@ import com.hmc.zenkai.config.ServerConfig;
 public enum RageIntensity {
     LOW, MEDIUM, HIGH, EXCEPTIONAL;
 
-    /** Minutos equivalentes de maestría (ServerConfig {@code rage.minutes_*}). */
+    /** Minutos equivalentes de maestría (ServerConfig {@code rage.minutes}). */
     public double minutes() {
-        return switch (this) {
-            case LOW -> ServerConfig.RAGE_MINUTES_LOW.get();
-            case MEDIUM -> ServerConfig.RAGE_MINUTES_MEDIUM.get();
-            case HIGH -> ServerConfig.RAGE_MINUTES_HIGH.get();
-            case EXCEPTIONAL -> ServerConfig.RAGE_MINUTES_EXCEPTIONAL.get();
-        };
+        return ServerConfig.rageMinutes(ordinal());
     }
 
     public boolean atLeast(RageIntensity min) { return ordinal() >= min.ordinal(); }

@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.weights;
 import com.hmc.zenkai.compat.CuriosCompat;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.item.WeightArmorItem;
+import com.hmc.zenkai.feature.gravity.GravityFields;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModDimensions;
 import com.hmc.zenkai.registry.ModStructureSegments;
@@ -24,8 +25,9 @@ import net.minecraft.world.item.ItemStack;
  * depende del PL y el PL depende de la penalización, así que usar el PL penalizado crearía
  * un bucle que converge a cualquier cosa.
  *
- * "Toneladas ambientales" ({@link #ambientTons}) es la gravedad natural de un SITIO (el planeta
- * de Kaiosama, la dimensión de la HTC — ver .claude/docs/pesas-y-gravedad.md): un
+ * "Toneladas ambientales" ({@link #ambientTons}) es la gravedad de un SITIO (el planeta de
+ * Kaiosama, la dimensión de la HTC) o de una cámara de gravedad, convertida con
+ * {@link #tonsForGravity} — ver .claude/docs/pesas-y-gravedad.md: un
  * jugador ahí SUMA esa carga a la de su equipo, en vez de tener una curva de penalización propia
  * — un jugador con pesas físicas puestas y de pie en uno de esos sitios sufre las dos a la vez,
  * como en el canon.
@@ -87,40 +89,55 @@ public final class WeightSystem {
      *  Kaiosama (que es un punto concreto dentro del Otherworld): toda la dimensión cuenta, sin
      *  caja — igual que ya hace {@code inHtc} en TrainingHubScreen para el multiplicador de TP.
      *  Corrección del usuario (2026-09-10): esto es gravedad INHERENTE a la dimensión, no algo
-     *  que dependa de la futura cámara de gravedad (bloque+estructura, ver
-     *  .claude/pendiente/contenido-futuro.md) — son cosas separadas aunque la cámara
-     *  probablemente se termine construyendo DENTRO de la HTC. */
+     *  que dependa de la cámara de gravedad (feature/gravity) — son cosas separadas aunque una
+     *  cámara se pueda construir DENTRO de la HTC (entonces manda la g mayor). */
     public static boolean isInHtc(Player p) {
         return p != null && p.level().dimension().equals(ModDimensions.HTC_LEVEL);
     }
 
-    /** Toneladas "ambientales" (gravedad de un sitio, no equipo) que le tocan a este jugador
-     *  ahora mismo. 0 si no está en ningún sitio con gravedad propia. Kaiosama y la HTC son
-     *  dimensiones distintas, así que nunca coinciden — no hace falta sumarlas. */
-    public static double ambientTons(Player p) {
-        if (isOnKaiosamaPlanet(p)) return ServerConfig.weightKaiosamaAmbientTons();
-        if (isInHtc(p)) return ServerConfig.weightHtcAmbientTons();
-        return 0.0;
+    /** Toneladas que pesa una gravedad g: {@code k × (g − 1)} (k = 4,44; diseño de la Fase 3 de
+     *  la 0.7.0). ×10 = 40 t, ×500 = 2 216 t. La ÚNICA conversión g → toneladas del mod. */
+    public static double tonsForGravity(double g) {
+        return ServerConfig.gravityTonsPerG() * Math.max(0.0, g - 1.0);
     }
 
-    /** Multiplicador de gravedad puramente COSMÉTICO — NO alimenta `r` (esa siempre usa
-     *  toneladas fijas, ver {@link #ambientTons}, precisamente para que su efecto siga menguando
-     *  con el PL sin importar este número). 1.0 = gravedad normal, sin ninguna fuente activa.
-     *  Pensado para UNA fila genérica "Gravedad: xN" en el Training Hub que sirva para
-     *  cualquier fuente (Kaiosama, HTC, y la futura cámara de gravedad) — pedido explícito del
-     *  usuario para no acumular una fila de texto por fuente. */
-    public static double gravityMultiplier(Player p) {
+    /** g del SITIO (planeta de Kaiosama ×10, HTC ×2), sin contar cámaras. Kaiosama y la HTC
+     *  son dimensiones distintas: nunca coinciden. */
+    private static double siteGravity(Player p) {
         if (isOnKaiosamaPlanet(p)) return ServerConfig.weightKaiosamaGravityMultiplier();
         if (isInHtc(p)) return ServerConfig.weightHtcGravityMultiplier();
         return 1.0;
     }
 
+    /** g efectiva: la MAYOR entre la del sitio y la de una cámara de gravedad. Las gravedades
+     *  no se suman: una cámara montada dentro de la HTC a ×50 da ×50, no ×51. Es a la vez la
+     *  etiqueta «Gravedad: xN» del hub y la fuente de las toneladas ({@link #ambientTons}), así
+     *  que nunca se contradicen (antes eran dos números sueltos en config). */
+    public static double gravityMultiplier(Player p) {
+        return Math.max(siteGravity(p), GravityFields.chamberG(p));
+    }
+
+    /** Toneladas "ambientales" (gravedad, no equipo) que le tocan a este jugador ahora mismo.
+     *  0 a gravedad normal. */
+    public static double ambientTons(Player p) {
+        return tonsForGravity(gravityMultiplier(p));
+    }
+
     /** Clave de traducción de la fuente de gravedad activa ahora mismo, o null si ninguna
-     *  (gravedad normal). Solo la usa el tooltip de la fila genérica de arriba. */
+     *  (gravedad normal). Solo la usa el tooltip de la fila genérica del hub. */
     public static String gravitySourceNameKey(Player p) {
+        double site = siteGravity(p);
+        double chamber = GravityFields.chamberG(p);
+        if (chamber > 1.0 && chamber >= site) return "screen.zenkai.training_hub.panel.gravity_source.chamber";
         if (isOnKaiosamaPlanet(p)) return "screen.zenkai.training_hub.panel.gravity_source.kaiosama";
         if (isInHtc(p)) return "screen.zenkai.training_hub.panel.gravity_source.htc";
         return null;
+    }
+
+    /** r para cualquier entidad (mobs en la cámara): toneladas / capacidad de su PL. */
+    public static double loadFor(long pl, double tons) {
+        if (tons <= 0.0) return 0.0;
+        return tons / capacityTons(pl);
     }
 
     // ── Capacidad y carga ────────────────────────────────────────────────────
@@ -140,7 +157,22 @@ public final class WeightSystem {
         if (tons <= 0.0) return 0.0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         if (!att.isRaceChosen()) return 0.0;
-        return tons / capacityTons(att.getPowerLevelRaw());
+        return tons / playerCapacity(att);
+    }
+
+    /**
+     * Capacidad de un JUGADOR: {@code (PL base / divisor)^exponente × multiplicador de forma}.
+     * Pedido del usuario (2026-11-20): «la gravedad no puede afectarme igual en base que en SSJ o en
+     * God». Antes la forma solo entraba por el PL limpio, y salía doblemente diluida: el PL multiplica
+     * por la forma tres de sus cinco términos (CON y la reserva de ki no cambian) y luego el exponente
+     * 0,6 lo aplastaba, así que una forma ×2,5 aguantaba ~1,4 veces más. Ahora la forma (y el Kaioken,
+     * que también va en statMultiplier) multiplica la capacidad ENTERA: en ×2,5 aguantas 2,5 veces el
+     * peso. El PL base (sin forma) sigue llevando la progresión por entrenamiento, con su exponente.
+     * En base (multiplicador 1) no cambia nada: Kaiosama y la HTC siguen calibradas igual.
+     */
+    public static double playerCapacity(PlayerStatsAttachment att) {
+        double mult = Math.max(0.1, att.getStatMultiplier());
+        return capacityTons(att.getPowerLevelWithStatMultiplier(1.0)) * mult;
     }
 
     /** r usado SOLO para el salto — igual que {@link #computeLoad} pero la parte AMBIENTAL
@@ -157,10 +189,10 @@ public final class WeightSystem {
         if (tons <= 0.0) return 0.0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         if (!att.isRaceChosen()) return 0.0;
-        return tons / capacityTons(att.getPowerLevelRaw());
+        return tons / playerCapacity(att);
     }
 
-    /** PL mínimo para que un peso dado quede en r = 1 (lo muestra la pantalla de ajuste). */
+    /** PL BASE (sin forma) mínimo para que un peso dado quede en r = 1 (lo muestra la pantalla de ajuste). */
     public static long plForTons(double tons) {
         if (tons <= 0.0) return 0L;
         double div = Math.max(0.0001, ServerConfig.weightCapacityDivisor());

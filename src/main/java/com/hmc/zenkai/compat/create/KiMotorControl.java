@@ -42,4 +42,6 @@ public interface KiMotorControl {
     void setSpeedStep(int step);
     void toggleReversed();
     SideMode cyclePort(Direction face, boolean fluid);
+    /** Ejecuta {@code change} (un cambio de orientación del bloque) sacando al motor de la red de Create antes y volviéndolo a meter después, como hace la llave de Create. */
+    void rotateKinetics(Runnable change);
 }

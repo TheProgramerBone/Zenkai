@@ -427,7 +427,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         List<GravityRow> out = new ArrayList<>();
         double equipped = WeightSystem.equippedTons(player);
         double ambient = WeightSystem.ambientTons(player);
-        double capacity = WeightSystem.capacityTons(att.getPowerLevelRaw());
+        double capacity = WeightSystem.playerCapacity(att);
         double load = att.getWeightLoad();
         String sourceKey = WeightSystem.gravitySourceNameKey(player);
 

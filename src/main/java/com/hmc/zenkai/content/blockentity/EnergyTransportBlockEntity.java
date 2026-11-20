@@ -39,10 +39,19 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
     /** Vista de capability. Una sola: el modo de la cara se decide al ENTREGAR la capability (null
      *  si la cara no es NORMAL) y se invalida al cambiarlo. En el servidor habla con la red o el grupo;
      *  el búfer propio solo se usa si no hay (cliente). */
-    private final IEnergyStorage view = new IEnergyStorage() {
+    private final IEnergyStorage view = makeView(null);
+    /** Una vista por cara: así la red sabe POR DÓNDE le entró la energía y no la devuelve por ahí. */
+    private final IEnergyStorage[] sideViews = new IEnergyStorage[6];
+
+    private IEnergyStorage makeView(@Nullable Direction from) {
+        return new IEnergyStorage() {
         @Override public int receiveEnergy(int max, boolean sim) {
             EnergyNetwork net = energyNetwork();
-            if (net != null) return net.receive(max, rate(), sim);
+            if (net != null) {
+                int in = net.receive(max, rate(), sim);
+                if (in > 0 && !sim && from != null) net.noteSource(getBlockPos().relative(from));
+                return in;
+            }
             int in = Math.min(Math.min(max, rate()), capacity() - energy);
             if (in > 0 && !sim) { energy += in; setChanged(); }
             return Math.max(in, 0);
@@ -64,7 +73,8 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
         }
         @Override public boolean canExtract() { return true; }
         @Override public boolean canReceive() { return true; }
-    };
+        };
+    }
 
     // ── Ranuras del tanque (pantalla TankScreen, 0.7.0) ───────────────────────
     /** Tres ranuras que se CARGAN desde el tanque (0-2) y tres que se DESCARGAN hacia él (3-5). Solo los
@@ -153,7 +163,11 @@ public class EnergyTransportBlockEntity extends TransportBlockEntity {
 
     /** Capability por cara: solo las caras NORMAL se ven desde fuera. */
     public @Nullable IEnergyStorage energyAt(@Nullable Direction side) {
-        return side == null || mode(side) == SideMode.NORMAL ? view : null;
+        if (side == null) return view;
+        if (mode(side) != SideMode.NORMAL) return null;
+        IEnergyStorage v = sideViews[side.ordinal()];
+        if (v == null) v = sideViews[side.ordinal()] = makeView(side);
+        return v;
     }
 
     @Override

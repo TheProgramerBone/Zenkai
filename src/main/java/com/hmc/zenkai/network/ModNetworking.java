@@ -267,6 +267,11 @@ public class ModNetworking {
                 ScouterDataPacket.STREAM_CODEC,
                 ScouterDataPacket::handle);
 
+        registrar.playToClient(
+                com.hmc.zenkai.feature.gravity.GravityFieldSyncPacket.TYPE,
+                com.hmc.zenkai.feature.gravity.GravityFieldSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.gravity.GravityFieldSyncPacket::handle);
+
         registrar.playToServer(
                 ScouterAreaScanPacket.TYPE,
                 ScouterAreaScanPacket.STREAM_CODEC,

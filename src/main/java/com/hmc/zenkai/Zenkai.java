@@ -229,6 +229,13 @@ public class Zenkai {
                         instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity chamber
                         ? chamber.energyHandler() : null,
                 ModBlocks.KI_CONTAINMENT_CHAMBER.get());
+
+        // Cámara de gravedad: la consola acepta FE por cualquier cara (un cable bajo el suelo); los
+        // puertos de la pared dan el búfer de la consola enlazada, solo por las caras abiertas.
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.GRAVITY_CHAMBER.get(), (be, side) -> be.energyHandler());
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.GRAVITY_CHAMBER_PORT.get(), (be, side) -> be.energyAt(side));
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────
@@ -243,6 +250,7 @@ public class Zenkai {
             event.register(ModMenuTypes.KI_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.KiChamberScreen::new);
             event.register(ModMenuTypes.PLAYER_BODY.get(), com.hmc.zenkai.client.gui.screens.PlayerBodyScreen::new);
             event.register(ModMenuTypes.TANK.get(), com.hmc.zenkai.client.gui.screens.TankScreen::new);
+            event.register(ModMenuTypes.GRAVITY_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.GravityChamberScreen::new);
         }
 
         @SubscribeEvent

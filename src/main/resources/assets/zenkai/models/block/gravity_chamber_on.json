@@ -1,0 +1,6 @@
+{
+  "parent": "zenkai:block/gravity_chamber",
+  "textures": {
+    "screen": "zenkai:block/gravity_chamber_screen_on"
+  }
+}

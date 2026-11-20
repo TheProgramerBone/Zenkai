@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiTechPalette;
+import com.hmc.zenkai.client.gui.buttons.ConfirmIconButton;
 import com.hmc.zenkai.client.gui.buttons.TechButton;
 import com.hmc.zenkai.client.gui.menu.KiChamberMenu;
 import com.hmc.zenkai.config.ServerConfig;
@@ -58,6 +59,13 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
     private static final int INFO_X = 126, INFO_Y = 38, INFO_LH = 11;
     private static final int INFO_RIGHT = 236;
 
+    /** Papelera 16x16 (btn_trash, gris a propósito) en la esquina inferior derecha del panel de lectura. */
+    private static final int TRASH_SIZE = 16, TRASH_X = INFO_RIGHT - TRASH_SIZE, TRASH_Y = 114;
+    private static final ResourceLocation TRASH =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash.png");
+    private static final ResourceLocation TRASH_HL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash_highlight.png");
+
     private static final int INV_LABEL_X = 47, INV_LABEL_Y = 157;
 
     /** Clave de lang de cada ranura de máquina, en el orden de KiContainmentChamberBlockEntity.SLOT_*. */
@@ -73,6 +81,7 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
     private TechButton doorButton;
     private TechButton forceButton;
     private TechButton convertButton;
+    private ConfirmIconButton dumpButton;
 
     public KiChamberScreen(KiChamberMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -94,6 +103,12 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
         addRenderableWidget(doorButton);
         addRenderableWidget(forceButton);
         addRenderableWidget(convertButton);
+        // Dos clics (el primero arma, el segundo vacía): tirar 16 000 mB por un clic suelto duele.
+        dumpButton = new ConfirmIconButton(leftPos + TRASH_X, topPos + TRASH_Y, TRASH_SIZE, TRASH, TRASH_HL,
+                Component.translatable("screen.zenkai.ki_chamber.dump.tip"),
+                Component.translatable("screen.zenkai.ki_chamber.dump.confirm"),
+                () -> press(KiChamberMenu.BTN_DUMP));
+        addRenderableWidget(dumpButton);
         refresh();
     }
 
@@ -134,6 +149,7 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
 
     /** Único sitio que decide qué dice cada botón. Se recalcula cada tick. */
     private void refresh() {
+        dumpButton.active = menu.tankAmount() > 0;
         doorButton.setMessage(Component.translatable(menu.isOccupied() ? "screen.zenkai.ki_chamber.door_release"
                 : menu.isOpen() ? "screen.zenkai.ki_chamber.door_close" : "screen.zenkai.ki_chamber.door_open"));
         forceButton.setMessage(Component.translatable(menu.isForceSet()

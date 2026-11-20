@@ -121,6 +121,7 @@ public final class FluidNetwork extends TransportNetwork {
     protected void tickTransfer(Level level) {
         List<IFluidHandler> outs = new ArrayList<>();
         List<Integer> outRates = new ArrayList<>();
+        List<TankLink> tankLinks = new ArrayList<>();
 
         for (TransportBlockEntity m : members) {
             FluidTransportBlockEntity me = (FluidTransportBlockEntity) m;
@@ -131,7 +132,7 @@ public final class FluidNetwork extends TransportNetwork {
                 if (contains(np) || !level.isLoaded(np)) continue;   // por dentro de la red o del grupo
                 BlockEntity nb = level.getBlockEntity(np);
                 if (nb instanceof FluidTransportBlockEntity other) {
-                    if (!tankGroup && !other.isCableBlock()) withTank(me, d, other);
+                    if (!tankGroup && !other.isCableBlock()) collectLink(tankLinks, me, d, other);
                     else if (tankGroup && !other.isCableBlock()) tankToTank(me, d, other);
                     continue;
                 }
@@ -152,6 +153,8 @@ public final class FluidNetwork extends TransportNetwork {
             }
         }
 
+        if (!tankLinks.isEmpty()) tankTransfer(tankLinks, !outs.isEmpty());
+
         for (int i = 0; i < outs.size() && !fluid.isEmpty(); i++) {
             int fair = Math.max(1, fluid.getAmount() / (outs.size() - i));
             int offer = Math.min(outRates.get(i), fair);
@@ -166,32 +169,61 @@ public final class FluidNetwork extends TransportNetwork {
         emptied = false;
     }
 
-    /** Red de tuberías frente a un tanque: las reglas de las dos caras, contra el grupo entero. */
-    private void withTank(FluidTransportBlockEntity pipe, Direction d, FluidTransportBlockEntity tank) {
+    /** Una cara de la red que da a un tanque (o grupo de tanques) con un fluido compatible. */
+    private record TankLink(FluidNetwork g, SideMode mine, SideMode theirs, long rate) {
+        double pct() { return g.capacity > 0 ? (double) g.amount() / g.capacity : 0; }
+    }
+
+    private void collectLink(List<TankLink> out, FluidTransportBlockEntity pipe, Direction d, FluidTransportBlockEntity tank) {
         FluidNetwork g = tank.fluidNetwork();
         if (g == null || g == this || !compatible(fluid, g.fluid)) return;
-        SideMode mine = pipe.mode(d);
         SideMode theirs = tank.mode(d.getOpposite());
         if (theirs == SideMode.NONE) return;
-        int rate = Math.min(pipe.rate(), tank.rate());
-        long amt;
-        if (mine == SideMode.PULL) {
-            if (!theirs.canGive()) return;
-            amt = -Math.min(rate, Math.min(g.amount(), room()));
-        } else if (theirs == SideMode.PULL) {
-            if (!mine.canGive()) return;
-            amt = Math.min(rate, Math.min(amount(), g.room()));
-        } else {
-            long eq = equalizeAmount(amount(), capacity, g.amount(), g.capacity);
-            if (eq > 0 && mine.canGive() && theirs.canTake()) {
-                amt = Math.min(rate, Math.min(eq, Math.min(amount(), g.room())));
-            } else if (eq < 0 && theirs.canGive() && mine.canTake()) {
-                amt = -Math.min(rate, Math.min(-eq, Math.min(g.amount(), room())));
+        out.add(new TankLink(g, pipe.mode(d), theirs, Math.min(pipe.rate(), tank.rate())));
+    }
+
+    /**
+     * Red de tuberias frente a sus tanques: conducto como en Mekanism, sin retener un porcentaje (ver
+     * {@code EnergyNetwork.tankTransfer}, que es el mismo reparto). La tuberia ENTREGA todo al tanque con
+     * menos porcentaje y hueco, y solo TOMA de un tanque si otro destino lo necesita.
+     */
+    private void tankTransfer(List<TankLink> links, boolean outsWanted) {
+        List<TankLink> normal = new ArrayList<>();
+        for (TankLink l : links) {
+            if (l.mine == SideMode.PULL) {
+                if (!l.theirs.canGive()) continue;
+                moveTo(l.g, -Math.min(l.rate, Math.min(l.g.amount(), room())));
+            } else if (l.theirs == SideMode.PULL) {
+                if (!l.mine.canGive()) continue;
+                moveTo(l.g, Math.min(l.rate, Math.min(amount(), l.g.room())));
             } else {
-                return;
+                normal.add(l);
             }
         }
-        moveTo(g, amt);
+        java.util.Set<FluidNetwork> pulledFrom = new java.util.HashSet<>();
+        for (TankLink src : normal) {   // 1) tomar solo si alguien mas lo necesita
+            if (!src.theirs.canGive() || !src.mine.canTake() || src.g.amount() <= 0 || room() <= 0) continue;
+            if (!compatible(fluid, src.g.fluid)) continue;
+            long want = 0;
+            if (outsWanted) {
+                want = src.rate;
+            } else {
+                for (TankLink dst : normal) {
+                    if (dst.g == src.g || !dst.mine.canGive() || !dst.theirs.canTake() || dst.g.room() <= 0) continue;
+                    if (!compatible(src.g.fluid, dst.g.fluid)) continue;
+                    want = Math.max(want, Math.min(src.rate, equalizeAmount(src.g.amount(), src.g.capacity, dst.g.amount(), dst.g.capacity)));
+                }
+            }
+            long amt = Math.min(want, Math.min(src.g.amount(), room()));
+            if (amt > 0) { moveTo(src.g, -amt); pulledFrom.add(src.g); }
+        }
+        List<TankLink> sinks = new ArrayList<>(normal);   // 2) entregar todo al de menor porcentaje
+        sinks.sort(java.util.Comparator.comparingDouble(TankLink::pct));
+        for (TankLink l : sinks) {
+            if (fluid.isEmpty()) break;
+            if (pulledFrom.contains(l.g) || !l.mine.canGive() || !l.theirs.canTake() || !compatible(fluid, l.g.fluid)) continue;
+            moveTo(l.g, Math.min(l.rate, Math.min(amount(), l.g.room())));
+        }
     }
 
     /** Grupo frente a OTRO grupo: cada uno trata solo su lado, como antes entre dos tanques. */

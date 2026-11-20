@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-07T19:01:06.715194	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-11-20T00:41:50.8039535	Tags for minecraft:item mod id zenkai
 fe588a35d47219c3f97563e3eb732b9225fd3212 data/c/tags/item/ores/coal.json
 c3a2c9d4ecdc046cab4c9113b70a7c6537df9627 data/c/tags/item/ores/copper.json
 403711dce9705a591c90e8b9092daa0210c8fd66 data/c/tags/item/ores/diamond.json
@@ -39,7 +39,7 @@ f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoo
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/zenkai/tags/item/covers_ear.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
-ffbe12e8b2f49ccaf3290ac63cc2fb50397e8e69 data/zenkai/tags/item/keeps_hair.json
-6b4d93496dc82222bd32251ba7ca5db257c7c0a4 data/zenkai/tags/item/no_armor_swap.json
+f4ce9b97293afd265cb345f962858f4c7525bffa data/zenkai/tags/item/keeps_hair.json
+a59997ea70b29f62b497e9cb8f9f35ed31c0df7e data/zenkai/tags/item/no_armor_swap.json
 4ba39d954c2755d85b1a4c5b975c5a2079e9a12d data/zenkai/tags/item/wish_banned.json
 e3cf37fbd4109eb5b7e8ea41ea0216697f3e4bc8 data/zenkai/tags/item/worldgen_debris.json

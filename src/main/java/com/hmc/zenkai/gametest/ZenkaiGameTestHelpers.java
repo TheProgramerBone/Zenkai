@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -56,7 +57,20 @@ final class ZenkaiGameTestHelpers {
 
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
         new EmbeddedChannel(new ChannelHandler[]{connection});
-        sp.connection = new ServerGamePacketListenerImpl(level.getServer(), connection, sp, cookie);
+        // Listener sin cliente detrás: NetworkRegistry.checkPacket rechaza cualquier payload personalizado porque
+        // el canal embebido no negoció ninguno. Eso saltaba DENTRO de listeners del EventBus (Curios al añadir la
+        // entidad, el sync de stats de Zenkai…), donde invokeHandler() no lo ve y el bus lo registraba como ERROR (o
+        // abortaba el resto de listeners). Aquí el envío a un cliente inexistente se descarta, como haría una
+        // conexión sin nadie al otro lado; cualquier otro fallo de envío sigue propagándose.
+        sp.connection = new ServerGamePacketListenerImpl(level.getServer(), connection, sp, cookie) {
+            @Override public void send(Packet<?> packet) {
+                try {
+                    super.send(packet);
+                } catch (UnsupportedOperationException e) {
+                    if (e.getMessage() == null || !e.getMessage().contains("may not be sent to the client")) throw e;
+                }
+            }
+        };
 
         invokeHandler(() -> level.addNewPlayer(sp));
 

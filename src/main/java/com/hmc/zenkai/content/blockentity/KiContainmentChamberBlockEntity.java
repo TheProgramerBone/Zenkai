@@ -188,6 +188,9 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
     private boolean forcing;
     /** ¿La carga en curso llegó a drenar algo? Decide si al cortarse deja cooldown. */
     private boolean drainedSomething;
+
+    /** El jugador entró en cooldown: la carga forzada va directa a la vida, sin gastar antes su ki. */
+    private boolean lifeOnly;
     @Nullable private KiEnergyType sessionType;
     @Nullable private ResourceLocation sessionForm;
     /** Restos fraccionales: el ki y el body son enteros y un 5 %/s repartido en 20 ticks casi
@@ -428,7 +431,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
                 // Forzar existe para saltarse el cooldown y la reserva pagando vida.
                 if (!forceSetting) return cooling ? "messages.zenkai.ki_chamber.cooldown" : "messages.zenkai.ki_chamber.low_ki";
                 // Con ki 0 forzar sigue valiendo: la máquina pasa a funcionar con la vida.
-                if (att.getBody() <= 1 && att.getKiCurrent() <= 0) return "messages.zenkai.ki_chamber.exhausted";
+                if (att.getBody() <= 1 && (cooling || att.getKiCurrent() <= 0)) return "messages.zenkai.ki_chamber.exhausted";
             }
             return null;
         }
@@ -438,10 +441,12 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
     private void begin(LivingEntity e) {
         charging = true;
         forcing = false;
+        lifeOnly = false;
         sessionForm = null;
         if (e instanceof ServerPlayer sp && level != null) {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-            forcing = cooldownLeft(att.flags(), level.getGameTime()) > 0L || att.getKiCurrent() <= reserve(att);
+            lifeOnly = cooldownLeft(att.flags(), level.getGameTime()) > 0L;
+            forcing = lifeOnly || att.getKiCurrent() <= reserve(att);
             sessionForm = formOf(sp);
         }
         drainedSomething = false;
@@ -510,6 +515,17 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
         markDirty();
     }
 
+    /**
+     * Vacía el tanque de ki (botón de la papelera). Sirve para quitar un tipo que no se quiere: con
+     * el tanque lleno de Base no se puede cargar Super, y no hay otra salida que el conversor.
+     * El ki se pierde: no devuelve nada ni al jugador ni al búfer de FE.
+     */
+    public void dumpTank() {
+        if (tank.isEmpty()) return;
+        tank.setFluid(FluidStack.EMPTY);
+        markDirty();
+    }
+
     /** Ajuste «Convertir a FE». */
     public void toggleConvert() {
         convert = !convert;
@@ -525,6 +541,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
         if (!charging) return;
         charging = false;
         forcing = false;
+        lifeOnly = false;
         lastMbPerSecond = 0;
         if (cooldown && drainedSomething && sp != null) {
             // Cuanta más vida entregó, más largo el enfriamiento (100 % del body = el extra completo).
@@ -665,7 +682,9 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
             // el body, que se convierte en Ki y se detiene en 1 sin matar (con ki 0 la máquina pararía
             // igualmente, así que cobrar vida mientras queda ki no tenía sentido).
             available = att.getKiCurrent();
-            if (available <= 0) {
+            // Quien entró EN cooldown paga con vida desde el primer tick: el ki que le queda no se toca
+            // (si no, gastaría primero el ki «gratis» y el cooldown no costaría nada).
+            if (available <= 0 || lifeOnly) {
                 if (att.getBody() <= 1) {
                     finish(sp, "messages.zenkai.ki_chamber.exhausted", true);
                     return;

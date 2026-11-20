@@ -41,17 +41,17 @@ public final class PlayerBodyBury {
 
     public static boolean canBury(ServerPlayer sp, PlayerBodyEntity body) {
         if (body.hasItems() || body.xp() > 0 || !PlayerBodyAccess.canOpen(sp, body)) return false;
-        return !ServerConfig.PERMADEATH_BURY_NEEDS_SHOVEL.get() || sp.getMainHandItem().is(ItemTags.SHOVELS);
+        return !(false) || sp.getMainHandItem().is(ItemTags.SHOVELS);
     }
 
     /** Empieza a enterrar. Devuelve true si el menú debe cerrarse (la tarea sigue en segundo plano). */
     public static boolean start(ServerPlayer sp, PlayerBodyEntity body) {
         if (!canBury(sp, body)) {
-            if (ServerConfig.PERMADEATH_BURY_NEEDS_SHOVEL.get() && !sp.getMainHandItem().is(ItemTags.SHOVELS))
+            if ((false) && !sp.getMainHandItem().is(ItemTags.SHOVELS))
                 sp.displayClientMessage(Component.translatable("zenkai.body.bury_needs_shovel"), true);
             return false;
         }
-        int ticks = ServerConfig.PERMADEATH_BURY_TICKS.get();
+        int ticks = (0);
         if (ticks <= 0) { finish(sp, body); return true; }
         TASKS.put(sp.getUUID(), new Task(body.getUUID(), ticks));
         return true;
@@ -60,7 +60,7 @@ public final class PlayerBodyBury {
     private static void finish(ServerPlayer sp, PlayerBodyEntity body) {
         boolean own = body.owner().map(o -> o.equals(sp.getUUID())).orElse(false);
         if (!own) {
-            int delta = ServerConfig.PERMADEATH_BURY_ALIGNMENT.get();
+            int delta = (2);
             if (delta != 0) {
                 com.hmc.zenkai.feature.alignment.AlignmentManager.change(sp, delta, "bury");
             }

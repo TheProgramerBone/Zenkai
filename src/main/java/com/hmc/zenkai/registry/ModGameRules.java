@@ -65,6 +65,12 @@ public final class ModGameRules {
             GameRules.register("zenkai_enablePlayerBodies", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
+    /** Si false, la cámara de gravedad no drena vida a quien lleva más del doble de lo que
+     *  aguanta (sigue frenando y dando TP). El drenaje nunca mata: se para en 1. */
+    public static final GameRules.Key<GameRules.BooleanValue> GRAVITY_DAMAGE =
+            GameRules.register("zenkai_gravityDamage", GameRules.Category.MISC,
+                    GameRules.BooleanValue.create(true));
+
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
         // Fuerza la carga estática de las claves antes de arrancar el servidor.
@@ -103,6 +109,11 @@ public final class ModGameRules {
     /** ¿La explosión de una cámara de contención sobrecargada rompe bloques? El daño es aparte. */
     public static boolean kiOverloadGriefing(MinecraftServer server) {
         return server.getGameRules().getBoolean(KI_OVERLOAD_GRIEFING);
+    }
+
+    /** ¿La cámara de gravedad drena vida pasado el doble de la capacidad? */
+    public static boolean gravityDamage(MinecraftServer server) {
+        return server.getGameRules().getBoolean(GRAVITY_DAMAGE);
     }
 
     public static boolean enableKiGriefing(MinecraftServer server) {

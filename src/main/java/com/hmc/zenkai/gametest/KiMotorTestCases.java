@@ -132,4 +132,20 @@ final class KiMotorTestCases {
         helper.assertTrue(be.tank().getCapacity() == ServerConfig.kiMotorTankCapacity(), "La capacidad es la de la config");
         helper.succeed();
     }
+
+    /** Modo generador con rotación: el FE sale a un cable por la cara de al lado, también tras haber estado en modo Tirar. */
+    static void generatorPushesIntoCable(GameTestHelper helper) {
+        KiMotorBlockEntity be = motor(helper);
+        helper.setBlock(POS.east(), ModBlocks.ENERGY_CABLE.get());
+        // Una cara dejada en Tirar (útil en modo motor) no puede dejar mudo al generador al conmutar.
+        be.setSideMode(com.hmc.zenkai.feature.sideconfig.SideConfigurable.Channel.ENERGY, Direction.EAST, SideMode.PULL);
+        be.setMode(KiMotorBlockEntity.Mode.GENERATOR);
+        be.setSpeed(256f);
+        for (int i = 0; i < 5; i++) be.tickGenerator();
+        helper.assertTrue(be.energyMode(Direction.EAST).canGive(), "Al pasar a generador la cara Tirar vuelve a Normal; es " + be.energyMode(Direction.EAST));
+        net.minecraft.world.level.block.entity.BlockEntity cable = helper.getBlockEntity(POS.east());
+        int got = ((com.hmc.zenkai.content.blockentity.EnergyTransportBlockEntity) cable).energy();
+        helper.assertTrue(got > 0, "El generador empuja FE al cable; el cable tiene " + got + " y el motor " + be.fe() + " (velocidad " + be.getSpeed() + ")");
+        helper.succeed();
+    }
 }

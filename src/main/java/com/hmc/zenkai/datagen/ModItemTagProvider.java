@@ -8,6 +8,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
@@ -21,6 +22,9 @@ import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 public class ModItemTagProvider extends ItemTagsProvider {
+
+    /** Gafas de Create (compat opcional): van sobre los ojos, no cubren el cráneo ni se retiran de un cuerpo. */
+    private static final ResourceLocation CREATE_GOGGLES = ResourceLocation.fromNamespaceAndPath("create", "goggles");
 
     public ModItemTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider,
                               CompletableFuture<TagsProvider.TagLookup<Block>> blockTags, @Nullable ExistingFileHelper existingFileHelper) {
@@ -58,7 +62,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
         tag(ModTags.Items.KEEPS_HAIR).add(
                 ModItems.SCOUTER.get(),
                 ModItems.HALO.get()
-        );
+        ).addOptional(CREATE_GOGGLES);
 
         // El scouter se apoya en la oreja izquierda: la raza que la tenga (Namekiano) la oculta mientras lo lleva.
         tag(ModTags.Items.COVERS_EAR).add(
@@ -71,7 +75,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModItems.HALO.get(),
                 ModItems.WEIGHTED_STRAPS.get(),
                 ModItems.WEIGHTED_CAPE.get()
-        );
+        ).addOptional(CREATE_GOGGLES);
 
         // ==========================================
         // 3. SET DE MADERA DE AJISA Y VEGETACIÓN

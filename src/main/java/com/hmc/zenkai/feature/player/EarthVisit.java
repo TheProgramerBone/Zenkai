@@ -50,7 +50,7 @@ public final class EarthVisit {
 
     /** Almas que cobra Baba por visita ({@code permadeath.visit_soul_cost}; 0 = gratis). */
     public static int soulCost() {
-        return ServerConfig.PERMADEATH_VISIT_SOUL_COST.get();
+        return (1);
     }
 
     /** Almas que lleva el jugador en el inventario (los Curios no cuentan: el alma no es equipo). */
@@ -203,7 +203,7 @@ public final class EarthVisit {
         PlayerStateFlags f = PlayerStatsAttachment.get(sp).flags();
         f.setEarthVisitTicksLeft(0L);
         // La espera empieza AHORA, no al pedir la visita: así una visita larga no se come su propia espera.
-        f.setEarthVisitCooldownTicks(ServerConfig.PERMADEATH_VISIT_COOLDOWN_DAYS.get() * 24000L);
+        f.setEarthVisitCooldownTicks((2) * 24000L);
         PENDING_LOOT.remove(sp.getUUID());
 
         if (died) leaveNewBody(sp);

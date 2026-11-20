@@ -19,6 +19,14 @@ import java.util.List;
 public final class EnergyNetwork extends TransportNetwork {
 
     private long energy;
+    /**
+     * Vecinos que EMPUJARON energía a la red desde el último tick. No se les devuelve nada en ese tick:
+     * un cubo o batería (Mekanism) que empuja y acepta por la misma cara se quedaba en un vaivén con el
+     * cable y este nunca se vaciaba (siempre quedaba un resto en tránsito).
+     */
+    private final java.util.Set<BlockPos> sources = new java.util.HashSet<>();
+
+    public void noteSource(BlockPos neighbour) { sources.add(neighbour.immutable()); }
 
     private EnergyNetwork(List<TransportBlockEntity> members, long capacity, long energy) {
         super(members, capacity);
@@ -80,6 +88,7 @@ public final class EnergyNetwork extends TransportNetwork {
         List<IEnergyStorage> outs = new ArrayList<>();
         List<Integer> outRates = new ArrayList<>();
         long before = energy;
+        List<TankLink> tankLinks = new ArrayList<>();
 
         for (TransportBlockEntity m : members) {
             EnergyTransportBlockEntity me = (EnergyTransportBlockEntity) m;
@@ -90,12 +99,13 @@ public final class EnergyNetwork extends TransportNetwork {
                 if (contains(np) || !level.isLoaded(np)) continue;   // por dentro de la red o del grupo
                 BlockEntity nb = level.getBlockEntity(np);
                 if (nb instanceof EnergyTransportBlockEntity other) {
-                    if (!tankGroup && !other.isCableBlock()) withTank(me, d, other);       // red -> tanque
+                    if (!tankGroup && !other.isCableBlock()) collectLink(tankLinks, me, d, other);   // red <-> tanque
                     else if (tankGroup && !other.isCableBlock()) tankToTank(me, d, other); // grupo -> otro grupo
                     continue;   // un cable frente a un grupo: lo trata la red del cable
                 }
                 IEnergyStorage target = level.getCapability(Capabilities.EnergyStorage.BLOCK, np, d.getOpposite());
                 if (target == null) continue;
+                if (mode != SideMode.PULL && sources.contains(np)) continue;   // no se lo devolvemos al que lo empujó
                 if (mode == SideMode.PULL) {
                     if (!target.canExtract()) continue;
                     int want = (int) Math.min(me.rate(), capacity - energy);
@@ -107,47 +117,86 @@ public final class EnergyNetwork extends TransportNetwork {
             }
         }
 
+        if (!tankLinks.isEmpty()) tankTransfer(tankLinks, !outs.isEmpty());
+
         // Entrega a partes iguales entre los destinos, cada uno con el caudal de su bloque.
         for (int i = 0; i < outs.size() && energy > 0; i++) {
             long fair = Math.max(1, energy / (outs.size() - i));
             int offer = (int) Math.min(outRates.get(i), fair);
             energy -= outs.get(i).receiveEnergy(offer, false);
         }
+        sources.clear();
         if (energy != before) markDirty();
     }
 
-    /**
-     * Red de cables frente a un tanque: las reglas de las dos caras, en los dos sentidos (el grupo del
-     * tanque se salta los cables). Se equilibra el PORCENTAJE entre la red y el grupo entero.
-     */
-    private void withTank(EnergyTransportBlockEntity cable, Direction d, EnergyTransportBlockEntity tank) {
+    /** Una cara de la red que da a un tanque (o grupo de tanques). */
+    private record TankLink(EnergyTransportBlockEntity cable, EnergyTransportBlockEntity tank,
+                            EnergyNetwork g, SideMode mine, SideMode theirs, long rate) {
+        double pct() { return g.capacity > 0 ? (double) g.energy / g.capacity : 0; }
+    }
+
+    private void collectLink(List<TankLink> out, EnergyTransportBlockEntity cable, Direction d, EnergyTransportBlockEntity tank) {
         EnergyNetwork g = tank.energyNetwork();
         if (g == null || g == this) return;
-        SideMode mine = cable.mode(d);
         SideMode theirs = tank.mode(d.getOpposite());
         if (theirs == SideMode.NONE) return;
-        long rate = Math.min(cable.rate(), tank.rate());
-        long gRoom = g.capacity - g.energy;
-        long amt;
-        if (mine == SideMode.PULL) {
-            if (!theirs.canGive()) return;
-            amt = -Math.min(rate, Math.min(g.energy, capacity - energy));
-        } else if (theirs == SideMode.PULL) {
-            if (!mine.canGive()) return;
-            amt = Math.min(rate, Math.min(energy, gRoom));
-        } else {
-            long eq = equalizeAmount(energy, capacity, g.energy, g.capacity);
-            if (eq > 0 && mine.canGive() && theirs.canTake()) {
-                amt = Math.min(rate, Math.min(eq, Math.min(energy, gRoom)));
-            } else if (eq < 0 && theirs.canGive() && mine.canTake()) {
-                amt = -Math.min(rate, Math.min(-eq, Math.min(g.energy, capacity - energy)));
-            } else {
-                return;
-            }
-        }
+        out.add(new TankLink(cable, tank, g, cable.mode(d), theirs, Math.min(cable.rate(), tank.rate())));
+    }
+
+    private void move(TankLink l, long amt) {   // amt > 0: red -> tanque; amt < 0: tanque -> red
         if (amt == 0) return;
         energy -= amt;
-        g.adjust(amt);
+        l.g.adjust(amt);
+    }
+
+    /**
+     * Red de cables frente a sus tanques. El cable es un CONDUCTO, no un depósito: antes equilibraba su
+     * porcentaje con el del tanque y por eso siempre se quedaba con una fracción de su capacidad (un
+     * cable de 4 000 frente a un tanque al 25 % guardaba 1 000 para siempre). Ahora:
+     *  - PULL (de cualquiera de los dos lados): tira con el caudal, como siempre.
+     *  - Entre caras que dan y toman: el cable ENTREGA todo lo que lleva al tanque con menos porcentaje
+     *    que tenga hueco, y solo TOMA de un tanque si hay otro destino que lo necesite (una máquina, o otro
+     *    tanque con menor porcentaje, y entonces solo hasta igualarlos). Con los tanques igualados o sin
+     *    destinos, el cable queda vacío.
+     */
+    private void tankTransfer(List<TankLink> links, boolean outsWanted) {
+        List<TankLink> normal = new ArrayList<>();
+        for (TankLink l : links) {
+            if (l.mine == SideMode.PULL) {
+                if (!l.theirs.canGive()) continue;
+                move(l, -Math.min(l.rate, Math.min(l.g.energy, capacity - energy)));
+            } else if (l.theirs == SideMode.PULL) {
+                if (!l.mine.canGive()) continue;
+                move(l, Math.min(l.rate, Math.min(energy, l.g.capacity - l.g.energy)));
+            } else {
+                normal.add(l);
+            }
+        }
+        java.util.Set<EnergyNetwork> pulledFrom = new java.util.HashSet<>();
+        // 1) Tomar del tanque más lleno solo si alguien más lo necesita.
+        for (TankLink src : normal) {
+            if (!src.theirs.canGive() || !src.mine.canTake() || src.g.energy <= 0 || energy >= capacity) continue;
+            long want = 0;
+            if (outsWanted) {
+                want = src.rate;
+            } else {
+                for (TankLink dst : normal) {
+                    if (dst == src || dst.g == src.g || !dst.mine.canGive() || !dst.theirs.canTake()) continue;
+                    if (dst.g.energy >= dst.g.capacity) continue;
+                    want = Math.max(want, Math.min(src.rate, equalizeAmount(src.g.energy, src.g.capacity, dst.g.energy, dst.g.capacity)));
+                }
+            }
+            long amt = Math.min(want, Math.min(src.g.energy, capacity - energy));
+            if (amt > 0) { move(src, -amt); pulledFrom.add(src.g); }
+        }
+        // 2) Entregar todo al tanque con menor porcentaje (nunca al que se acaba de tomar).
+        List<TankLink> sinks = new ArrayList<>(normal);
+        sinks.sort(java.util.Comparator.comparingDouble(TankLink::pct));
+        for (TankLink l : sinks) {
+            if (energy <= 0) break;
+            if (pulledFrom.contains(l.g) || !l.mine.canGive() || !l.theirs.canTake()) continue;
+            move(l, Math.min(l.rate, Math.min(energy, l.g.capacity - l.g.energy)));
+        }
     }
 
     /**

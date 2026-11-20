@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "M": {
+      "item": "zenkai:katchin_block"
+    },
+    "P": {
+      "item": "zenkai:gravity_upgrade_diamond"
+    },
+    "R": {
+      "tag": "c:dusts/redstone"
+    }
+  },
+  "pattern": [
+    "RIR",
+    "IMI",
+    "RPR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:gravity_upgrade_katchin"
+  }
+}

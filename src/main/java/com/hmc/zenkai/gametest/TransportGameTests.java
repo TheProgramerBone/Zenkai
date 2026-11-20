@@ -68,6 +68,33 @@ public final class TransportGameTests {
         h.succeed();
     }
 
+    /** Un cable es un conducto: si el tanque de destino tiene hueco, no se queda con un resto (ni energía ni fluido). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void cableAndPipeEmptyCompletelyIntoATankWithRoom(GameTestHelper h) {
+        h.setBlock(A, ModBlocks.ENERGY_TANK.get());
+        h.setBlock(B, ModBlocks.ENERGY_CABLE.get());
+        h.setBlock(C, ModBlocks.ENERGY_TANK.get());
+        EnergyTransportBlockEntity src = h.getBlockEntity(A);
+        EnergyTransportBlockEntity cable = h.getBlockEntity(B);
+        EnergyTransportBlockEntity dst = h.getBlockEntity(C);
+        src.energyAt(null).receiveEnergy(100_000, false);
+        for (int i = 0; i < 400; i++) tickEnergy(h, A, B, C);
+        h.assertTrue(dst.energy() > 0, "El tanque de destino recibe energía");
+        h.assertTrue(cable.energy() == 0, "El cable no se queda con un resto: guarda " + cable.energy());
+
+        h.setBlock(new BlockPos(1, 2, 1), ModBlocks.FLUID_TANK.get());
+        h.setBlock(new BlockPos(2, 2, 1), ModBlocks.FLUID_PIPE.get());
+        h.setBlock(new BlockPos(3, 2, 1), ModBlocks.FLUID_TANK.get());
+        FluidTransportBlockEntity fsrc = h.getBlockEntity(new BlockPos(1, 2, 1));
+        FluidTransportBlockEntity pipe = h.getBlockEntity(new BlockPos(2, 2, 1));
+        FluidTransportBlockEntity fdst = h.getBlockEntity(new BlockPos(3, 2, 1));
+        fsrc.fluidAt(null).fill(new FluidStack(Fluids.WATER, 10_000), IFluidHandler.FluidAction.EXECUTE);
+        for (int i = 0; i < 400; i++) tickFluid(h, new BlockPos(1, 2, 1), new BlockPos(2, 2, 1), new BlockPos(3, 2, 1));
+        h.assertTrue(fdst.tank().getFluidAmount() > 0, "El tanque de destino recibe fluido");
+        h.assertTrue(pipe.tank().getFluidAmount() == 0, "La tubería no se queda con un resto: guarda " + pipe.tank().getFluidAmount());
+        h.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void sideModesGateTheTransfer(GameTestHelper h) {
         h.setBlock(A, ModBlocks.ENERGY_TANK.get());
@@ -127,8 +154,10 @@ public final class TransportGameTests {
         for (int i = 0; i < 400; i++) tickFluid(h, A, B, C);
         h.assertTrue(dst.tank().getFluid().getFluid() == Fluids.LAVA && dst.tank().getFluidAmount() == 1_000,
                 "Un tanque con otro fluido no recibe agua");
-        h.assertTrue(((FluidTransportBlockEntity) h.getBlockEntity(B)).tank().getFluidAmount() > 0,
-                "La tubería sí se llena con el fluido compatible");
+        // La tubería es un conducto: sin un destino compatible no toma agua del tanque (antes se quedaba
+        // con un porcentaje por el equilibrado, que era justo el resto que nunca se vaciaba).
+        h.assertTrue(((FluidTransportBlockEntity) h.getBlockEntity(B)).tank().getFluidAmount() == 0,
+                "Sin destino compatible la tubería no retiene agua");
 
         // Por la capability: con el grupo ya formado, escribir en tank() no lo vería su búfer.
         dst.fluidAt(null).drain(1_000, IFluidHandler.FluidAction.EXECUTE);

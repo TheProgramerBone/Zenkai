@@ -57,4 +57,10 @@ public final class KiMotorGameTests {
         if (!KiMotorFactory.loaded()) { helper.succeed(); return; }
         KiMotorTestCases.tankHoldsConfiguredCapacity(helper);
     }
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void generatorPushesIntoCable(GameTestHelper helper) {
+        if (!KiMotorFactory.loaded()) { helper.succeed(); return; }
+        KiMotorTestCases.generatorPushesIntoCable(helper);
+    }
 }

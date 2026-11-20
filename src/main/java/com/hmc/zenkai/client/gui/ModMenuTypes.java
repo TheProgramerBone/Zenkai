@@ -42,6 +42,11 @@ public class ModMenuTypes {
             MENUS.register("tank",
                     () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.TankMenu::new));
 
+    /** Consola de la cámara de gravedad (0.7.0, Fase 3). */
+    public static final DeferredHolder<MenuType<?>, MenuType<GravityChamberMenu>> GRAVITY_CHAMBER =
+            MENUS.register("gravity_chamber",
+                    () -> IMenuTypeExtension.create(GravityChamberMenu::new));
+
     public static void register(IEventBus bus) {
         MENUS.register(bus);
     }

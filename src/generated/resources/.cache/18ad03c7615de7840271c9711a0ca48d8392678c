@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-16T18:19:56.7364784	Item Models: zenkai
+// 1.21.1	2026-11-20T00:41:50.7913855	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -60,6 +60,13 @@ c52731eb08f625e4de3fd0b76e868898577177e9 assets/zenkai/models/item/dirty_raw_kat
 b9266967f9e42e12efe38b8ac902fe76362c545e assets/zenkai/models/item/energy_battery.json
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 b3483a3b592995f3901669b8a260cde0e5b6a537 assets/zenkai/models/item/energy_generator.json
+dbe81986b9bc53dd8f74f9a790d01a1b31251cbc assets/zenkai/models/item/gravity_chamber.json
+2c012dc6aaf41ed831ffcb9b40eb3b4e38aeeec1 assets/zenkai/models/item/gravity_upgrade_copper.json
+32d42b820bd0b72db6c9df53110d4a695e160e5a assets/zenkai/models/item/gravity_upgrade_diamond.json
+9be3a1d018fe0fda7ab15eeba546438d7c2be746 assets/zenkai/models/item/gravity_upgrade_energy_crystal.json
+ef8c377a03420f312e8b7dfb46682902ddba7f8e assets/zenkai/models/item/gravity_upgrade_iron.json
+079fc5e14446c8dbbd6e455109175d263c04cedc assets/zenkai/models/item/gravity_upgrade_katchin.json
+2ca357c1f409c665d4475cc9a390195cda40182c assets/zenkai/models/item/gravity_upgrade_netherite.json
 f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/hair.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
 17a629df4615b9fbb9b20f489f1053784acc77a2 assets/zenkai/models/item/healing_water_bottle.json

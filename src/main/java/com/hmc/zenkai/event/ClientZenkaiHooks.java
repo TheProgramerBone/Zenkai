@@ -134,6 +134,8 @@ public final class ClientZenkaiHooks {
     // campo isMajin aparte que no representaba nada real; se eliminó para no confundir los dos.
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
     private static final IconUV ICON_STRAIN = IconUV.grid(10, 1);
+    /** Cronómetro azul (tools/gen_chamber_cooldown_icon.py): cooldown de la cámara de contención de ki. */
+    private static final IconUV ICON_KI_CHAMBER_COOLDOWN = IconUV.grid(5, 8);
     public static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
     /** Solo lo usa el Ki Sense (forma ya activa): el HUD propio ya muestra la forma con su aura. */
     public static final IconUV ICON_TRANSFORMED = IconUV.grid(8, 0);
@@ -356,10 +358,9 @@ public final class ClientZenkaiHooks {
         }
 
         // Cooldown de la cámara de contención de ki: segundos que faltan para poder cargar sin forzar.
-        // Icono PROVISIONAL (el de agotamiento, con la cifra en azul de ki): falta uno propio en icons.png.
         long chamberLeft = stats.flags().getKiChamberCooldownUntil() - now;
         if (chamberLeft > 0L) {
-            out.add(new Badge(ICON_STRAIN, ((chamberLeft + 19L) / 20L) + "s", C_KI_CHAMBER_COOLDOWN));
+            out.add(new Badge(ICON_KI_CHAMBER_COOLDOWN, ((chamberLeft + 19L) / 20L) + "s", C_KI_CHAMBER_COOLDOWN));
         }
 
         // Formas Legendarias: su icono del atlas del árbol y debajo el número que importa de cada una.

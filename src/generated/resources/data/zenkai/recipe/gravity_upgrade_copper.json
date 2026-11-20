@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "M": {
+      "tag": "c:storage_blocks/copper"
+    },
+    "P": {
+      "item": "zenkai:basic_circuit"
+    },
+    "R": {
+      "tag": "c:dusts/redstone"
+    }
+  },
+  "pattern": [
+    "RIR",
+    "IMI",
+    "RPR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:gravity_upgrade_copper"
+  }
+}

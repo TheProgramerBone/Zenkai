@@ -99,6 +99,20 @@ public class ModItems {
             com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> ENERGY_BATTERY = ITEMS.registerItem("energy_battery",
             com.hmc.zenkai.content.item.EnergyBatteryItem::new, new Item.Properties());
+    // Mejoras de la cámara de gravedad (Fase 3): fijan la g máxima de la consola.
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_COPPER = ITEMS.registerItem("gravity_upgrade_copper",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(10, p), new Item.Properties());
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_IRON = ITEMS.registerItem("gravity_upgrade_iron",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(25, p), new Item.Properties());
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_ENERGY_CRYSTAL = ITEMS.registerItem("gravity_upgrade_energy_crystal",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(50, p), new Item.Properties().rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_DIAMOND = ITEMS.registerItem("gravity_upgrade_diamond",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(100, p), new Item.Properties().rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_KATCHIN = ITEMS.registerItem("gravity_upgrade_katchin",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(250, p), new Item.Properties().rarity(Rarity.RARE));
+    public static final DeferredItem<Item> GRAVITY_UPGRADE_NETHERITE = ITEMS.registerItem("gravity_upgrade_netherite",
+            p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(500, p), new Item.Properties().rarity(Rarity.EPIC).fireResistant());
+
     /** Llave: pantalla de caras en cruz y desmontar (WrenchItem). En el tag c:tools/wrench. */
     public static final DeferredItem<Item> WRENCH = ITEMS.registerItem("wrench",
             com.hmc.zenkai.content.item.WrenchItem::new, new Item.Properties());

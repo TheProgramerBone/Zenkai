@@ -46,10 +46,24 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 public final class WrenchEvents {
     private WrenchEvents() {}
 
+    private static final net.neoforged.neoforge.common.ItemAbility DISMANTLE =
+            net.neoforged.neoforge.common.ItemAbility.get("wrench_dismantle");
+    private static final net.neoforged.neoforge.common.ItemAbility CONFIGURE =
+            net.neoforged.neoforge.common.ItemAbility.get("wrench_configure");
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         ItemStack stack = event.getItemStack();
-        if (!(stack.getItem() instanceof WrenchItem)) return;
+        // La llave de Zenkai o el Configurator de Mekanism (por su habilidad, sin dependencia) en un modo de
+        // configurar ENERGÍA o FLUIDOS: sus modos se traducen a los canales del bloque (WrenchItem.mekanismMode).
+        boolean ownWrench = stack.getItem() instanceof WrenchItem;
+        boolean configurator = !ownWrench && !stack.isEmpty() && stack.canPerformAction(CONFIGURE)
+                && (WrenchItem.mekanismMode(stack) == WrenchItem.Mode.ENERGY || WrenchItem.mekanismMode(stack) == WrenchItem.Mode.FLUID);
+        // Configurator en modo ROTAR, o en modo LLAVE (clic = girar, agachado = desmontar, como en Mekanism).
+        boolean mekRotate = !ownWrench && !configurator && WrenchItem.mekanismMode(stack) == WrenchItem.Mode.ROTATE;
+        boolean mekWrench = !ownWrench && !configurator && !stack.isEmpty()
+                && stack.canPerformAction(DISMANTLE) && !stack.canPerformAction(CONFIGURE);
+        if (!ownWrench && !configurator && !mekRotate && !mekWrench) return;
         Level level = event.getLevel();
         BlockPos pos = event.getPos();
         BlockState state = level.getBlockState(pos);
@@ -57,9 +71,10 @@ public final class WrenchEvents {
         Player player = event.getEntity();
         BlockEntity be = level.getBlockEntity(pos);
         boolean transport = state.getBlock() instanceof TransportBlock;
-        WrenchItem.Mode mode = WrenchItem.mode(stack);
+        WrenchItem.Mode mode = ownWrench ? WrenchItem.mode(stack)
+                : mekRotate || mekWrench ? WrenchItem.Mode.ROTATE : WrenchItem.mekanismMode(stack);
 
-        if (player.isShiftKeyDown()) {
+        if (player.isShiftKeyDown() && !configurator && !mekRotate) {
             if (!(be instanceof SideConfigurable)) return;
             cancel(event, level);
             if (level instanceof ServerLevel sl) TransportWrench.dismantle(sl, pos, state, be, player, stack);
@@ -67,11 +82,18 @@ public final class WrenchEvents {
         }
 
         if (mode == WrenchItem.Mode.ROTATE) {
-            if (state.is(ModBlocks.KI_MOTOR.get())) return;   // lo gira Create (y sin Create el bloque es inerte)
-            if (transport) { cancel(event, level); return; }   // un cable o un tanque no tienen orientación
+            // Con la llave de Zenkai el motor lo gira Create (y sin Create el bloque es inerte); con el
+            // Configurator de Mekanism no hay quien lo gire, así que se gira aquí sacándolo antes de la red.
+            if (ownWrench && state.is(ModBlocks.KI_MOTOR.get())) return;
+            if (transport) { if (ownWrench) cancel(event, level); return; }   // un cable o un tanque no tienen orientación
             if (!rotatable(state)) return;
             cancel(event, level);
-            if (!level.isClientSide) rotate(level, pos, state, event.getFace());
+            if (level.isClientSide) return;
+            if (be instanceof com.hmc.zenkai.compat.create.KiMotorControl motor) {
+                motor.rotateKinetics(() -> rotate(level, pos, state, event.getFace()));
+            } else {
+                rotate(level, pos, state, event.getFace());
+            }
             return;
         }
 
@@ -84,7 +106,8 @@ public final class WrenchEvents {
             return;
         }
         SideConfigurable.Channel ch = WrenchItem.channelFor(stack, cfg);
-        SideMode next = cfg.sideMode(ch, face).next();
+        // Agachado con el Configurator: modo anterior, como en los transportes y en Mekanism.
+        SideMode next = configurator && player.isShiftKeyDown() ? cfg.sideMode(ch, face).prev() : cfg.sideMode(ch, face).next();
         cfg.setSideMode(ch, face, next);
         level.playSound(null, pos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 0.4f, 1.4f);
         player.displayClientMessage(Component.translatable("item.zenkai.wrench.set",

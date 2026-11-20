@@ -183,6 +183,25 @@ public final class KiChamberGameTests {
     }
 
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void enteringInCooldownPaysWithHealthFromTheStart(GameTestHelper helper) {
+        KiContainmentChamberBlockEntity be = chamber(helper);
+        ServerPlayer sp = chargedPlayer(helper);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+
+        att.flags().setKiChamberCooldownUntil(helper.getLevel().getGameTime() + 10_000L);
+        att.setBody(att.getBodyMax());
+        double kiBefore = att.getKiCurrent();
+        helper.assertTrue(be.testStartCharge(sp, true), "En cooldown, con Forzar y vida, arranca");
+        int bodyBefore = att.getBody();
+        for (int i = 0; i < 100 && be.isCharging(); i++) be.tickCharge(sp);
+
+        helper.assertTrue(att.getBody() < bodyBefore, "En cooldown la vida se drena desde el primer momento");
+        helper.assertTrue(att.getKiCurrent() >= kiBefore - 1.0,
+                "Y el ki no se toca mientras tanto; antes " + kiBefore + ", ahora " + att.getKiCurrent());
+        helper.succeed();
+    }
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void forcingPaysWithHealthOnlyOnceKiIsZero(GameTestHelper helper) {
         KiContainmentChamberBlockEntity be = chamber(helper);
         ServerPlayer sp = chargedPlayer(helper);

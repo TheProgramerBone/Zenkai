@@ -190,6 +190,35 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
                 .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
 
+        // Cámara de gravedad (Fase 3). Recetas PROVISIONALES como las de la 2b.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.GRAVITY_CHAMBER.get(), 1)
+                .pattern("IAI").pattern("KEK").pattern("IRI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('A', ModItems.ADVANCED_CIRCUIT)
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.GRAVITY_CHAMBER_PORT.get(), 2)
+                .pattern("IUI").pattern("UCU").pattern("IUI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('U', Tags.Items.INGOTS_COPPER)
+                .define('C', ModBlocks.ENERGY_CABLE.get())
+                .unlockedBy("has_gravity_chamber", has(ModBlocks.GRAVITY_CHAMBER.get())).save(recipeOutput);
+        // Mejoras: bloque del material en el centro y la mejora anterior debajo (la de cobre, un circuito básico).
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_COPPER.get(),
+                Ingredient.of(Tags.Items.STORAGE_BLOCKS_COPPER), Ingredient.of(ModItems.BASIC_CIRCUIT));
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_IRON.get(),
+                Ingredient.of(Tags.Items.STORAGE_BLOCKS_IRON), Ingredient.of(ModItems.GRAVITY_UPGRADE_COPPER));
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_ENERGY_CRYSTAL.get(),
+                Ingredient.of(ModBlocks.ENERGY_CRYSTAL_BLOCK.get()), Ingredient.of(ModItems.GRAVITY_UPGRADE_IRON));
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_DIAMOND.get(),
+                Ingredient.of(Tags.Items.STORAGE_BLOCKS_DIAMOND), Ingredient.of(ModItems.GRAVITY_UPGRADE_ENERGY_CRYSTAL));
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_KATCHIN.get(),
+                Ingredient.of(ModBlocks.KATCHIN_BLOCK.get()), Ingredient.of(ModItems.GRAVITY_UPGRADE_DIAMOND));
+        gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_NETHERITE.get(),
+                Ingredient.of(Tags.Items.INGOTS_NETHERITE), Ingredient.of(ModItems.GRAVITY_UPGRADE_KATCHIN));
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
                 .pattern("Y Y")
@@ -670,6 +699,18 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .requires(base, 8)
                 .requires(dye)
                 .unlockedBy(getHasName(base), has(base))
+                .save(out);
+    }
+
+    /** Mejora de gravedad: material en el centro, la anterior debajo, redstone y hierro alrededor. */
+    private static void gravityUpgrade(RecipeOutput out, Item result, Ingredient material, Ingredient previous) {
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, result, 1)
+                .pattern("RIR").pattern("IMI").pattern("RPR")
+                .define('R', Tags.Items.DUSTS_REDSTONE)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('M', material)
+                .define('P', previous)
+                .unlockedBy("has_gravity_chamber", has(ModBlocks.GRAVITY_CHAMBER.get()))
                 .save(out);
     }
 }

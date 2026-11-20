@@ -27,7 +27,7 @@ public final class PlayerBodyAccess {
         int grace = ServerConfig.PERMADEATH_OWNER_GRACE_SECONDS.get();
         if (grace > 0 && body.level().getGameTime() - body.createdAt() < grace * 20L) return "zenkai.body.grace";
         if (ServerConfig.PERMADEATH_BODY_GRIEFING.get()) return null;
-        if (!ServerConfig.PERMADEATH_BODY_OPEN_PARTY.get()) return "zenkai.body.not_moral";
+        if (!(true)) return "zenkai.body.not_moral";
         PartyManager.Party party = PartyManager.get(who.server).partyOf(owner);
         return party != null && party.members.contains(who.getUUID()) ? null : "zenkai.body.not_moral";
     }
@@ -48,7 +48,7 @@ public final class PlayerBodyAccess {
     public static boolean canTakeXp(ServerPlayer who, PlayerBodyEntity body) {
         UUID owner = body.owner().orElse(null);
         if (owner != null && who.getUUID().equals(owner)) return true;
-        if (owner == null || !ServerConfig.PERMADEATH_XP_PARTY_CAN_TAKE.get() || !canOpen(who, body)) return false;
+        if (owner == null || !(false) || !canOpen(who, body)) return false;
         PartyManager.Party party = PartyManager.get(who.server).partyOf(owner);   // grifeo no basta: la XP es de la party, no de cualquiera
         return party != null && party.members.contains(who.getUUID());
     }

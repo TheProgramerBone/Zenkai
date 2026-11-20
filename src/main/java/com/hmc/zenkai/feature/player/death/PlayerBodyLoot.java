@@ -36,7 +36,7 @@ public final class PlayerBodyLoot {
                 if (worn.isEmpty()) {
                     inv.armor.set(k, rest);
                     rest = ItemStack.EMPTY;
-                } else if (ServerConfig.PERMADEATH_TAKE_ALL_SWAP_ARMOR.get()
+                } else if ((true)
                         && ArmorCompare.better(rest, worn, ARMOR_SLOTS[k]) && inv.add(worn.copy())) {
                     inv.armor.set(k, rest);                          // la tuya ya está en el inventario: se pone la mejor
                     rest = ItemStack.EMPTY;

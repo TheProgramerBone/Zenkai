@@ -71,7 +71,7 @@ public class UranaiBabaEntity extends ZenkaiDefaultNPC implements DialogueSpeake
                     pages.add(line("offer", 2, name));
                     pages.add(Component.translatable(cost > 0 ? "dialogue.zenkai.baba.terms_soul" : "dialogue.zenkai.baba.terms",
                             ServerConfig.PERMADEATH_VISIT_DAYS.get(),
-                            ServerConfig.PERMADEATH_VISIT_COOLDOWN_DAYS.get(),
+                            (2),
                             cost));
                     choices.add(new OpenDialoguePayload.Choice("visit",
                             Component.translatable("dialogue.zenkai.baba.choice.visit")));

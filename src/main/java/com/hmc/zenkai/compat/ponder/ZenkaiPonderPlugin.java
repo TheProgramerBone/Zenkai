@@ -3,6 +3,7 @@ package com.hmc.zenkai.compat.ponder;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.compat.ponder.scenes.DragonBallsPonderScenes;
 import com.hmc.zenkai.compat.ponder.scenes.EnergyGeneratorPonderScenes;
+import com.hmc.zenkai.compat.ponder.scenes.GravityChamberPonderScenes;
 import com.hmc.zenkai.compat.ponder.scenes.PieceConnectorPonderScenes;
 import com.hmc.zenkai.compat.ponder.scenes.ScouterBenchPonderScenes;
 import com.hmc.zenkai.compat.ponder.scenes.TechPonderScenes;
@@ -30,11 +31,6 @@ public final class ZenkaiPonderPlugin implements PonderPlugin {
         EnergyGeneratorPonderScenes.register(helper);
         DragonBallsPonderScenes.register(helper);
         TechPonderScenes.register(helper);   // cámara de ki, cables, tuberías, tanques, llave, motor (0.7.0)
-
-        // La cámara de gravedad (bloque nuevo, ver diseño de gravedad/nave) todavía no existe en
-        // ModBlocks — la gravedad natural (planeta de Kaiosama/HTC) ya está cerrada, pero la
-        // cámara en sí sigue sin empezar. En cuanto se registre el bloque, añadir aquí su propia
-        // clase de escenas siguiendo el mismo patrón que las tres de abajo.
-        // TODO: GravityChamberPonderScenes.register(helper) — pendiente de que exista el bloque.
+        GravityChamberPonderScenes.register(helper);   // consola y puerto de la cámara de gravedad (Fase 3)
     }
 }

@@ -3,6 +3,10 @@
     "zenkai:scouter",
     "zenkai:halo",
     "zenkai:weighted_straps",
-    "zenkai:weighted_cape"
+    "zenkai:weighted_cape",
+    {
+      "id": "create:goggles",
+      "required": false
+    }
   ]
 }

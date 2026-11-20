@@ -69,6 +69,18 @@ public class ModBlockEntities {
                             ModBlocks.FLUID_PIPE.get(), ModBlocks.FLUID_TANK.get())
                     .build(null));
 
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity>> GRAVITY_CHAMBER =
+            BLOCK_ENTITIES.register("gravity_chamber", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity::new,
+                            ModBlocks.GRAVITY_CHAMBER.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.GravityChamberPortBlockEntity>> GRAVITY_CHAMBER_PORT =
+            BLOCK_ENTITIES.register("gravity_chamber_port", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.GravityChamberPortBlockEntity::new,
+                            ModBlocks.GRAVITY_CHAMBER_PORT.get())
+                    .build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

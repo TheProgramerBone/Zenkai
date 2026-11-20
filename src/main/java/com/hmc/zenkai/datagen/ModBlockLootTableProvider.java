@@ -120,6 +120,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         add(ModBlocks.CUT_KATCHIN_SLAB.get(), this::createSlabItemTable);
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
         dropSelf(ModBlocks.ENERGY_GENERATOR.get());
+        dropSelf(ModBlocks.GRAVITY_CHAMBER.get());
+        dropSelf(ModBlocks.GRAVITY_CHAMBER_PORT.get());
         dropSelf(ModBlocks.ENERGY_CABLE.get());
         dropSelf(ModBlocks.FLUID_PIPE.get());
         // Los tanques sueltan su contenido y los modos de cara dentro del ítem.
@@ -280,7 +282,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected @NotNull Iterable<Block> getKnownBlocks() {
-        return ModBlocks.MOD_BLOCKS.getEntries().stream().map(Holder::value)::iterator;
+        // El Motor de Ki trae su tabla escrita a mano en src/main/resources (compat de Create): sin
+        // excluirlo, runData se cae con «Missing loottable zenkai:blocks/ki_motor».
+        return ModBlocks.MOD_BLOCKS.getEntries().stream().map(Holder::value)
+                .filter(b -> b != ModBlocks.KI_MOTOR.get())::iterator;
     }
 
     /** Tabla de un tanque de transporte: él mismo, con los componentes que escribe su block entity. */

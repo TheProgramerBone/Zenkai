@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "E": {
+      "item": "zenkai:energy_crystal"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "R": {
+      "tag": "c:storage_blocks/redstone"
+    }
+  },
+  "pattern": [
+    "IAI",
+    "KEK",
+    "IRI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:gravity_chamber"
+  }
+}

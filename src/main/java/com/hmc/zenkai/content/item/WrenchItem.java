@@ -64,9 +64,37 @@ public class WrenchItem extends Item {
         return stack.getItem() instanceof WrenchItem && mode(stack) == Mode.ROTATE;
     }
 
+    /** Id del componente donde el Configurator de Mekanism guarda su modo (se lee por nombre: sin dependencia). */
+    private static final net.minecraft.resources.ResourceLocation MEK_MODE =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("mekanism", "configurator_mode");
+
+    /**
+     * El modo del Configurator de Mekanism traducido a los de esta llave: Configurar energía → ENERGY,
+     * Configurar fluidos → FLUID, Rotar → ROTATE. Cualquier otro (objetos, químicos, calor, vacío, llave) o un
+     * ítem que no sea el Configurator: null, y Zenkai no toca el clic. Sin el componente el Configurator está
+     * en su modo por defecto (objetos), así que tampoco es nuestro.
+     */
+    @SuppressWarnings("unchecked")
+    @org.jetbrains.annotations.Nullable
+    public static Mode mekanismMode(ItemStack stack) {
+        var type = (net.minecraft.core.component.DataComponentType<Object>)
+                net.minecraft.core.registries.BuiltInRegistries.DATA_COMPONENT_TYPE.get(MEK_MODE);
+        if (type == null) return null;
+        Object v = stack.get(type);
+        if (v == null) return null;
+        String name = v instanceof net.minecraft.util.StringRepresentable sr ? sr.getSerializedName() : v.toString();
+        return switch (name.toLowerCase(Locale.ROOT)) {
+            case "configurate_energy" -> Mode.ENERGY;
+            case "configurate_fluids" -> Mode.FLUID;
+            case "rotate" -> Mode.ROTATE;
+            default -> null;
+        };
+    }
+
     /** El canal que la llave toca en este bloque: el del modo si lo tiene, si no el único que tenga. */
     public static SideConfigurable.Channel channelFor(ItemStack stack, SideConfigurable cfg) {
-        SideConfigurable.Channel wanted = mode(stack) == Mode.FLUID ? SideConfigurable.Channel.FLUID : SideConfigurable.Channel.ENERGY;
+        Mode m = stack.getItem() instanceof WrenchItem ? mode(stack) : mekanismMode(stack);
+        SideConfigurable.Channel wanted = m == Mode.FLUID ? SideConfigurable.Channel.FLUID : SideConfigurable.Channel.ENERGY;
         return cfg.sideChannels().contains(wanted) ? wanted : cfg.sideChannels().get(0);
     }
 

@@ -1,7 +1,12 @@
 package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.gravity.GravityFields;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ModGameRules;
+import net.minecraft.server.level.ServerPlayer;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -45,11 +50,16 @@ public final class WeightLoadSystem {
     /** Limpieza al desloguear: si no, el mapa crece sin fin en servidores. */
     public static void forget(UUID id) {
         LAST_JUMP.remove(id);
+        DRAIN_CARRY.remove(id);
+        GravityFields.forget(id);
     }
 
     public static void tick(TickCtx c) {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
+
+        // La g de cámara viaja al cliente ANTES de calcular: su espejo de weightLoad la necesita.
+        if (p instanceof ServerPlayer sp) GravityFields.syncIfChanged(sp);
 
         double load = WeightSystem.computeLoad(p);
         att.setWeightLoad(load);
@@ -65,7 +75,39 @@ public final class WeightLoadSystem {
                 && p.tickCount % WARN_INTERVAL == 0) {
             p.displayClientMessage(Component.translatable("messages.zenkai.weight.overloaded"), true);
         }
+
+        if (p instanceof ServerPlayer sp) drainInChamber(sp, att, load);
     }
+
+    /**
+     * Drenaje de vida de la cámara de gravedad (decidido 2026-11-16): con r por encima de
+     * {@link ServerConfig#gravityChamberDrainLoad} (el doble de la capacidad) se pierde un % del
+     * body máximo por segundo, y NUNCA mata: se para en 1, escrito directo en el pool (sin evento
+     * de daño ni die(), por la muerte permanente). SOLO dentro de una cámara (decisión del usuario,
+     * 2026-11-19): Kaiosama y la HTC son el entrenamiento gratuito y no hacen daño. Interruptor:
+     * gamerule zenkai_gravityDamage. El acumulador fraccional es propio (no el de RegenSystem):
+     * la regeneración no debe poder anular el drenaje sin más.
+     */
+    private static void drainInChamber(ServerPlayer sp, PlayerStatsAttachment att, double load) {
+        if (load <= ServerConfig.gravityChamberDrainLoad() || !GravityFields.inChamber(sp)
+                || sp.isCreative() || sp.isSpectator() || !ModGameRules.gravityDamage(sp.server)) {
+            DRAIN_CARRY.remove(sp.getUUID());
+            return;
+        }
+        if (att.getBody() <= 1) return;
+        double perTick = att.getBodyMax() * ServerConfig.gravityChamberDrainPercent() / 100.0 / 20.0;
+        double carry = DRAIN_CARRY.getOrDefault(sp.getUUID(), 0.0) + perTick;
+        int whole = (int) Math.floor(carry);
+        DRAIN_CARRY.put(sp.getUUID(), carry - whole);
+        if (whole <= 0) return;
+        att.setBody(Math.max(1, att.getBody() - whole));
+        PlayerLifeCycle.sync(sp);
+        if (sp.tickCount % WARN_INTERVAL == 0) {
+            sp.displayClientMessage(Component.translatable("messages.zenkai.gravity_chamber.crushing"), true);
+        }
+    }
+
+    private static final Map<UUID, Double> DRAIN_CARRY = new ConcurrentHashMap<>();
 
     private static boolean isTryingToMove(Player p) {
         if (p.zza != 0.0F || p.xxa != 0.0F) return true;
