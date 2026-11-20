@@ -18,7 +18,7 @@ import net.minecraft.world.item.ItemStack;
  * ajuste) leen de aquí. Si algún día cambia la curva, cambia en un solo archivo.
  *
  * Modelo:
- *   carga r  = (toneladas equipadas + toneladas ambientales) / capacidad
+ *   carga r  = (toneladas equipadas × g + toneladas ambientales) / capacidad
  *   capacidad = (PL_LIMPIO / divisor) ^ exponente          [toneladas]
  *
  * PL_LIMPIO = con forma y kaioken, SIN el factor de pesas. Es obligatorio: la capacidad
@@ -134,6 +134,27 @@ public final class WeightSystem {
         return null;
     }
 
+    /**
+     * Toneladas que PESAN las pesas puestas bajo la gravedad actual: {@code equipped × g}. Pedido del
+     * usuario (2026-11-20): el peso es masa × gravedad, así que 1 t de pesas a ×10 se siente como 10 t.
+     * A g = 1 es el equipo tal cual; la gravedad ambiental ({@link #ambientTons}) se suma aparte.
+     * Como la forma multiplica la capacidad, esto frena el irse de golpe a ×500 con el equipo puesto.
+     */
+    public static double effectiveEquippedTons(Player p) {
+        return equippedTons(p) * Math.max(1.0, gravityMultiplier(p));
+    }
+
+    /**
+     * % de la vida máxima que se pierde por segundo con la carga r (jugadores y mobs de la cámara).
+     * Proporcional a cuánto se pasa uno de lo que aguanta: {@code percent × (r − 1)}, con techo
+     * {@link ServerConfig#gravityChamberDrainMaxPercent}. 0 por debajo del umbral de drenaje.
+     */
+    public static double drainPercentPerSecond(double load) {
+        if (load <= ServerConfig.gravityChamberDrainLoad()) return 0.0;
+        double pct = ServerConfig.gravityChamberDrainPercent() * (load - 1.0);
+        return Math.min(pct, ServerConfig.gravityChamberDrainMaxPercent());
+    }
+
     /** r para cualquier entidad (mobs en la cámara): toneladas / capacidad de su PL. */
     public static double loadFor(long pl, double tons) {
         if (tons <= 0.0) return 0.0;
@@ -153,7 +174,7 @@ public final class WeightSystem {
     /** r = (toneladas equipadas + toneladas ambientales) / capacidad. 0 si no lleva pesas y no
      *  está en ningún planeta con gravedad propia. */
     public static double computeLoad(Player p) {
-        double tons = equippedTons(p) + ambientTons(p);
+        double tons = effectiveEquippedTons(p) + ambientTons(p);
         if (tons <= 0.0) return 0.0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         if (!att.isRaceChosen()) return 0.0;
@@ -185,7 +206,7 @@ public final class WeightSystem {
      *  completa de {@link #computeLoad}. El equipo físico NO se toca: sigue contando al 100%
      *  para el salto, como antes. */
     public static double jumpLoad(Player p) {
-        double tons = equippedTons(p) + ambientTons(p) * ServerConfig.weightGravityJumpFactor();
+        double tons = effectiveEquippedTons(p) + ambientTons(p) * ServerConfig.weightGravityJumpFactor();
         if (tons <= 0.0) return 0.0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         if (!att.isRaceChosen()) return 0.0;
@@ -233,5 +254,24 @@ public final class WeightSystem {
     public static double tpFactor(double load) {
         if (isOverloaded(load)) return 1.0;
         return 1.0 + ServerConfig.weightTpBonus() * effective(load);
+    }
+
+    /**
+     * Término extra de TP por la gravedad de una CÁMARA (pedido del usuario, 2026-11-20): el bono por
+     * carga topa a r = umbral, así que sin esto ×500 con mucho PL daba lo mismo que ×10 con poco.
+     * {@code 1 + c·ln(g)} (×10 → 2,2; ×100 → 3,3; ×500 → 4,1 con c = 0,5): logarítmico, para que ×500
+     * no se dispare. Solo cámara: la HTC y Kaiosama son entrenamiento gratuito ya calibrado. 1,0 en
+     * sobrecarga (la carga que no puedes mover no entrena) y fuera de cámara.
+     */
+    public static double gravityTpFactor(Player p, double load) {
+        if (p == null || isOverloaded(load)) return 1.0;
+        double g = GravityFields.chamberG(p);
+        return g > 1.0 ? 1.0 + ServerConfig.gravityChamberTpPerLn() * Math.log(g) : 1.0;
+    }
+
+    /** Multiplicador TOTAL de TP de un jugador: carga (pesas + gravedad) × término de gravedad de cámara. */
+    public static double tpFactor(Player p) {
+        double load = PlayerStatsAttachment.get(p).getWeightLoad();
+        return tpFactor(load) * gravityTpFactor(p, load);
     }
 }

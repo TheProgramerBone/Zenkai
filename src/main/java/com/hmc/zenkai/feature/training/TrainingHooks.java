@@ -159,7 +159,7 @@ public final class TrainingHooks {
         double granted = rawTpCap * currentEfficiency(sp, cat); // plFactor = 1.0 (victimPl 0, igual que grantFromMeditation/TargetPractice)
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         if (inHtc) granted *= ServerConfig.trainingHtcMultiplier();
-        granted *= WeightSystem.tpFactor(att.getWeightLoad());
+        granted *= WeightSystem.tpFactor(sp);
         granted *= com.hmc.zenkai.feature.race.RacePassives.tpGainMult(sp);
 
         if (potentialUnlockBonusApplies(sp)) {
@@ -206,7 +206,7 @@ public final class TrainingHooks {
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         double granted = base
                 * (inHtc ? ServerConfig.trainingHtcMultiplier() : 1.0)
-                * WeightSystem.tpFactor(att.getWeightLoad())
+                * WeightSystem.tpFactor(sp)
                 // Potencial del Humano (RacePassives): más TP por lo mismo, sin tocar la fatiga.
                 * com.hmc.zenkai.feature.race.RacePassives.tpGainMult(sp);
 
@@ -268,7 +268,7 @@ public final class TrainingHooks {
         double granted = rawTp * m * plFactor;
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         if (inHtc) granted *= ServerConfig.trainingHtcMultiplier();
-        granted *= WeightSystem.tpFactor(att.getWeightLoad());
+        granted *= WeightSystem.tpFactor(sp);
 
         if (potentialUnlockBonusApplies(sp)) granted *= ServerConfig.potentialUnlockTpMult();
         return (int) Math.floor(granted);

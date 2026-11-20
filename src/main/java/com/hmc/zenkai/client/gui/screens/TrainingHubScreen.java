@@ -255,7 +255,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
             g.fill(tx + row, ty + r, tx + 7 - row, ty + r + 1, ZenkaiPalette.TP_ON_DARK);
         }
         if (!modsOpen && mc.player != null) {
-            double mult = WeightSystem.tpFactor(att.getWeightLoad())
+            double mult = WeightSystem.tpFactor(mc.player)
                     * (mc.player.level().dimension() == ModDimensions.HTC_LEVEL ? ServerConfig.trainingHtcMultiplier() : 1.0);
             String txt = "x" + ZenkaiNumbers.fmt2(mult);
             g.drawString(this.font, txt, tx - 6 - this.font.width(txt), iy + 1, ZenkaiPalette.OK, true);
@@ -284,7 +284,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
         double load = att.getWeightLoad();
         boolean inHtc = player.level().dimension() == ModDimensions.HTC_LEVEL;
-        double weightMult = WeightSystem.tpFactor(load);
+        double weightMult = WeightSystem.tpFactor(player);
         double htcMult = ServerConfig.trainingHtcMultiplier();
         double baseMult = weightMult * (inHtc ? htcMult : 1.0);
 
@@ -425,7 +425,8 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
      *  extra era la otra mitad del solapamiento original. */
     private List<GravityRow> buildGravityRows(Player player) {
         List<GravityRow> out = new ArrayList<>();
-        double equipped = WeightSystem.equippedTons(player);
+        // Lo que pesan las pesas bajo esta gravedad (equipo × g): así equipped + ambient = el total real.
+        double equipped = WeightSystem.effectiveEquippedTons(player);
         double ambient = WeightSystem.ambientTons(player);
         double capacity = WeightSystem.playerCapacity(att);
         double load = att.getWeightLoad();
@@ -436,12 +437,13 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                     Component.literal("x" + ZenkaiNumbers.fmt2(WeightSystem.gravityMultiplier(player))),
                     ZenkaiPalette.VALUE));
         }
+        // Toneladas con ZenkaiNumbers.tons: a ×500 el total pasaba de 20 caracteres y pisaba la etiqueta.
         out.add(GravityRow.of(Component.translatable("screen.zenkai.training_hub.popup.gravity.equipped"),
-                Component.literal(String.format(Locale.ROOT, "%.2f t", equipped)), ZenkaiPalette.TEXT));
+                Component.literal(ZenkaiNumbers.tons(equipped) + " t"), ZenkaiPalette.TEXT));
         out.add(GravityRow.of(Component.translatable("screen.zenkai.training_hub.popup.gravity.ambient"),
-                Component.literal(String.format(Locale.ROOT, "%.2f t", ambient)), ZenkaiPalette.TEXT));
+                Component.literal(ZenkaiNumbers.tons(ambient) + " t"), ZenkaiPalette.TEXT));
         out.add(GravityRow.bar(Component.translatable("screen.zenkai.training_hub.popup.gravity.total"),
-                Component.literal(String.format(Locale.ROOT, "%.2f / %.2f t", equipped + ambient, capacity)),
+                Component.literal(ZenkaiNumbers.tons(equipped + ambient) + " / " + ZenkaiNumbers.tons(capacity) + " t"),
                 ZenkaiPalette.SECTION_LOAD, (float) Math.min(100.0, load * 100)));
         return out;
     }
@@ -489,6 +491,23 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                         r.bar(), 100.0, ZenkaiPalette.BAR_CONTROL);
                 ty += barExtra;
             }
+        }
+
+        // Convención de ZenkaiNumbers: si alguna cifra salió compactada, el exacto va en tooltip.
+        double equipped = WeightSystem.effectiveEquippedTons(player);
+        double ambient = WeightSystem.ambientTons(player);
+        double capacity = WeightSystem.playerCapacity(att);
+        if (ZenkaiNumbers.isCompacted(equipped) || ZenkaiNumbers.isCompacted(ambient)
+                || ZenkaiNumbers.isCompacted(equipped + ambient) || ZenkaiNumbers.isCompacted(capacity)) {
+            g.renderComponentTooltip(this.font, List.of(
+                    Component.translatable("screen.zenkai.training_hub.popup.gravity.equipped")
+                            .append(": " + ZenkaiNumbers.exact(equipped) + " t"),
+                    Component.translatable("screen.zenkai.training_hub.popup.gravity.ambient")
+                            .append(": " + ZenkaiNumbers.exact(ambient) + " t"),
+                    Component.translatable("screen.zenkai.training_hub.popup.gravity.total")
+                            .append(": " + ZenkaiNumbers.exact(equipped + ambient) + " / "
+                                    + ZenkaiNumbers.exact(capacity) + " t")),
+                    mouseX, mouseY);
         }
     }
 

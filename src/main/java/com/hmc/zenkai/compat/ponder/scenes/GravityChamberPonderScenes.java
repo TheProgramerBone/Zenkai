@@ -14,8 +14,8 @@ import net.minecraft.resources.ResourceLocation;
 /**
  * Escena Ponder de la cámara de gravedad (Fase 3 de la 0.7.0), para la consola y el puerto.
  * Esquema: assets/zenkai/ponder/gravity_chamber.nbt (tools/gen_ponder_schematics.py, gen_gravity_chamber):
- * esfera de radio 5 con la consola en (6,1,6), el suelo a cuadros como fondo de la sala, un puerto en la
- * pared este a ras de suelo, tres cables y un tanque de energía fuera.
+ * esfera de radio 3 (el mínimo) con la consola en (5,1,5), el suelo a cuadros como fondo de la sala, un puerto
+ * en la pared este a ras de suelo, dos cables y un tanque de energía fuera.
  *
  * La corteza se calcula con la MISMA geometría que el block entity (insideSphere), así la selección
  * coincide celda a celda con el esquema. Para enseñar el interior se oculta la mitad norte (z bajas,
@@ -24,9 +24,10 @@ import net.minecraft.resources.ResourceLocation;
 public final class GravityChamberPonderScenes {
     private GravityChamberPonderScenes() {}
 
-    private static final int R = 5;
-    private static final int CX = 6, CY = 1, CZ = 6;   // consola
-    private static final int PORT_X = CX + 3;
+    /** Radio MÍNIMO de la cámara (3): con 5 la estructura tapaba los textos del Ponder (2026-11-20). */
+    private static final int R = GravityChamberBlockEntity.MIN_RADIUS;
+    private static final int CX = 5, CY = 1, CZ = 5;   // consola
+    private static final int PORT_X = CX + 2;          // la corteza a ras de suelo está a dx = 2 con R = 3
 
     public static void register(PonderSceneRegistrationHelper<ResourceLocation> helper) {
         helper.forComponents(ModBlocks.GRAVITY_CHAMBER.getId(), ModBlocks.GRAVITY_CHAMBER_PORT.getId())
@@ -59,7 +60,7 @@ public final class GravityChamberPonderScenes {
 
     private static void chamber(SceneBuilder scene, SceneBuildingUtil util) {
         scene.title("gravity_chamber", "Cámara de gravedad");
-        scene.configureBasePlate(0, 0, 15);
+        scene.configureBasePlate(0, 0, 11);
         scene.showBasePlate();
         BlockPos console = util.grid().at(CX, CY, CZ);
         BlockPos port = util.grid().at(PORT_X, 1, CZ);
@@ -74,7 +75,8 @@ public final class GravityChamberPonderScenes {
         Selection wall = shell(util, false);
         scene.world().showSection(wall, Direction.DOWN);
         scene.idle(20);
-        scene.overlay().showText(110).placeNearTarget().pointAt(util.vector().topOf(util.grid().at(CX, CY + 2 * R - 1, CZ)))
+        // El texto apunta a la pared a ras de suelo (no a la cima de la esfera): así queda abajo y se ve entero.
+        scene.overlay().showText(110).placeNearTarget().pointAt(util.vector().topOf(util.grid().at(CX - R + 1, CY, CZ)))
                 .text("La pared puede ser de cualquier bloque. El radio (de 5 a 10) se elige en la pantalla, y su holograma marca dónde faltan bloques");
         scene.idle(120);
 
@@ -86,7 +88,7 @@ public final class GravityChamberPonderScenes {
         scene.idle(110);
 
         scene.world().showSection(util.select().position(port)
-                .add(util.select().fromTo(PORT_X + 1, 1, CZ, PORT_X + 4, 1, CZ)), Direction.WEST);
+                .add(util.select().fromTo(PORT_X + 1, 1, CZ, PORT_X + 3, 1, CZ)), Direction.WEST);
         scene.idle(15);
         scene.overlay().showOutlineWithText(util.select().position(port), 100).colored(PonderPalette.GREEN)
                 .text("La energía entra por un puerto de la pared, o por debajo de la consola. Más gravedad y más radio gastan más FE");

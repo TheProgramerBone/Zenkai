@@ -95,7 +95,8 @@ public final class WeightLoadSystem {
             return;
         }
         if (att.getBody() <= 1) return;
-        double perTick = att.getBodyMax() * ServerConfig.gravityChamberDrainPercent() / 100.0 / 20.0;
+        // Proporcional a lo que te pasas de tu capacidad (WeightSystem.drainPercentPerSecond).
+        double perTick = att.getBodyMax() * WeightSystem.drainPercentPerSecond(load) / 100.0 / 20.0;
         double carry = DRAIN_CARRY.getOrDefault(sp.getUUID(), 0.0) + perTick;
         int whole = (int) Math.floor(carry);
         DRAIN_CARRY.put(sp.getUUID(), carry - whole);

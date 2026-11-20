@@ -639,9 +639,15 @@ public class ServerConfig {
     public static double gravityChamberFeRadiusStep()  { return (0.25); }
     public static int    gravityChamberFeCapacity()    { return techCap(200_000); }
     public static int    gravityChamberMaxReceive()    { return techRate(4_096); }
-    /** % del máximo (body o vida) que drena por segundo pasada r = 2,0; nunca baja de 1. */
+    /** % del máximo (body o vida) que drena por segundo POR CADA unidad de r por encima de 1 una vez
+     *  pasada r = 2,0 (a r = 2 es el 1 %, a r = 3 el 2 %...). Ver {@code WeightSystem.drainPercentPerSecond}. */
     public static double gravityChamberDrainPercent()  { return (1.0); }
     public static double gravityChamberDrainLoad()     { return (2.0); }
+    /** Techo del drenaje (% por segundo): con ×500 y poco PL la fórmula daría cientos y no dejaría
+     *  tiempo de salir. Nunca mata de todas formas: se detiene en 1 de vida. */
+    public static double gravityChamberDrainMaxPercent() { return (10.0); }
+    /** TP extra por la g de la cámara: {@code 1 + c·ln(g)} (ver {@code WeightSystem.gravityTpFactor}). */
+    public static double gravityChamberTpPerLn()       { return (0.5); }
     public static int    kiMotorFeCapacity()       { return techCap(50_000); }
     public static int    kiMotorTankCapacity()     { return techCap(4_000); }
     public static int    kiMotorIoPerTick()        { return techRate(2_048); }

@@ -200,6 +200,55 @@ public final class GravityChamberGameTests {
         helper.succeed();
     }
 
+    /** El drenaje crece con lo que te pasas de tu capacidad y tiene techo (pedido del usuario, 2026-11-20). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void drainIsProportionalToExcessLoad(GameTestHelper helper) {
+        double threshold = ServerConfig.gravityChamberDrainLoad();
+        helper.assertTrue(WeightSystem.drainPercentPerSecond(threshold) == 0.0, "En el umbral no hay drenaje");
+        double a = WeightSystem.drainPercentPerSecond(threshold + 1.0);
+        double b = WeightSystem.drainPercentPerSecond(threshold + 4.0);
+        helper.assertTrue(a > 0.0 && b > a, "Más carga, más drenaje (" + a + " -> " + b + ")");
+        helper.assertTrue(WeightSystem.drainPercentPerSecond(10_000.0) <= ServerConfig.gravityChamberDrainMaxPercent() + 1e-9,
+                "El drenaje respeta su techo");
+        helper.succeed();
+    }
+
+    /** El TP escala con la g de la cámara (log), no en la HTC/Kaiosama y no en sobrecarga (2026-11-20). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void tpScalesWithChamberGravity(GameTestHelper helper) {
+        ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
+        long now = helper.getLevel().getGameTime();
+        try {
+            helper.assertTrue(WeightSystem.gravityTpFactor(sp, 0.5) == 1.0, "Fuera de cámara no hay término de g");
+            GravityFields.refresh(sp, 10, now);
+            double g10 = WeightSystem.gravityTpFactor(sp, 0.5);
+            GravityFields.refresh(sp, 100, now);
+            double g100 = WeightSystem.gravityTpFactor(sp, 0.5);
+            helper.assertTrue(g10 > 1.0 && g100 > g10, "A más g, más TP (" + g10 + " -> " + g100 + ")");
+            helper.assertTrue(WeightSystem.gravityTpFactor(sp, 50.0) == 1.0, "En sobrecarga no entrena");
+        } finally {
+            GravityFields.forget(sp.getUUID());
+        }
+        helper.succeed();
+    }
+
+    /** Las pesas puestas pesan equipo × g: el peso es masa por gravedad (pedido del usuario, 2026-11-20). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void equippedWeightsScaleWithGravity(GameTestHelper helper) {
+        ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
+        long now = helper.getLevel().getGameTime();
+        try {
+            double at1 = WeightSystem.effectiveEquippedTons(sp);
+            GravityFields.refresh(sp, 10, now);
+            double at10 = WeightSystem.effectiveEquippedTons(sp);
+            helper.assertTrue(Math.abs(at10 - WeightSystem.equippedTons(sp) * 10.0) < 1e-9 && Math.abs(at1 - WeightSystem.equippedTons(sp)) < 1e-9,
+                    "Las pesas a ×10 deben pesar diez veces su valor");
+        } finally {
+            GravityFields.forget(sp.getUUID());
+        }
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void chamberDrainStopsAtOneAndRespectsGamerule(GameTestHelper helper) {
         ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);

@@ -46,11 +46,15 @@ public class GravityChamberBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
 
-    /** Pedestal + columna + pantalla. Igual que el modelo (datagen de ModBlockStateProvider). */
+    /**
+     * Pedestal + columna + cabezal en atril (models/block/gravity_chamber.json). El panel va inclinado
+     * 22,5 grados hacia el frente; la caja del cabezal lo envuelve entero (no hay forma inclinada) y no
+     * depende de FACING porque el panel ocupa casi la misma huella girado a cualquier lado.
+     */
     private static final VoxelShape SHAPE = Shapes.or(
             Block.box(1, 0, 1, 15, 3, 15),
-            Block.box(4, 3, 4, 12, 12, 12),
-            Block.box(2, 12, 2, 14, 15, 14));
+            Block.box(5, 3, 5, 11, 8, 11),
+            Block.box(2, 8, 2, 14, 16, 14));
 
     public GravityChamberBlock(Properties properties) {
         super(properties);

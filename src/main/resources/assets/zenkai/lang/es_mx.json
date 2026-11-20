@@ -2145,7 +2145,7 @@
   "zenkai.ponder.ki_motor.text_4": "Sus puertos de energía y de fluido se configuran en la cruz de caras",
   "zenkai.ponder.gravity_chamber.header": "Cámara de gravedad",
   "zenkai.ponder.gravity_chamber.text_1": "La consola va en el centro del suelo de una sala esférica cerrada",
-  "zenkai.ponder.gravity_chamber.text_2": "La pared puede ser de cualquier bloque. El radio (de 5 a 10) se elige en la pantalla, y su holograma marca dónde faltan bloques",
+  "zenkai.ponder.gravity_chamber.text_2": "La pared puede ser de cualquier bloque. El radio (de 3 a 10) se elige en la pantalla, y su holograma marca dónde faltan bloques",
   "zenkai.ponder.gravity_chamber.text_3": "Pon una mejora de gravedad (de cobre x10 a netherita x500) y elige la gravedad en la pantalla",
   "zenkai.ponder.gravity_chamber.text_4": "La energía entra por un puerto de la pared, o por debajo de la consola. Más gravedad y más radio gastan más FE",
   "zenkai.ponder.gravity_chamber.text_5": "Dentro, la gravedad frena y entrena según tu poder: en una forma más fuerte aguantas más peso. El botón de la pantalla la enciende o la apaga",

@@ -432,6 +432,55 @@ public final class ScreenShots {
     }
 
     /**
+     * Consola de la cámara de gravedad (modo «gravity», con mundo «new:»): una apagada y otra encendida, las dos
+     * mirando al norte sobre un escalón de piedra, vistas desde cada cara (frente, espalda, oeste, este), en
+     * diagonal, de perfil a la altura del cabezal, desde arriba y como la ve un jugador de pie delante. Sirve para
+     * comprobar que cada cara lee su propio mapa de textura (frente != espalda, oeste != este) y que el panel
+     * inclinado baja hacia el jugador con la pantalla derecha.
+     */
+    private static void gravityPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos o = sp.blockPosition().offset(0, 0, 5);
+            at[0] = o.above();
+            var console = com.hmc.zenkai.registry.ModBlocks.GRAVITY_CHAMBER.get().defaultBlockState();
+            var stone = net.minecraft.world.level.block.Blocks.SMOOTH_STONE.defaultBlockState();
+            level.setBlock(o, stone, 3);
+            level.setBlock(o.offset(4, 0, 0), stone, 3);
+            level.setBlock(o.above(), console, 3);
+            level.setBlock(o.offset(4, 1, 0), console.setValue(com.hmc.zenkai.content.block.GravityChamberBlock.ACTIVE, true), 3);
+            sp.getAbilities().flying = true;
+            sp.onUpdateAbilities();
+            level.setDayTime(6000);
+        }));
+        PLAN.add(() -> wait = 40);
+        // dx, dy (pies, desde la base de la consola), dz desde el centro de la consola, yaw, pitch; el último campo
+        // es 1 para la encendida (4 bloques al este).
+        float[][] views = {
+                {0f, 0.2f, -2.3f, 0f, 12f, 0}, {0f, 0.2f, 2.3f, 180f, 12f, 0},
+                {-2.3f, 0.2f, 0f, -90f, 12f, 0}, {2.3f, 0.2f, 0f, 90f, 12f, 0},
+                {-1.7f, 0.4f, -1.7f, -45f, 20f, 0}, {1.7f, 0.4f, 1.7f, 135f, 20f, 0},
+                {-2.2f, -1.0f, 0f, -90f, 4f, 0}, {2.2f, -1.0f, 0f, 90f, 4f, 0},
+                {0f, 2.6f, 0.01f, 0f, 89f, 0}, {0f, 0f, -1.6f, 0f, 24f, 0},
+                {0f, 0f, -1.6f, 0f, 24f, 1}, {-1.7f, 0.4f, -1.7f, -45f, 20f, 1} };
+        String[] names = { "front", "back", "west", "east", "diag_nw", "diag_se", "profile_west", "profile_east",
+                "top", "player_view", "on_player_view", "on_diag_nw" };
+        for (int v = 0; v < views.length; v++) {
+            final float[] view = views[v];
+            final String name = names[v];
+            PLAN.add(() -> {
+                double cx = at[0].getX() + 0.5 + (view[5] > 0 ? 4 : 0), cz = at[0].getZ() + 0.5;
+                onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), cx + view[0], at[0].getY() + view[1],
+                        cz + view[2], view[3], view[4]));
+                wait = 20;
+            });
+            PLAN.add(() -> { capture(mc, "A9_gravity_" + name); wait = 3; });
+        }
+    }
+
+    /**
      * Motor de Ki (modo «motor», con mundo «new:», necesita Create en run/mods): dos motores, uno con el eje
      * mirando al jugador y otro de espaldas, vistos de frente, de espaldas y en diagonal; luego la pantalla
      * en modo motor (FE a medias, Ki Súper en el tanque, un puerto en Tirar y otro en Nada) y en modo dínamo.
@@ -780,6 +829,7 @@ public final class ScreenShots {
             if ("chamber".equals(mode)) chamberPlan(mc);
             else if ("tanks".equals(mode)) tanksPlan(mc);
             else if ("motor".equals(mode)) motorPlan(mc);
+            else if ("gravity".equals(mode)) gravityPlan(mc);
             else if ("tech".equals(mode)) techPlan(mc);
             else if ("wrench".equals(mode)) wrenchPlan(mc);
             else if ("ponder".equals(mode)) ponderPlan(mc);

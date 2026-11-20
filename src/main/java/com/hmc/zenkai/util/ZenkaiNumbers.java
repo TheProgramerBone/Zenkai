@@ -81,6 +81,18 @@ public final class ZenkaiNumbers {
         return String.format(Locale.ROOT, "%.2f", v);
     }
 
+    /**
+     * Toneladas de una screen (pesas, gravedad, capacidad), sin el " t": 2 decimales por debajo de 1 000,
+     * 1 decimal hasta {@link #COMPACT_FROM} y compacto desde ahí ("52.8K"). Con la cámara de gravedad a ×500
+     * el equipo pasa de 50 000 t y "52815.56 / 236014.92 t" se montaba sobre la etiqueta del popup de Training
+     * (captura del usuario, 2026-11-20). Si {@link #isCompacted} es cierto, quien lo dibuja pone el exacto
+     * ({@link #exact(double)}) en un tooltip.
+     */
+    public static String tons(double v) {
+        if (isCompacted(v)) return format(Math.round(v));
+        return String.format(Locale.ROOT, Math.abs(v) < 1000 ? "%.2f" : "%.1f", v);
+    }
+
     /** Igual que {@link #fmt2} pero con más decimales — para el tooltip "valor exacto" de un
      *  número que en pantalla ya se redondeó a 2 decimales (p. ej. el tonelaje del panel "TP
      *  Modifiers" de Training: la fila enseña 2 decimales, el tooltip da los 4 reales). */

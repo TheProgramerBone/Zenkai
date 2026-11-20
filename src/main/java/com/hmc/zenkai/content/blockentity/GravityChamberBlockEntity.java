@@ -59,7 +59,7 @@ import java.util.UUID;
  * Consola de la cámara de gravedad (Fase 3 de la 0.7.0; diseño en pendientes-0.7.0.md §3.3 y
  * docs/pesas-y-gravedad.md).
  *
- * SALA: esfera de radio R (5–10, se elige en la pantalla) con la consola en la capa más baja del
+ * SALA: esfera de radio R (3–10, se elige en la pantalla) con la consola en la capa más baja del
  * interior: centro = consola + (0, R−1, 0). La sala vale si el aire alrededor de la consola está
  * CERRADO dentro de esa esfera; la pared puede ser de cualquier bloque con colisión. Una sala más
  * pequeña que la esfera vale igual; lo que se escapa de la esfera es una FUGA.
@@ -80,8 +80,10 @@ import java.util.UUID;
  */
 public class GravityChamberBlockEntity extends BlockEntity implements MenuProvider {
 
-    /** Radio de la esfera: de 5 a 10 (pedido del usuario, 2026-11-20; antes 3–8). */
-    public static final int MIN_RADIUS = 5, MAX_RADIUS = 10, DEFAULT_RADIUS = 7;
+    /** Radio de la esfera: de 3 a 10 (pedido del usuario, 2026-11-20: mínimo 3; antes 5–10 y antes 3–8). */
+    public static final int MIN_RADIUS = 3, MAX_RADIUS = 10, DEFAULT_RADIUS = 7;
+    /** Radio al que está calibrado el coste de FE (el factor del radio vale 1 aquí; con 3 sale más barato). */
+    private static final int COST_BASE_RADIUS = 5;
     public static final int MIN_INTERIOR = 27;
     /** Tope duro del relleno: más que el interior de una esfera de radio 10 (unas 3 600 celdas). */
     private static final int MAX_INTERIOR = 4_800;
@@ -168,7 +170,7 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
     public double activeGravity() { return active ? effectiveGravity() : 1.0; }
 
     /** Drones a la vez (Fase 4): cuanto mayor la esfera, más drones (decisión del usuario, 2026-11-19). */
-    public int maxDrones() { return radius - 2; }   // radio 5 → 3 drones, radio 10 → 8 (el máximo del diseño)
+    public int maxDrones() { return radius - 2; }   // radio 3 → 1 dron, radio 5 → 3, radio 10 → 8 (el máximo del diseño)
 
     public boolean isEnabled() { return enabled; }
 
@@ -177,11 +179,11 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         setChanged();
     }
 
-    /** FE por tick de una g y un radio: {@code 2·(g−1)·(1 + 0,25·(R−5))}, redondeado hacia arriba. */
+    /** FE por tick de una g y un radio: {@code 2·(g−1)·(1 + 0,25·(R−5))}, redondeado hacia arriba (con R = 3, ×0,5). */
     public static int costPerTick(int g, int radius) {
         if (g <= 1) return 0;
         double c = ServerConfig.gravityChamberFePerG() * (g - 1)
-                * (1.0 + ServerConfig.gravityChamberFeRadiusStep() * (radius - MIN_RADIUS));
+                * (1.0 + ServerConfig.gravityChamberFeRadiusStep() * (radius - COST_BASE_RADIUS));
         return (int) Math.ceil(c);
     }
 
@@ -284,7 +286,7 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
             // Drenaje: % de la vida máxima por segundo repartido en pasos de 5 ticks; nunca baja de 1.
             // La escritura directa de vida la traduce EntityStats.reconcile a body con suelo 1.
             if (damage && load > ServerConfig.gravityChamberDrainLoad() && mob.getHealth() > 1f) {
-                float step = (float) (mob.getMaxHealth() * ServerConfig.gravityChamberDrainPercent() / 100.0
+                float step = (float) (mob.getMaxHealth() * WeightSystem.drainPercentPerSecond(load) / 100.0
                         * ENTITY_INTERVAL / 20.0);
                 mob.setHealth(Math.max(1f, mob.getHealth() - step));
             }

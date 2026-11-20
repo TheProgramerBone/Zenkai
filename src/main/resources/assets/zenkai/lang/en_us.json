@@ -2131,7 +2131,7 @@
   "zenkai.ponder.ki_motor.text_4": "Its energy and fluid ports are set in the face cross",
   "zenkai.ponder.gravity_chamber.header": "Gravity Chamber",
   "zenkai.ponder.gravity_chamber.text_1": "The console goes in the centre of the floor of a sealed spherical room",
-  "zenkai.ponder.gravity_chamber.text_2": "The wall can be any block. The radius (5 to 10) is chosen on the screen, and its hologram marks where blocks are missing",
+  "zenkai.ponder.gravity_chamber.text_2": "The wall can be any block. The radius (3 to 10) is chosen on the screen, and its hologram marks where blocks are missing",
   "zenkai.ponder.gravity_chamber.text_3": "Insert a gravity upgrade (copper x10 to netherite x500) and choose the gravity on the screen",
   "zenkai.ponder.gravity_chamber.text_4": "Energy comes in through a port in the wall, or from under the console. More gravity and a bigger radius cost more FE",
   "zenkai.ponder.gravity_chamber.text_5": "Inside, gravity slows you and trains you based on your power: a stronger form holds more weight. The screen button turns it on or off",

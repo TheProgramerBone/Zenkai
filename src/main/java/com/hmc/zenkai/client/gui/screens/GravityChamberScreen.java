@@ -129,7 +129,7 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
         int eff = Math.max(1, max <= 1 ? 1 : Math.min(menu.targetGravity(), max));
         double tons = WeightSystem.tonsForGravity(eff);
         y = infoRow(g, y, "screen.zenkai.gravity_chamber.tons",
-                Component.literal(ZenkaiNumbers.fmt2(tons) + " t"), ZenkaiTechPalette.TEXT_ON_SCREEN);
+                Component.literal(ZenkaiNumbers.tons(tons) + " t"), ZenkaiTechPalette.TEXT_ON_SCREEN);
         // Lo que aguanta QUIEN MIRA, con su forma actual: así se ve que transformarse cambia el límite.
         if (minecraft != null && minecraft.player != null) {
             double cap = WeightSystem.playerCapacity(PlayerStatsAttachment.get(minecraft.player));
@@ -137,19 +137,19 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
             int color = r > com.hmc.zenkai.config.ServerConfig.gravityChamberDrainLoad() ? ZenkaiTechPalette.DENIED_ON_SCREEN
                     : WeightSystem.isOverloaded(r) ? ZenkaiTechPalette.MAXED_ON_SCREEN : ZenkaiTechPalette.OK_ON_SCREEN;
             y = infoRow(g, y, "screen.zenkai.gravity_chamber.capacity",
-                    Component.literal(ZenkaiNumbers.fmt2(cap) + " t"), color);
+                    Component.literal(ZenkaiNumbers.tons(cap) + " t"), color);
         }
         y = infoRow(g, y, "screen.zenkai.gravity_chamber.cost",
-                Component.literal(menu.cost() > 0 ? menu.cost() + " FE/t" : "—"),
+                Component.literal(menu.cost() > 0 ? ZenkaiNumbers.screen((long) menu.cost()) + " FE/t" : "—"),
                 menu.status() == GravityChamberBlockEntity.STATUS_ACTIVE ? ZenkaiTechPalette.OK_ON_SCREEN : ZenkaiTechPalette.DIM_ON_SCREEN);
         y += 4;
         y = infoRow(g, y, "screen.zenkai.gravity_chamber.volume",
-                Component.literal(String.valueOf(menu.interior())), ZenkaiTechPalette.TEXT_ON_SCREEN);
+                Component.literal(ZenkaiNumbers.screen((long) menu.interior())), ZenkaiTechPalette.TEXT_ON_SCREEN);
         y = infoRow(g, y, "screen.zenkai.gravity_chamber.leaks",
-                Component.literal(String.valueOf(menu.leaks())),
+                Component.literal(ZenkaiNumbers.screen((long) menu.leaks())),
                 menu.leaks() > 0 ? ZenkaiTechPalette.DENIED_ON_SCREEN : ZenkaiTechPalette.OK_ON_SCREEN);
         y = infoRow(g, y, "screen.zenkai.gravity_chamber.ports",
-                Component.literal(String.valueOf(menu.ports())), ZenkaiTechPalette.TEXT_ON_SCREEN);
+                Component.literal(ZenkaiNumbers.screen((long) menu.ports())), ZenkaiTechPalette.TEXT_ON_SCREEN);
         y += 6;
         PanelText.onDark(g, font, statusLine(), INFO_X, y, statusColor());
     }
@@ -186,8 +186,22 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
         if (lmx >= BAR_X - 1 && lmx < BAR_X + BAR_W + 1 && lmy >= BAR_Y - 1 && lmy < BAR_Y + BAR_H + 1) {
             drawTooltip(g, mouseX, mouseY, List.of(
                     TipLine.of(Component.translatable("screen.zenkai.gravity_chamber.fe").withStyle(ChatFormatting.BOLD)),
-                    TipLine.of(Component.literal(menu.energy() + " / " + menu.energyCapacity() + " FE"))));
+                    TipLine.of(Component.literal(ZenkaiNumbers.exact((long) menu.energy()) + " / "
+                            + ZenkaiNumbers.exact((long) menu.energyCapacity()) + " FE"))));
             return;
+        }
+        // Convención de ZenkaiNumbers: toneladas compactadas (filas 2 y 3 de la info) -> exacto en tooltip.
+        if (lmx >= INFO_X && lmx < INFO_RIGHT && lmy >= INFO_Y + INFO_LH && lmy < INFO_Y + 3 * INFO_LH) {
+            boolean tonsRow = lmy < INFO_Y + 2 * INFO_LH;
+            int max = menu.maxGravity();
+            double v = tonsRow
+                    ? WeightSystem.tonsForGravity(Math.max(1, max <= 1 ? 1 : Math.min(menu.targetGravity(), max)))
+                    : (minecraft != null && minecraft.player != null
+                        ? WeightSystem.playerCapacity(PlayerStatsAttachment.get(minecraft.player)) : 0);
+            if (ZenkaiNumbers.isCompacted(v)) {
+                drawTooltip(g, mouseX, mouseY, List.of(TipLine.of(Component.literal(ZenkaiNumbers.exact(v) + " t"))));
+                return;
+            }
         }
         if (hoveredSlot != null && !hoveredSlot.hasItem() && menu.getCarried().isEmpty() && menu.slots.indexOf(hoveredSlot) == 0) {
             drawTooltip(g, mouseX, mouseY, List.of(

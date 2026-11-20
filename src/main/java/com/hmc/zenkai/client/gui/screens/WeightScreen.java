@@ -208,14 +208,18 @@ public class WeightScreen extends Screen {
         if (mc.player == null) return;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
 
+        // Con la gravedad de donde estás: la pesa pesa tons × g y la gravedad ambiental se suma (MISMA
+        // regla que WeightSystem.computeLoad, así la previsualización no miente). En gravedad normal = tons.
+        double shownTons = tons * Math.max(1.0, WeightSystem.gravityMultiplier(mc.player))
+                + WeightSystem.ambientTons(mc.player);
         double cap = WeightSystem.playerCapacity(att);
-        double r = cap <= 0 ? 0 : tons / cap;
+        double r = cap <= 0 ? 0 : shownTons / cap;
         boolean over = WeightSystem.isOverloaded(r);
 
         drawValuePlate(g, mouseX, mouseY, over);
         drawLoadBar(g, r);
         PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.weight.load", fmt(tons), fmt(cap), (int) Math.round(r * 100)),
+                Component.translatable("screen.zenkai.weight.load", fmt(shownTons), fmt(cap), (int) Math.round(r * 100)),
                 cx, topPos + Y_LOAD, over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
 
         // Rejilla 2x2 de lo que cambia al llevar esta carga.
@@ -227,10 +231,11 @@ public class WeightScreen extends Screen {
         // El bono de TP es la recompensa de llevar lastre: verde cuando cuenta, rojo cuando te
         // has pasado y deja de contar.
         line(g, xr, y, "screen.zenkai.weight.tp",
-                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.OK_ON_PANEL, fmt(WeightSystem.tpFactor(r)));
+                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.OK_ON_PANEL,
+                fmt(WeightSystem.tpFactor(r) * WeightSystem.gravityTpFactor(mc.player, r)));
 
         PanelText.centeredOnPanel(g, this.font, Component.translatable("screen.zenkai.weight.pl_needed",
-                ZenkaiNumbers.format(WeightSystem.plForTons(tons))), cx, topPos + Y_PL, ZenkaiPalette.MUTED_ON_PANEL);
+                ZenkaiNumbers.format(WeightSystem.plForTons(shownTons))), cx, topPos + Y_PL, ZenkaiPalette.MUTED_ON_PANEL);
 
         if (over) {
             PanelText.centeredOnPanel(g, this.font,
