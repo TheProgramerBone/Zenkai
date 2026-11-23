@@ -272,7 +272,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         double pct = kiDrainPct(mastery0to100);
         if (pct <= 0.0) return 0.0;
         double powerTerm = BalanceUtil.powerStat(att) * ServerConfig.formDrainScale()
-                * drainMultiplier(att.getAttribute(ZenkaiAttributes.SPIRIT));
+                * drainMultiplier(att.getAttributeWithArmor(ZenkaiAttributes.SPIRIT));
         double floorTerm = ServerConfig.formDrainFloor() * att.getEnergyMax();
         return pct / 100.0 * Math.max(powerTerm, floorTerm);
     }

@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:training_gi",
+  "piece": "leggings",
+  "material": {
+    "item": "zenkai:katchin_cloth"
+  },
+  "count": 7,
+  "energy": 35000,
+  "time": 175,
+  "result": {
+    "id": "zenkai:training_gi_leggings"
+  }
+}

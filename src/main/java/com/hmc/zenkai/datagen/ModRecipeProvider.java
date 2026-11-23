@@ -190,6 +190,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
                 .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
 
+        // Máquina de fabricación (Fase 5b). Receta PROVISIONAL: katchin, circuito avanzado y una mesa de crafteo.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ARMOR_FABRICATOR.get(), 1)
+                .pattern("KAK").pattern("ITI").pattern("KRK")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('A', ModItems.ADVANCED_CIRCUIT)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('T', net.minecraft.world.item.Items.CRAFTING_TABLE)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
         // Cámara de gravedad (Fase 3). Recetas PROVISIONALES como las de la 2b.
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.GRAVITY_CHAMBER.get(), 1)
                 .pattern("IAI").pattern("KEK").pattern("IRI")
@@ -218,6 +228,14 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 Ingredient.of(ModBlocks.KATCHIN_BLOCK.get()), Ingredient.of(ModItems.GRAVITY_UPGRADE_DIAMOND));
         gravityUpgrade(recipeOutput, ModItems.GRAVITY_UPGRADE_NETHERITE.get(),
                 Ingredient.of(Tags.Items.INGOTS_NETHERITE), Ingredient.of(ModItems.GRAVITY_UPGRADE_KATCHIN));
+
+        // Dron de entrenamiento (Fase 4): katchin + el «chip de FE», que es el circuito avanzado (decisión 2026-11-22).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.TRAINING_DRONE.get(), 1)
+                .pattern(" K ").pattern("ICI").pattern(" K ")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .unlockedBy("has_gravity_chamber", has(ModBlocks.GRAVITY_CHAMBER.get())).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
@@ -332,6 +350,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .requires(ModBlocks.KATCHIN_BLOCK)
                 .unlockedBy("has_katchin_block", has(ModBlocks.KATCHIN_BLOCK))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "katchin_ingot_from_block"));
+
+        // Hilo y tela de katchin (Fase 5a, decisión 2026-11-22): mesa de crafteo, sin máquina.
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_THREAD.get(), 4)
+                .requires(ModItems.KATCHIN_INGOT)
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KATCHIN_CLOTH.get(), 1)
+                .pattern("TT").pattern("TT")
+                .define('T', ModItems.KATCHIN_THREAD.get())
+                .unlockedBy("has_katchin_thread", has(ModItems.KATCHIN_THREAD)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CUT_KATCHIN.get(), 4)
                 .pattern("KK")

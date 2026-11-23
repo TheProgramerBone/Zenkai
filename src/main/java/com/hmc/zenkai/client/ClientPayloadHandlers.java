@@ -82,11 +82,11 @@ public final class ClientPayloadHandlers {
      *  TrainingCategory) — solo TrainingHubScreen la pide, empujada a ella igual que
      *  onTrainingReward/onTrainingInfo. */
     public static void onTrainingFatigue(double combatEfficiency, double meditationEfficiency,
-                                          double targetPracticeEfficiency,
+                                          double targetPracticeEfficiency, double gravityEfficiency,
                                           int shadowRecord, int meditationRecord, int targetPracticeRecord) {
         Screen current = Minecraft.getInstance().screen;
         if (current instanceof TrainingHubScreen ths) {
-            ths.onFatigueReceived(combatEfficiency, meditationEfficiency, targetPracticeEfficiency,
+            ths.onFatigueReceived(combatEfficiency, meditationEfficiency, targetPracticeEfficiency, gravityEfficiency,
                     shadowRecord, meditationRecord, targetPracticeRecord);
         }
     }

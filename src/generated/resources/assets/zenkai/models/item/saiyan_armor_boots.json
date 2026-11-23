@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:item/saiyan_armor_boots"
+  }
+}

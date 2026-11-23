@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:training_gi",
+  "piece": "chestplate",
+  "material": {
+    "item": "zenkai:katchin_cloth"
+  },
+  "count": 8,
+  "energy": 40000,
+  "time": 200,
+  "result": {
+    "id": "zenkai:training_gi_chestplate"
+  }
+}

@@ -112,6 +112,31 @@ public final class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.VAR_INT)
                     .build());
 
+    /**
+     * Atributos imbuidos en una pieza de armadura (Fase 5a de la 0.7.0). Ausente = ImbuedAttributes.NONE. Vale en
+     * cualquier ítem (vanilla o de otro mod): los suma ArmorAttributeBonus solo si la pieza está en una ranura de armadura.
+     */
+    public static final Supplier<DataComponentType<com.hmc.zenkai.feature.armor.ImbuedAttributes>> IMBUED =
+            COMPONENTS.register("imbued", () -> DataComponentType.<com.hmc.zenkai.feature.armor.ImbuedAttributes>builder()
+                    .persistent(com.hmc.zenkai.feature.armor.ImbuedAttributes.CODEC)
+                    .networkSynchronized(com.hmc.zenkai.feature.armor.ImbuedAttributes.STREAM_CODEC)
+                    .build());
+
+    /** Set de armadura que diseña un patrón (Fase 5b): id de las recetas zenkai:armor_fabrication. Ausente = patrón en blanco. */
+    public static final Supplier<DataComponentType<net.minecraft.resources.ResourceLocation>> ARMOR_PATTERN =
+            COMPONENTS.register("armor_pattern", () -> DataComponentType.<net.minecraft.resources.ResourceLocation>builder()
+                    .persistent(net.minecraft.resources.ResourceLocation.CODEC)
+                    .networkSynchronized(net.minecraft.resources.ResourceLocation.STREAM_CODEC)
+                    .build());
+
+    /** Calidad de una sangre (Fase 5b, P2): puntos que sube al imbuir, 1 (mobs vanilla), 2 (mobs del mod) o 5 (jefes).
+     *  Ausente = 1. */
+    public static final Supplier<DataComponentType<Integer>> BLOOD_QUALITY =
+            COMPONENTS.register("blood_quality", () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

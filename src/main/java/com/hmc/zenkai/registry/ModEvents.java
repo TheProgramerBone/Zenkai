@@ -31,6 +31,8 @@ public class ModEvents {
         event.put(ModEntities.NAMEKIAN.get(), NamekianEntity.createAttributes().build());
         event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
         event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
+        event.put(ModEntities.TRAINING_DRONE.get(),
+                com.hmc.zenkai.content.entity.misc.TrainingDroneEntity.createAttributes().build());
         event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
         event.put(ModEntities.SAIBAMAN.get(), SaibamanEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());

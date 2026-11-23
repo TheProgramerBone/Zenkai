@@ -49,21 +49,25 @@ public final class NineSlice {
         int srcMidW = texW - corner * 2;    // ancho del tramo fuente
         int srcMidH = texH - corner * 2;
 
-        // Esquinas
-        blit(g, tex, x,           y,           cw, ch, 0,                  0,                  corner, corner, texW, texH);
-        blit(g, tex, x + w - cw,  y,           cw, ch, texW - corner,      0,                  corner, corner, texW, texH);
-        blit(g, tex, x,           y + h - ch,  cw, ch, 0,                  texH - corner,      corner, corner, texW, texH);
-        blit(g, tex, x + w - cw,  y + h - ch,  cw, ch, texW - corner,      texH - corner,      corner, corner, texW, texH);
+        // Esquinas y bordes RECORTADOS, nunca escalados (2026-11-22): con un botón de 13 px de alto la esquina de 8 se
+        // aplastaba a 6 y el blit sin suavizado se comía filas del bisel, así que arriba y abajo el contorno salía más
+        // fino que a los lados. Recortando, cada lado conserva sus píxeles de borde tal cual (el de abajo toma las
+        // últimas filas de la textura y el de la derecha las últimas columnas).
+        int uR = texW - cw, vB = texH - ch;
+        blit(g, tex, x,           y,           cw, ch, 0,  0,  cw, ch, texW, texH);
+        blit(g, tex, x + w - cw,  y,           cw, ch, uR, 0,  cw, ch, texW, texH);
+        blit(g, tex, x,           y + h - ch,  cw, ch, 0,  vB, cw, ch, texW, texH);
+        blit(g, tex, x + w - cw,  y + h - ch,  cw, ch, uR, vB, cw, ch, texW, texH);
 
         // Bordes horizontales
         if (midW > 0) {
-            blit(g, tex, x + cw, y,          midW, ch, corner, 0,             srcMidW, corner, texW, texH);
-            blit(g, tex, x + cw, y + h - ch, midW, ch, corner, texH - corner, srcMidW, corner, texW, texH);
+            blit(g, tex, x + cw, y,          midW, ch, corner, 0,  srcMidW, ch, texW, texH);
+            blit(g, tex, x + cw, y + h - ch, midW, ch, corner, vB, srcMidW, ch, texW, texH);
         }
         // Bordes verticales
         if (midH > 0) {
-            blit(g, tex, x,          y + ch, cw, midH, 0,             corner, corner, srcMidH, texW, texH);
-            blit(g, tex, x + w - cw, y + ch, cw, midH, texW - corner, corner, corner, srcMidH, texW, texH);
+            blit(g, tex, x,          y + ch, cw, midH, 0,  corner, cw, srcMidH, texW, texH);
+            blit(g, tex, x + w - cw, y + ch, cw, midH, uR, corner, cw, srcMidH, texW, texH);
         }
         // Centro
         if (midW > 0 && midH > 0) {

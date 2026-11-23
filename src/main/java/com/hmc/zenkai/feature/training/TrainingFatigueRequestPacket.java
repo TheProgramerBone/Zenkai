@@ -35,6 +35,7 @@ public record TrainingFatigueRequestPacket() implements CustomPacketPayload {
                     TrainingHooks.currentEfficiency(sp, TrainingCategory.COMBAT),
                     TrainingHooks.currentEfficiency(sp, TrainingCategory.MEDITATION),
                     TrainingHooks.currentEfficiency(sp, TrainingCategory.TARGET_PRACTICE),
+                    TrainingHooks.currentEfficiency(sp, TrainingCategory.GRAVITY),
                     td.getBestShadowTp(), td.getBestMeditationTp(), td.getBestTargetPracticeTp()));
         });
     }

@@ -109,6 +109,15 @@ public class CombatZenkaiHooks {
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         // Escena de la primera transformación (Rage Forms): invulnerable. Se cancela aquí y no a 0 en Pre para que no haya animación de daño.
         if (com.hmc.zenkai.feature.rage.AwakeningProtection.isProtected(sp)) { e.setCanceled(true); return; }
+        // Disparo de un dron de entrenamiento (Fase 4): fuera de la tubería de combate. Quita un % fijo del
+        // body máximo y NUNCA mata (se para en 1, como la gravedad de la cámara): es entrenamiento.
+        if (e.getSource().getEntity() instanceof com.hmc.zenkai.content.entity.misc.TrainingDroneEntity drone) {
+            e.setCanceled(true);
+            if (com.hmc.zenkai.feature.gravity.DroneShotDamage.apply(sp, e.getAmount(), drone.shotBodyPercent())) {
+                drone.onOwnerKnockedOut(sp);   // a 1 de body: la ronda termina con el TP de lo ya destruido
+            }
+            return;
+        }
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && PartyService.friendlyFireBlocked(attacker, sp)) return;
         if (PhysicalCombatServer.hasIFrames(sp.getUUID()) || DashServer.hasIFrames(sp)) return;

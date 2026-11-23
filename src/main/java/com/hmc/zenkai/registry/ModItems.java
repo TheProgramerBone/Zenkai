@@ -83,8 +83,6 @@ public class ModItems {
     public static final DeferredItem<Item> DIRTY_RAW_KATCHIN = ITEMS.registerItem("dirty_raw_katchin",
             Item::new, new Item.Properties());
 
-    /** El metal más duro del Universo 7. No es un tier de herramienta: es material
-     *  estructural y de equipo. Ver PowerMining para por qué no se pica con un pico. */
     // ── Mejoras de máquina y batería (0.7.0, Fase 2b) ────────────────────────
     // La tolerancia a Ki Base viene de serie en las máquinas: solo hay mejora para los otros tres tipos.
     public static final DeferredItem<Item> KI_TOLERANCE_SUPER = ITEMS.registerItem("ki_tolerance_super",
@@ -112,13 +110,101 @@ public class ModItems {
             p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(250, p), new Item.Properties().rarity(Rarity.RARE));
     public static final DeferredItem<Item> GRAVITY_UPGRADE_NETHERITE = ITEMS.registerItem("gravity_upgrade_netherite",
             p -> new com.hmc.zenkai.content.item.GravityUpgradeItem(500, p), new Item.Properties().rarity(Rarity.EPIC).fireResistant());
+    /** Dron de entrenamiento (Fase 4): va en la consola de la cámara de gravedad; 10 usos. */
+    public static final DeferredItem<Item> TRAINING_DRONE = ITEMS.registerItem("training_drone",
+            com.hmc.zenkai.content.item.TrainingDroneItem::new, new Item.Properties().rarity(Rarity.UNCOMMON));
 
     /** Llave: pantalla de caras en cruz y desmontar (WrenchItem). En el tag c:tools/wrench. */
     public static final DeferredItem<Item> WRENCH = ITEMS.registerItem("wrench",
             com.hmc.zenkai.content.item.WrenchItem::new, new Item.Properties());
 
+    /** El metal más duro del Universo 7. No es un tier de herramienta: es material
+     *  estructural y de equipo. Ver PowerMining para por qué no se pica con un pico. */
     public static final DeferredItem<Item> KATCHIN_INGOT = ITEMS.registerItem("katchin_ingot",
             Item::new, new Item.Properties().rarity(Rarity.RARE));
+    /**
+     * Hilo y tela de katchin (Fase 5a de la 0.7.0): el katchin es el material ÚNICO de fabricación de armaduras (modelo de
+     * DMZ, §3.4); el lingote sirve para lo metálico y el hilo/tela para la ropa. Mesa de crafteo: 1 lingote → 4 hilos y
+     * 4 hilos en 2×2 → 1 tela (decisión 2026-11-22). En la 5c heredan el tipo de infusión del lingote (componente).
+     */
+    public static final DeferredItem<Item> KATCHIN_THREAD = ITEMS.registerItem("katchin_thread",
+            Item::new, new Item.Properties().rarity(Rarity.RARE));
+    public static final DeferredItem<Item> KATCHIN_CLOTH = ITEMS.registerItem("katchin_cloth",
+            Item::new, new Item.Properties().rarity(Rarity.RARE));
+
+    // ── Armaduras de Dragon Ball (Fase 5b de la 0.7.0): solo de la máquina de fabricación ──
+    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_HELMET = dbArmor("saiyan_armor_helmet",
+            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.HELMET, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
+    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_CHESTPLATE = dbArmor("saiyan_armor_chestplate",
+            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
+    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_LEGGINGS = dbArmor("saiyan_armor_leggings",
+            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.LEGGINGS, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
+    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_BOOTS = dbArmor("saiyan_armor_boots",
+            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.BOOTS, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
+    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_HELMET = dbArmor("namek_clothes_helmet",
+            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.HELMET, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
+    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_CHESTPLATE = dbArmor("namek_clothes_chestplate",
+            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
+    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_LEGGINGS = dbArmor("namek_clothes_leggings",
+            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.LEGGINGS, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
+    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_BOOTS = dbArmor("namek_clothes_boots",
+            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.BOOTS, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
+    public static final DeferredItem<ArmorItem> TRAINING_GI_HELMET = dbArmor("training_gi_helmet",
+            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.HELMET, ModArmorMaterials.TRAINING_GI_DURABILITY);
+    public static final DeferredItem<ArmorItem> TRAINING_GI_CHESTPLATE = dbArmor("training_gi_chestplate",
+            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.TRAINING_GI_DURABILITY);
+    public static final DeferredItem<ArmorItem> TRAINING_GI_LEGGINGS = dbArmor("training_gi_leggings",
+            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.LEGGINGS, ModArmorMaterials.TRAINING_GI_DURABILITY);
+    public static final DeferredItem<ArmorItem> TRAINING_GI_BOOTS = dbArmor("training_gi_boots",
+            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.BOOTS, ModArmorMaterials.TRAINING_GI_DURABILITY);
+
+    /**
+     * El material llega como Supplier y se lee DENTRO del supplier del ítem, nunca al cargar la clase: ModArmorMaterials
+     * toca ModItems (ítem de reparación) en su propio static, y leer aquí sus campos en ese momento los veía aún a null
+     * (ciclo de inicialización). Las 12 piezas salían con material nulo y el creativo reventaba en isRaceArmor (2026-11-22).
+     */
+    private static DeferredItem<ArmorItem> dbArmor(String id,
+                                                   java.util.function.Supplier<net.minecraft.core.Holder<net.minecraft.world.item.ArmorMaterial>> mat,
+                                                   ArmorItem.Type type, int durability) {
+        return ITEMS.register(id, () -> new ArmorItem(mat.get(), type,
+                new Item.Properties().durability(type.getDurability(durability)).rarity(Rarity.UNCOMMON)));
+    }
+
+    /**
+     * Patrón de armadura (Fase 5b): UN ítem; el set que diseña va en el componente {@code zenkai:armor_pattern}. Así un
+     * addon o un datapack añade sets nuevos (recetas de fabricación + patrón en loot) sin registrar ítems. No se gasta
+     * al fabricar (decisión 2026-11-22). Los tres básicos salen por receta (papel + tintes); los de personajes, de cofres.
+     */
+    public static final DeferredItem<Item> ARMOR_PATTERN = ITEMS.registerItem("armor_pattern",
+            com.hmc.zenkai.content.item.ArmorPatternItem::new, new Item.Properties().stacksTo(1));
+    /** Sangre por ATRIBUTO (Fase 5b, P2; 2026-11-22 el usuario pidió quitar el «por raza»: así un zombi puede soltar
+     *  Sangre de Fuerza sin que suene raro). Cada una sube su atributo en la pestaña de atributos; la calidad (+1/+2/+5)
+     *  va en el componente {@code zenkai:blood_quality}. Los ids viejos por raza (saiyan_blood…) se migran con
+     *  {@link #registerLegacyAliases}: excepción aprobada por el usuario a la regla de no renombrar ids. */
+    public static final DeferredItem<Item> STRENGTH_BLOOD = blood("strength_blood", com.hmc.zenkai.feature.ZenkaiAttributes.STRENGTH);
+    public static final DeferredItem<Item> DEXTERITY_BLOOD = blood("dexterity_blood", com.hmc.zenkai.feature.ZenkaiAttributes.DEXTERITY);
+    public static final DeferredItem<Item> SPIRIT_BLOOD = blood("spirit_blood", com.hmc.zenkai.feature.ZenkaiAttributes.SPIRIT);
+    public static final DeferredItem<Item> CONSTITUTION_BLOOD = blood("constitution_blood", com.hmc.zenkai.feature.ZenkaiAttributes.CONSTITUTION);
+    public static final DeferredItem<Item> WILLPOWER_BLOOD = blood("willpower_blood", com.hmc.zenkai.feature.ZenkaiAttributes.WILLPOWER);
+
+    /** Ids viejos de las sangres (por raza, 0.7.0 de desarrollo) → los nuevos por atributo: las pilas guardadas en
+     *  mundos y cofres cargan como la sangre nueva del mismo atributo. Se llama una vez al registrar. */
+    public static void registerLegacyAliases() {
+        ITEMS.addAlias(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "saiyan_blood"),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "strength_blood"));
+        ITEMS.addAlias(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "human_blood"),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "dexterity_blood"));
+        ITEMS.addAlias(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "namekian_blood"),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "spirit_blood"));
+        ITEMS.addAlias(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "majin_blood"),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "constitution_blood"));
+        ITEMS.addAlias(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "arcosian_blood"),
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "willpower_blood"));
+    }
+
+    private static DeferredItem<Item> blood(String id, com.hmc.zenkai.feature.ZenkaiAttributes attr) {
+        return ITEMS.registerItem(id, p -> new com.hmc.zenkai.content.item.BloodItem(attr, p), new Item.Properties());
+    }
 
     // ── Recursos exclusivos de Namek ─────────────────────────────────────────
     public static final DeferredItem<Item> NAMEK_CRYSTAL = ITEMS.registerItem("namek_crystal",
@@ -1014,5 +1100,6 @@ public class ModItems {
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
+        registerLegacyAliases();
     }
 }

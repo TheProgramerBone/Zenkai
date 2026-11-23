@@ -156,10 +156,7 @@ public class TextOnlyButton extends AbstractButton {
                 ? Component.literal("[ ").append(getMessage()).append(" ]")
                 .withStyle(net.minecraft.ChatFormatting.BOLD)
                 : getMessage();
-        g.drawString(font, msg,
-                getX() + getWidth() / 2 - font.width(msg) / 2,
-                getY() + (getHeight() - 8) / 2,
-                color, shadow);
+        ButtonText.drawCentered(g, font, msg, getX(), getY(), getWidth(), getHeight(), color, shadow);
 
         if (selected) {
             g.fill(getX() + 4, getY() + getHeight() - 2, getX() + getWidth() - 4, getY() + getHeight() - 1,

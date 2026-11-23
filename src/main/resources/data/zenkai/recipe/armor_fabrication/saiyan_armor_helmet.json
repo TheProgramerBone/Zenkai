@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:saiyan_armor",
+  "piece": "helmet",
+  "material": {
+    "item": "zenkai:katchin_ingot"
+  },
+  "count": 5,
+  "energy": 25000,
+  "time": 125,
+  "result": {
+    "id": "zenkai:saiyan_armor_helmet"
+  }
+}

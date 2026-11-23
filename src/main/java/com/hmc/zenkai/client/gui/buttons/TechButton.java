@@ -69,10 +69,7 @@ public class TechButton extends AbstractButton {
 
         var font = Minecraft.getInstance().font;
         // Sombra SÍ: el texto va sobre el acero del botón, que es oscuro.
-        g.drawString(font, getMessage(),
-                getX() + getWidth() / 2 - font.width(getMessage()) / 2,
-                getY() + (getHeight() - 8) / 2,
-                color, true);
+        ButtonText.drawCentered(g, font, getMessage(), getX(), getY(), getWidth(), getHeight(), color, true);
     }
 
     @Override

@@ -36,12 +36,13 @@ public class BalanceUtil {
      * Poder bruto del jugador = STR + WIL, cada uno ya ponderado por su raza/estilo. SUMA y no
      * máximo a propósito: con 1000 de STR y 999 de WIL un max() solo contaría el 1000 y ignoraría
      * el otro. Lo comparten el drenaje del Kaioken y el de las transformaciones, para que ambos
-     * escalen con el mismo número.
+     * escalen con el mismo número. Incluye el bono de armadura (decisión 2026-11-22): si no contara,
+     * la armadura daría poder sin coste de ki.
      */
     public static double powerStat(PlayerStatsAttachment att) {
-        double str = computeStat(att.getAttribute(ZenkaiAttributes.STRENGTH),
+        double str = computeStat(att.getAttributeWithArmor(ZenkaiAttributes.STRENGTH),
                 att.getRace(), att.getStyle(), ZenkaiAttributes.STRENGTH);
-        double wil = computeStat(att.getAttribute(ZenkaiAttributes.WILLPOWER),
+        double wil = computeStat(att.getAttributeWithArmor(ZenkaiAttributes.WILLPOWER),
                 att.getRace(), att.getStyle(), ZenkaiAttributes.WILLPOWER);
         return Math.max(MIN_POWER_STAT, str + wil);
     }

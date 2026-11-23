@@ -137,6 +137,16 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── Atributos / TP ───────────────────────────────────────────────────────
     public int  getAttribute(ZenkaiAttributes a)        { return raceStats.getAttribute(a); }
     public void setAttribute(ZenkaiAttributes a, int v) { raceStats.setAttribute(a, v); applyRecalc(); }
+    /** Bono de las armaduras imbuidas en este atributo. */
+    public int  getArmorBonus(ZenkaiAttributes a)         { return raceStats.getArmorBonus(a); }
+    /** Puntos propios + armadura, sin forma ni pesas. Lo usan el drenaje de formas/Kaioken y el PL. */
+    public int  getAttributeWithArmor(ZenkaiAttributes a) { return raceStats.getAttributeWithArmor(a); }
+    /** Sustituye el bono de armadura; recalcula los pools solo si cambió. Devuelve si cambió. */
+    public boolean setArmorBonus(java.util.Map<ZenkaiAttributes, Integer> bonus) {
+        if (!raceStats.setArmorBonus(bonus)) return false;
+        applyRecalc();
+        return true;
+    }
 
     public int  getTP()              { return raceStats.getTP(); }
     public void addTP(int amount)    { raceStats.addTP(amount); }
@@ -513,12 +523,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     }
 
     /**
-     * Atributo con el boost de forma aplicado. SOLO para mostrar y para cálculos de combate.s
+     * Atributo con el bono de armadura y el boost de forma aplicados. SOLO para mostrar y para cálculos de combate.
      * Para costes de TP, requisitos de MND y el cap se usa getAttribute() (el crudo): si no,
-     * transformarse te desbloquearía habilidades y abarataría subidas.
+     * transformarse (o vestirse) te desbloquearía habilidades y abarataría subidas.
      */
     public int getEffectiveAttribute(ZenkaiAttributes a) {
-        int raw = raceStats.getAttribute(a);
+        int raw = raceStats.getAttributeWithArmor(a);
         return switch (a) {
             case STRENGTH, DEXTERITY, WILLPOWER -> (int) Math.round(raw * statMultiplier * weightFactor);
             default -> raw; // CON y SPI no escalan con la forma; MIND tampoco

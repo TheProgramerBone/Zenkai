@@ -590,6 +590,15 @@ public class ModBlocks {
                     .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE) ? 10 : 0)),
             b -> new com.hmc.zenkai.content.item.KiChamberBlockItem(b.get(), new Item.Properties()));
 
+    /** Máquina de fabricación de armaduras (0.7.0, Fase 5b): pestañas Fabricar y Atributos. */
+    public static final DeferredBlock<Block> ARMOR_FABRICATOR = registerBlock("armor_fabricator",
+            () -> new com.hmc.zenkai.content.block.ArmorFabricatorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? 10 : 0)));
+
     /** Motor de Ki (0.7.0): convierte FE y fluido de Ki en rotación de Create y al revés. Compat OPCIONAL:
      *  el bloque se registra siempre, pero sin Create es inerte y se oculta (ver KiMotorFactory). */
     public static final DeferredBlock<Block> KI_MOTOR = registerBlock("ki_motor",

@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:saiyan_armor",
+  "piece": "chestplate",
+  "material": {
+    "item": "zenkai:katchin_ingot"
+  },
+  "count": 8,
+  "energy": 40000,
+  "time": 200,
+  "result": {
+    "id": "zenkai:saiyan_armor_chestplate"
+  }
+}

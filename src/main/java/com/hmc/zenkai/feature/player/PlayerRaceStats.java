@@ -25,6 +25,14 @@ public class PlayerRaceStats {
     private int tp = 0;
     private final EnumMap<ZenkaiAttributes, Integer> attributes = new EnumMap<>(ZenkaiAttributes.class);
     private final EnumMap<ZenkaiAttributes, Integer> invested   = new EnumMap<>(ZenkaiAttributes.class);
+    /**
+     * Bono de las armaduras imbuidas que lleva puestas (Fase 5a de la 0.7.0). Capa de ATRIBUTOS, antes de StatSynergy y
+     * RaceStatTable: la forma multiplica siempre después sin tocar nada. Va APARTE de {@code attributes} a propósito:
+     * el bono NO recorta los puntos propios (un jugador al tope con +50 de armadura queda en tope + 50) y no cuenta para
+     * los costes de TP, el respec ni los requisitos de MND, que siguen leyendo getAttribute (los puntos comprados).
+     * Lo escribe ArmorAttributeBonus en el servidor; viaja al cliente dentro de save() para la pantalla de Stats.
+     */
+    private final EnumMap<ZenkaiAttributes, Integer> armorBonus = new EnumMap<>(ZenkaiAttributes.class);
 
     /**
      * TP REALMENTE gastado en atributos. Es lo que devuelve el respec.
@@ -54,6 +62,7 @@ public class PlayerRaceStats {
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
             attributes.put(a, 0);
             invested.put(a, 0);
+            armorBonus.put(a, 0);
         }
         applyRaceBaseAttributes();
     }
@@ -116,6 +125,25 @@ public class PlayerRaceStats {
     }
 
     public int getAttribute(ZenkaiAttributes a) { return attributes.getOrDefault(a, 0); }
+
+    /** Bono de armadura en este atributo (0 sin armaduras imbuidas). */
+    public int getArmorBonus(ZenkaiAttributes a) { return armorBonus.getOrDefault(a, 0); }
+
+    /** Puntos propios + armadura. Es lo que alimenta StatSynergy, los pools y el drenaje de formas/Kaioken. */
+    public int getAttributeWithArmor(ZenkaiAttributes a) { return getAttribute(a) + getArmorBonus(a); }
+
+    /**
+     * Sustituye el bono de armadura entero. Devuelve true si cambió algo (quien llama recalcula pools y sincroniza solo
+     * entonces). El tope del bono lo aplica ArmorAttributeBonus, no aquí: así un gametest puede poner cualquier valor.
+     */
+    public boolean setArmorBonus(Map<ZenkaiAttributes, Integer> bonus) {
+        boolean changed = false;
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
+            int v = Math.max(0, bonus.getOrDefault(a, 0));
+            if (armorBonus.getOrDefault(a, 0) != v) { armorBonus.put(a, v); changed = true; }
+        }
+        return changed;
+    }
 
     public void setAttribute(ZenkaiAttributes a, int v) {
         attributes.put(a, MathUtil.clamp(v, 0, ServerConfig.globalAttributeCap()));
@@ -256,8 +284,8 @@ public class PlayerRaceStats {
     public RecalcResult recalcAll() {
         // speed/flySpeed ya no salen de DEX: los gobiernan las habilidades Run y Fly.
         return pools(race, style,
-                attributes.get(ZenkaiAttributes.CONSTITUTION),
-                attributes.get(ZenkaiAttributes.SPIRIT));
+                getAttributeWithArmor(ZenkaiAttributes.CONSTITUTION),
+                getAttributeWithArmor(ZenkaiAttributes.SPIRIT));
     }
 
     // ── Stats de combate ─────────────────────────────────────────────────────
@@ -267,53 +295,53 @@ public class PlayerRaceStats {
 
     public double computeMeleeFinal() {
         return StatSynergy.melee(
-                attributes.get(ZenkaiAttributes.STRENGTH),
-                attributes.get(ZenkaiAttributes.WILLPOWER),
+                getAttributeWithArmor(ZenkaiAttributes.STRENGTH),
+                getAttributeWithArmor(ZenkaiAttributes.WILLPOWER),
                 RaceStatTable.melee(race, style));
     }
 
     public double computeDefenseFinal() {
         return StatSynergy.defense(
-                attributes.get(ZenkaiAttributes.DEXTERITY),
-                attributes.get(ZenkaiAttributes.CONSTITUTION),
+                getAttributeWithArmor(ZenkaiAttributes.DEXTERITY),
+                getAttributeWithArmor(ZenkaiAttributes.CONSTITUTION),
                 RaceStatTable.defense(race, style));
     }
 
     public double computeKiPowerFinal() {
         return StatSynergy.kiPower(
-                attributes.get(ZenkaiAttributes.WILLPOWER),
-                attributes.get(ZenkaiAttributes.SPIRIT),
+                getAttributeWithArmor(ZenkaiAttributes.WILLPOWER),
+                getAttributeWithArmor(ZenkaiAttributes.SPIRIT),
                 RaceStatTable.kiDamage(race, style));
     }
 
     public double computeKiPoolFinal() {
         return StatSynergy.kiPool(
-                attributes.get(ZenkaiAttributes.SPIRIT),
+                getAttributeWithArmor(ZenkaiAttributes.SPIRIT),
                 RaceStatTable.kiReserves(race, style));
     }
 
     public double computeSpiritMeleeFinal() {
-        return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.melee(race, style);
+        return getAttributeWithArmor(ZenkaiAttributes.SPIRIT) * RaceStatTable.melee(race, style);
     }
 
     /** Mejor atributo ofensivo en escala de melee. El coeficiente es SIEMPRE el de melee, no
      *  el de ki_damage: si cada atributo trajera su propio coeficiente estaríamos comparando
      *  escalas distintas y el "mejor" dependería de la tabla, no del jugador. */
     public double computeBestMeleeFinal() {
-        int best = Math.max(attributes.get(ZenkaiAttributes.STRENGTH),
-                Math.max(attributes.get(ZenkaiAttributes.WILLPOWER),
-                        attributes.get(ZenkaiAttributes.SPIRIT)));
+        int best = Math.max(getAttributeWithArmor(ZenkaiAttributes.STRENGTH),
+                Math.max(getAttributeWithArmor(ZenkaiAttributes.WILLPOWER),
+                        getAttributeWithArmor(ZenkaiAttributes.SPIRIT)));
         return best * RaceStatTable.melee(race, style);
     }
 
     /** CON efectiva (lineal, sin el offset del pool). La usa el Power Level. */
     public double computeConFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.CONSTITUTION),
+        return BalanceUtil.computeStat(getAttributeWithArmor(ZenkaiAttributes.CONSTITUTION),
                 race, style, ZenkaiAttributes.CONSTITUTION);
     }
 
     public double getMeleeBonus() {
-        return attributes.get(ZenkaiAttributes.STRENGTH);
+        return getAttributeWithArmor(ZenkaiAttributes.STRENGTH);
     }
 
     // ── NBT ──────────────────────────────────────────────────────────────────
@@ -335,6 +363,12 @@ public class PlayerRaceStats {
         for (var e : invested.entrySet()) inv.putInt(e.getKey().name(), e.getValue());
         tag.put("invested", inv);
 
+        // El bono de armadura se recalcula en el servidor cada tick (ArmorAttributeBonus); se guarda solo para que el
+        // sync completo lo lleve al cliente. Un valor viejo en disco se corrige en el primer tick tras cargar.
+        CompoundTag arm = new CompoundTag();
+        for (var e : armorBonus.entrySet()) if (e.getValue() > 0) arm.putInt(e.getKey().name(), e.getValue());
+        tag.put("armorBonus", arm);
+
         return tag;
     }
 
@@ -353,6 +387,9 @@ public class PlayerRaceStats {
 
         CompoundTag inv = tag.getCompound("invested");
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) invested.put(a, inv.getInt(a.name()));
+
+        CompoundTag arm = tag.getCompound("armorBonus");
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) armorBonus.put(a, Math.max(0, arm.getInt(a.name())));
 
         this.refundCarry = tag.getDouble("refundCarry");
 

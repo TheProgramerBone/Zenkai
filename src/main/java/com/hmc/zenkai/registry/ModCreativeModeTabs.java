@@ -157,7 +157,19 @@ public class ModCreativeModeTabs {
         items.sort(order(insertionOrder(), dragonBallRank()));
         Item bubble = ModBlocks.HFIL_JANEMBA_BUBBLE.get().asItem();
         for (Item item : items) {
+            // Patrón: en blanco no sirve de nada; en su lugar, uno por cada set básico (el set va en el componente).
+            if (item == ModItems.ARMOR_PATTERN.get()) {
+                for (var set : com.hmc.zenkai.feature.armor.ArmorSets.BASIC) {
+                    output.accept(com.hmc.zenkai.feature.armor.ArmorSets.pattern(set));
+                }
+                continue;
+            }
             output.accept(item);
+            // Sangre: además de la normal (+1), la concentrada (+2) y la pura (+5).
+            if (item instanceof com.hmc.zenkai.content.item.BloodItem) {
+                output.accept(com.hmc.zenkai.content.item.BloodItem.of(item, 2, 1));
+                output.accept(com.hmc.zenkai.content.item.BloodItem.of(item, 5, 1));
+            }
             // Batería: además de la vacía, una cargada al máximo.
             if (item == ModItems.ENERGY_BATTERY.get()) output.accept(fullBattery());
             // Gelatina: además de la rosa, un ítem por cada color de tinte (el color viaja en el
@@ -229,7 +241,8 @@ public class ModCreativeModeTabs {
     /** True si el item es una armadura cuyo material es RACE_ARMOR_MATERIAL. */
     private static boolean isRaceArmor(Item item) {
         if (!(item instanceof ArmorItem armor)) return false;
-        return armor.getMaterial().equals(ModArmorMaterials.RACE_ARMOR_MATERIAL);
+        // Con el orden de los argumentos al revés: un ArmorItem de otro mod con material nulo no tumba el creativo.
+        return ModArmorMaterials.RACE_ARMOR_MATERIAL.equals(armor.getMaterial());
     }
 
     public static void register(IEventBus eventBus) {

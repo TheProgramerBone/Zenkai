@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    }
+  },
+  "pattern": [
+    " K ",
+    "ICI",
+    " K "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:training_drone"
+  }
+}

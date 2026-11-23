@@ -14,6 +14,8 @@ import net.minecraft.network.chat.Component;
  * SOLO jugador local y solo cliente. Space/shift siguen siendo control vertical manual.
  * Se sale del crucero (volviendo al vuelo rápido, que sigue activo) con atrás (S) o al chocar
  * contra una pared; con el ciclo de Control o al dejar de volar se sale por completo.
+ * En MODO COMBATE no existe (2026-11-22): el ciclo se queda en OFF → Vuelo rápido → OFF y entrar en combate
+ * corta el crucero (ver ClientZenkaiPalTick).
  */
 public final class FlightCruise {
 

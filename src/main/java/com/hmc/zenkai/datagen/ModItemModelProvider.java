@@ -48,6 +48,26 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.RAW_KATCHIN.get());
         basicItem(ModItems.DIRTY_RAW_KATCHIN.get());
         basicItem(ModItems.KATCHIN_INGOT.get());
+        basicItem(ModItems.KATCHIN_THREAD.get());
+        basicItem(ModItems.KATCHIN_CLOTH.get());
+        basicItem(ModItems.SAIYAN_ARMOR_HELMET.get());
+        basicItem(ModItems.SAIYAN_ARMOR_CHESTPLATE.get());
+        basicItem(ModItems.SAIYAN_ARMOR_LEGGINGS.get());
+        basicItem(ModItems.SAIYAN_ARMOR_BOOTS.get());
+        basicItem(ModItems.NAMEK_CLOTHES_HELMET.get());
+        basicItem(ModItems.NAMEK_CLOTHES_CHESTPLATE.get());
+        basicItem(ModItems.NAMEK_CLOTHES_LEGGINGS.get());
+        basicItem(ModItems.NAMEK_CLOTHES_BOOTS.get());
+        basicItem(ModItems.TRAINING_GI_HELMET.get());
+        basicItem(ModItems.TRAINING_GI_CHESTPLATE.get());
+        basicItem(ModItems.TRAINING_GI_LEGGINGS.get());
+        basicItem(ModItems.TRAINING_GI_BOOTS.get());
+        basicItem(ModItems.ARMOR_PATTERN.get());
+        basicItem(ModItems.STRENGTH_BLOOD.get());
+        basicItem(ModItems.DEXTERITY_BLOOD.get());
+        basicItem(ModItems.SPIRIT_BLOOD.get());
+        basicItem(ModItems.CONSTITUTION_BLOOD.get());
+        basicItem(ModItems.WILLPOWER_BLOOD.get());
 
         // El item de la puerta es una textura plana propia, no el modelo de bloque.
         basicItem(ModBlocks.AJISA_DOOR.get().asItem());

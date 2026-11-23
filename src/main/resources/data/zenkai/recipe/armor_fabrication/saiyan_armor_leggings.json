@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:saiyan_armor",
+  "piece": "leggings",
+  "material": {
+    "item": "zenkai:katchin_ingot"
+  },
+  "count": 7,
+  "energy": 35000,
+  "time": 175,
+  "result": {
+    "id": "zenkai:saiyan_armor_leggings"
+  }
+}

@@ -376,12 +376,16 @@ public class StatsScreen extends ZenkaiMenuScreen {
         int ax = left + BTN_W * 2 + 8;
         for (ZenkaiAttributes a : ORDER) {
             int raw = att.getAttribute(a);
+            int arm = att.getArmorBonus(a);
             int eff = att.getEffectiveAttribute(a);
+            // La forma se nota cuando el efectivo no es propios + armadura; sin forma, el bono de la armadura ya va en
+            // el «+N» verde y repetir «150 (100) +50» solo metería ruido.
+            boolean boosted = eff != raw + arm;
             // Compacto en cuanto los números crecen: con una transformación activa, el efectivo
             // y el crudo juntos ("921047 (200000)") se salían de la columna y quedaban debajo
             // del retrato. El valor exacto pasa al tooltip, que es donde se consulta y no donde
             // se ojea.
-            Component line = (eff != raw)
+            Component line = boosted
                     ? getAttributeLabel(a, attrText(eff) + " (" + attrText(raw) + ")")
                     : getAttributeLabel(a, attrText(raw));
 
@@ -389,10 +393,18 @@ public class StatsScreen extends ZenkaiMenuScreen {
             // problema que hay que descubrir pasando el ratón por encima no está señalado.
             int color = (a == ZenkaiAttributes.MIND && att.mindFree() < 0)
                     ? ZenkaiPalette.DENIED_ON_PANEL
-                    : (eff != raw) ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL;
+                    : boosted ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL;
 
             g.drawString(font, line, ax, ay, color, false);
-            attrAreas.add(new AttrArea(a, ax, ay, font.width(line), font.lineHeight));
+            int lineW = font.width(line);
+            // Bono de las armaduras imbuidas (Fase 5a): aparte y en verde, porque no son puntos comprados (no cuentan
+            // en el coste de TP ni en el respec) y el jugador tiene que distinguirlos de un vistazo.
+            if (arm > 0) {
+                String bonus = " +" + attrText(arm);
+                g.drawString(font, bonus, ax + lineW, ay, ZenkaiPalette.OK_ON_PANEL, false);
+                lineW += font.width(bonus);
+            }
+            attrAreas.add(new AttrArea(a, ax, ay, lineW, font.lineHeight));
             ay += ATTR_STEP;
         }
 
@@ -554,7 +566,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     /** Compacto por encima del umbral, exacto por debajo. */
     private static String attrText(int v) {
-        return Math.abs(v) >= COMPACT_FROM ? ZenkaiNumbers.format(v) : String.valueOf(v);
+        return ZenkaiNumbers.screen(v);
     }
 
     // ── Pools ────────────────────────────────────────────────────────────────
@@ -987,7 +999,17 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // de una fila que ya dice "STR: 5" es ruido. Con separadores de miles, que es como se
         // lee un número de siete cifras sin contarlas.
         int raw = att.getAttribute(attr), eff = att.getEffectiveAttribute(attr);
-        if (Math.abs(raw) >= COMPACT_FROM || Math.abs(eff) >= COMPACT_FROM) {
+        int arm = att.getArmorBonus(attr);
+        if (arm > 0) {
+            // Desglose cuando hay armadura imbuida: propios (los que cuestan TP), armadura y el efectivo que pega.
+            out.add(Component.translatable("tooltip.zenkai.attr.own", ZenkaiNumbers.exact(raw))
+                    .withStyle(net.minecraft.ChatFormatting.WHITE));
+            out.add(Component.translatable("tooltip.zenkai.attr.armor", ZenkaiNumbers.exact(arm))
+                    .withStyle(net.minecraft.ChatFormatting.GREEN));
+            out.add(Component.translatable("tooltip.zenkai.attr.effective", ZenkaiNumbers.exact(eff))
+                    .withStyle(net.minecraft.ChatFormatting.GOLD));
+            out.add(Component.empty());
+        } else if (Math.abs(raw) >= COMPACT_FROM || Math.abs(eff) >= COMPACT_FROM) {
             out.add(Component.literal(ZenkaiNumbers.exact(raw))
                     .withStyle(net.minecraft.ChatFormatting.WHITE));
             if (eff != raw) {

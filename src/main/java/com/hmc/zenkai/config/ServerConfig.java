@@ -244,6 +244,25 @@ public class ServerConfig {
             BUILDER.comment("Max per attribute. 5 counted attrs x 200000 = PL cap 1,000,000")
                     .defineInRange("caps.global_attribute", 200000, 1, 1000000);
 
+    // Armaduras imbuidas (Fase 5a de la 0.7.0). Lectura de P1 confirmada por el usuario: los puntos propios llegan hasta
+    // caps.global_attribute y, ENCIMA, el bono total de armaduras por atributo tiene su propio techo del mismo valor.
+    // Opciones de baja frecuencia (.get() directo): se leen una vez por tick y jugador, no por golpe.
+    private static final ModConfigSpec.IntValue ARMOR_ATTRIBUTE_CAP_RAW =
+            BUILDER.comment("Max bonus per attribute that ALL worn imbued armor pieces can add together. It does not cut the player's own points: a maxed player with +50 from armor sits at max + 50.")
+                    .defineInRange("caps.armor_attribute", 200000, 0, 1000000);
+
+    private static final ModConfigSpec.DoubleValue IMBUE_COST_BASE_RAW =
+            BUILDER.comment("Imbuing: FE cost of one attribute point while the piece is under the threshold. Past it the cost grows logarithmically: base * (1 + ln(1 + excess / scale)).")
+                    .defineInRange("imbue.cost_base", 1000.0D, 0.0D, 1.0E9D);
+
+    private static final ModConfigSpec.IntValue IMBUE_COST_THRESHOLD_RAW =
+            BUILDER.comment("Imbuing: points of ONE attribute on ONE piece that cost the flat base price. There is no cap per piece, only this rising price.")
+                    .defineInRange("imbue.cost_threshold", 100, 0, 1000000);
+
+    private static final ModConfigSpec.DoubleValue IMBUE_COST_SCALE_RAW =
+            BUILDER.comment("Imbuing: how many points past the threshold it takes for the logarithmic term to grow (bigger = gentler curve).")
+                    .defineInRange("imbue.cost_scale", 100.0D, 1.0D, 1.0E9D);
+
     private static final ModConfigSpec.DoubleValue AURA_REFERENCE_TP_RAW =
             BUILDER.comment("Aura presence scale: total TP an endgame player is expected to have invested. The ONLY reference number AuraCeiling needs to normalize the log10 presence scale - it does NOT change when a form/Kaioken step is added, the ceiling recomputes from the whole registry on its own. Raise it if TP income outpaces this and auras start looking maxed out too early; lower it if the top of the scale never gets reached.")
                     .defineInRange("aura.reference_tp", 5_000_000D, 1.0D, 1.0E12D);
@@ -648,9 +667,24 @@ public class ServerConfig {
     public static double gravityChamberDrainMaxPercent() { return (10.0); }
     /** TP extra por la g de la cámara: {@code 1 + c·ln(g)} (ver {@code WeightSystem.gravityTpFactor}). */
     public static double gravityChamberTpPerLn()       { return (0.5); }
+
+    // Drones de entrenamiento (Fase 4 de la 0.7.0). Constantes, sin opción (regla de pocas opciones);
+    // cifras de partida a balancear jugando.
+    /** TP crudo por dron y por punto de g de una ronda completada (TP proporcional a la g, decisión 2026-11-16). */
+    public static double droneTpPerG()             { return (1.0); }
+    /** El modo agresivo (destruirlos mientras disparan) paga este múltiplo del pasivo. */
+    public static double droneAggressiveTpMult()   { return (2.0); }
+    // Tiempo, velocidad, esquiva, daño, cadencia y golpes por dificultad: feature/gravity/DroneDifficulty.
+    /** Usos de cada dron: gasta uno el dron golpeado o destruido en una ronda (decisión 2026-11-16). */
+    public static final int DRONE_MAX_USES = 10;
     public static int    kiMotorFeCapacity()       { return techCap(50_000); }
     public static int    kiMotorTankCapacity()     { return techCap(4_000); }
     public static int    kiMotorIoPerTick()        { return techRate(2_048); }
+
+    // Máquina de fabricación (Fase 5b de la 0.7.0). Constantes por la regla de «pocas opciones»; las escalan tech.*.
+    public static int    armorFabricatorFeCapacity()   { return techCap(200_000); }
+    public static int    armorFabricatorMaxReceive()   { return techRate(4_096); }
+    public static int    armorFabricatorTankCapacity() { return techCap(8_000); }
 
     public static double kiChamberSpeedMult()          { return (4.0); }
     public static double kiChamberStoragePercent()     { return (100.0); }
@@ -1894,6 +1928,11 @@ public class ServerConfig {
 
     public static double tpCoefficient()   { return TP_COEFFICIENT; }
     public static int globalAttributeCap() { return GLOBAL_ATTRIBUTE_CAP; }
+    /** Techo del bono total de armaduras imbuidas por atributo (P1). */
+    public static int armorAttributeCap()  { return ARMOR_ATTRIBUTE_CAP_RAW.get(); }
+    public static double imbueCostBase()   { return IMBUE_COST_BASE_RAW.get(); }
+    public static int imbueCostThreshold() { return IMBUE_COST_THRESHOLD_RAW.get(); }
+    public static double imbueCostScale()  { return IMBUE_COST_SCALE_RAW.get(); }
     /** TP total de referencia para el techo de presencia del aura. Ver AuraCeiling. */
     public static double auraReferenceTp() { return AURA_REFERENCE_TP; }
     public static double attributeBaseCost() { return ATTRIBUTE_BASE_COST; }

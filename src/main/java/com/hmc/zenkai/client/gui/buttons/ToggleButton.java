@@ -72,10 +72,7 @@ public class ToggleButton extends AbstractButton {
         var font = Minecraft.getInstance().font;
         // Sombra SÍ: el texto va sobre la textura del botón, que es oscura y ornamentada.
         // Explícito y no drawCenteredString para que la decisión quede escrita.
-        g.drawString(font, getMessage(),
-                getX() + getWidth() / 2 - font.width(getMessage()) / 2,
-                getY() + (getHeight() - 8) / 2,
-                color, true);
+        ButtonText.drawCentered(g, font, getMessage(), getX(), getY(), getWidth(), getHeight(), color, true);
     }
 
     @Override

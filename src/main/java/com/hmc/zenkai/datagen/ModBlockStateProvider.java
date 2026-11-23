@@ -198,6 +198,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         modLoc("block/energy_generator_front"),
                         modLoc("block/energy_generator_top")));
 
+        // Máquina de fabricación (Fase 5b): cubo orientable con cara frontal encendida al fabricar.
+        ModelFile fabOff = models().orientable("armor_fabricator", modLoc("block/armor_fabricator_side"),
+                modLoc("block/armor_fabricator_front"), modLoc("block/armor_fabricator_top"));
+        ModelFile fabOn = models().orientable("armor_fabricator_on", modLoc("block/armor_fabricator_side"),
+                modLoc("block/armor_fabricator_front_on"), modLoc("block/armor_fabricator_top"));
+        horizontalBlock(ModBlocks.ARMOR_FABRICATOR.get(),
+                state -> state.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? fabOn : fabOff);
+        simpleBlockItem(ModBlocks.ARMOR_FABRICATOR.get(), fabOff);
+
         // Cámara de gravedad: el modelo de pedestal es a mano (models/block/gravity_chamber*.json);
         // aquí solo la orientación y la pantalla encendida. El puerto es un cubo con una textura.
         horizontalBlock(ModBlocks.GRAVITY_CHAMBER.get(), state ->

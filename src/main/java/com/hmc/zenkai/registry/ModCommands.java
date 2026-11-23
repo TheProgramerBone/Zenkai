@@ -346,6 +346,8 @@ public class ModCommands {
                 .then(Commands.literal("debug")
                         // /zenkai debug rage fire|down|reset|status|pet: pruebas de Rage Forms en un solo jugador.
                         .then(com.hmc.zenkai.registry.commands.RageDebugCommands.node())
+                        // /zenkai debug imbue <attr> <n> | clear: imbuye la pieza de la mano (Fase 5a, sin máquina aún).
+                        .then(com.hmc.zenkai.feature.armor.ImbueDebugCommands.node())
                         .then(Commands.literal("entity")
                                 .executes(DebugCommands::debugEntity))
                         // Skill tree de transformaciones (F1): verify (por defecto) compara el espejo

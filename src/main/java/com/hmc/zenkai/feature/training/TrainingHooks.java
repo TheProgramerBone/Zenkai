@@ -140,6 +140,11 @@ public final class TrainingHooks {
         return grant(sp, rawTp, 0L, TrainingCategory.ADDON);
     }
 
+    /** Ronda de drones completada en la cámara de gravedad (categoría GRAVITY, sin rival: victimPl 0). */
+    public static int grantFromGravityDrones(ServerPlayer sp, double rawTp) {
+        return grant(sp, rawTp, 0L, TrainingCategory.GRAVITY);
+    }
+
     public static int grantFromTargetPractice(ServerPlayer sp, double rawTp) {
         return grant(sp, rawTp, 0L, TrainingCategory.TARGET_PRACTICE);
     }

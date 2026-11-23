@@ -1,0 +1,18 @@
+{
+  "type": "zenkai:armor_imbuing",
+  "piece": [
+    {
+      "item": "zenkai:namek_clothes_helmet"
+    },
+    {
+      "item": "zenkai:namek_clothes_chestplate"
+    },
+    {
+      "item": "zenkai:namek_clothes_leggings"
+    },
+    {
+      "item": "zenkai:namek_clothes_boots"
+    }
+  ],
+  "ki": "base"
+}

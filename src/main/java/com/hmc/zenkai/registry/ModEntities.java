@@ -123,6 +123,16 @@ public class ModEntities {
                     .noSave()
                     .build("absorb_mass"));
 
+    /** Dron de entrenamiento de la cámara de gravedad (Fase 4): lo genera la consola en cada ronda; nunca se guarda. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.misc.TrainingDroneEntity>> TRAINING_DRONE =
+            ENTITY_TYPES.register("training_drone", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.misc.TrainingDroneEntity>of(
+                            com.hmc.zenkai.content.entity.misc.TrainingDroneEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(8)
+                    .noSave()
+                    .build("training_drone"));
+
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
                     .sized(4, 10.0f).build("yemma"));

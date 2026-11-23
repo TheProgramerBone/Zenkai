@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-20T00:41:50.7959988	Block States: zenkai
+// 1.21.1	2026-11-22T15:09:43.5196744	Block States: zenkai
 a94084a882e8e97f815eec1bcc0de31216c39653 assets/zenkai/blockstates/ajisa_button.json
 1941064c3fa3ef874b3f58b16d1e5260b932f041 assets/zenkai/blockstates/ajisa_door.json
 7b6b9fc8b8aecaa2d034bb21ffc7f4b12a529146 assets/zenkai/blockstates/ajisa_fence.json
@@ -13,6 +13,7 @@ aa317d2407700d1878e4857e08a765f60c7e5f92 assets/zenkai/blockstates/ajisa_log.jso
 024f0800cfe084bf0793cb41746494e885b47f32 assets/zenkai/blockstates/ajisa_stairs.json
 fd46ec8bbcc33d004cf77d4adbce703444c7a16e assets/zenkai/blockstates/ajisa_trapdoor.json
 64979c52680530ed04c03e286c67bd3003c40fdd assets/zenkai/blockstates/ajisa_wood.json
+f4f686326283e706d2290775dec55863a3a5ef4d assets/zenkai/blockstates/armor_fabricator.json
 26a3ef3194aa2ee521565b6ae6ca4ccdb6030d71 assets/zenkai/blockstates/cut_hfil_cinder_sandstone.json
 dc5df2952957bf9f4709afce49ec5869606d4697 assets/zenkai/blockstates/cut_hfil_cinder_sandstone_slab.json
 b0069670acba24e93608c64885ff39d96361a78d assets/zenkai/blockstates/cut_hfil_cinder_sandstone_stairs.json
@@ -258,6 +259,8 @@ cd55caf033c55f25c2694bc8fbd0d9f49c08be8a assets/zenkai/models/block/ajisa_stairs
 06562eae6100ffea4e3ebf08fa5d29290449b094 assets/zenkai/models/block/ajisa_trapdoor_top.json
 776ca6530e90ced033b18cefff81753f26b00db3 assets/zenkai/models/block/ajisa_wood.json
 540b8bc79183a34f18730263cb7f4b5c1e75cf72 assets/zenkai/models/block/ajisa_wood_horizontal.json
+22fb072d065419f17a3f404ab1dce9f884df8968 assets/zenkai/models/block/armor_fabricator.json
+1ece9182d8a011be6bcfc91b9b61e5544e63d653 assets/zenkai/models/block/armor_fabricator_on.json
 fcc149669e702aa95eb9572e7a14d24b91779695 assets/zenkai/models/block/cut_hfil_cinder_sandstone.json
 6bfec1b237b84022c5bd0733ae8eeeca664cfd82 assets/zenkai/models/block/cut_hfil_cinder_sandstone_slab.json
 49890b11396ac4ca2f532a5193b35070c025a57d assets/zenkai/models/block/cut_hfil_cinder_sandstone_slab_top.json
@@ -647,6 +650,7 @@ fb316c9d0b7f37f4c4be196785d16aa77676b69e assets/zenkai/models/block/structural_c
 048cd5652ed65fd689a7afe5a08ca297b06485e6 assets/zenkai/models/item/ajisa_leaves.json
 02107abff1ec6291d1b10f32e4e20aae374a5701 assets/zenkai/models/item/ajisa_planks.json
 6f0d1e684554dc61cc7e719fa004bc99b143c7ea assets/zenkai/models/item/ajisa_sapling.json
+3a730cb0c64af047e4c942e7d453e1987f56def4 assets/zenkai/models/item/armor_fabricator.json
 82ca932079229152c8ee3e294eae8cdc237185b2 assets/zenkai/models/item/cut_hfil_cinder_sandstone.json
 af7748effbdc472dacfe7c5ac9ec9be8e8db731b assets/zenkai/models/item/cut_katchin.json
 19d6ad82c12709954fe6e08af7960b923ca88244 assets/zenkai/models/item/deepslate_katchin_ore.json

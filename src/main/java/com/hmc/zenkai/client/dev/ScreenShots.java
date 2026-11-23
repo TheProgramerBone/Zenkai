@@ -481,6 +481,123 @@ public final class ScreenShots {
     }
 
     /**
+     * Drones de entrenamiento (modo «drones», con mundo «new:»; Fase 4): sala esférica de CRISTAL de radio 6 (4 drones)
+     * con la consola a ×10 y cuatro drones con desgaste 0..3. Captura la pantalla en la vista Drones parada y con una
+     * ronda en marcha, la ronda pasiva desde dentro (todos pendientes y luego dos golpeados, ojo verde) y la agresiva
+     * (disparando), más una vista desde fuera a través del cristal.
+     */
+    private static void dronesPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        final int radius = 6;
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos console = sp.blockPosition().offset(0, 0, 9);
+            at[0] = console;
+            level.setBlock(console, com.hmc.zenkai.registry.ModBlocks.GRAVITY_CHAMBER.get().defaultBlockState(), 3);
+            if (!(level.getBlockEntity(console) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)) return;
+            be.setRadiusForTests(radius);
+            BlockPos c = com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity.sphereCenter(console, radius);
+            for (int dx = -radius; dx <= radius; dx++) for (int dy = -radius; dy <= radius; dy++) for (int dz = -radius; dz <= radius; dz++) {
+                BlockPos q = c.offset(dx, dy, dz);
+                if (!q.equals(console) && com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity.insideSphere(dx, dy, dz, radius))
+                    level.setBlock(q, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+            }
+            for (long k : be.shell()) level.setBlock(BlockPos.of(k), net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState(), 2);
+            be.upgradeHandler().setStackInSlot(0, new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.GRAVITY_UPGRADE_COPPER.get()));
+            be.setTargetGravityForTests(10);
+            be.fillEnergyForTests(200_000);
+            for (int i = 0; i < 4; i++) {
+                var d = new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.TRAINING_DRONE.get());
+                d.setDamageValue(i * 3);
+                be.droneHandler().setStackInSlot(i, d);
+            }
+            be.cycleDroneDifficulty();       // Normal -> Difícil: que se vea la esquiva y el daño mayor
+            be.cycleDroneDifficulty();
+            be.revalidateNow();
+            sp.getAbilities().flying = true;
+            sp.onUpdateAbilities();
+            sp.teleportTo(level, console.getX() + 0.5, console.getY() + 2, console.getZ() - 3.5, 0f, 10f);
+            level.setDayTime(6000);
+        }));
+        PLAN.add(() -> wait = 60);
+        Runnable openScreen = () -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)
+                    sp.openMenu(be, buf -> { buf.writeBlockPos(at[0]); buf.writeBoolean(true); });
+            });
+            com.hmc.zenkai.client.gui.screens.GravityChamberScreen.devSetDroneView(true);
+            wait = 25;
+        };
+        PLAN.add(openScreen);
+        PLAN.add(() -> { capture(mc, "D0_drones_screen_idle"); wait = 3; });
+        PLAN.add(() -> { com.hmc.zenkai.client.gui.screens.GravityChamberScreen.devSetDroneView(false); wait = 5; });
+        PLAN.add(() -> { capture(mc, "D0b_gravity_view"); com.hmc.zenkai.client.gui.screens.GravityChamberScreen.devSetDroneView(true); wait = 5; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be) be.pressRound(sp);
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "D1_drones_screen_running"); mc.setScreen(null); wait = 30; });
+        PLAN.add(() -> { capture(mc, "D2_drones_passive"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (!(sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)) return;
+                var list = sp.serverLevel().getEntitiesOfClass(com.hmc.zenkai.content.entity.misc.TrainingDroneEntity.class,
+                        new net.minecraft.world.phys.AABB(at[0]).inflate(12));
+                for (int i = 0; i < Math.min(2, list.size()); i++) be.droneRound().onDroneHit(sp.serverLevel(), list.get(i), sp);
+            });
+            wait = 20;
+        });
+        PLAN.add(() -> { capture(mc, "D3_drones_passive_two_hit"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() + 0.5, at[0].getY() + 1.6, at[0].getZ() - 2.5, 0f, 25f));
+            wait = 20;
+        });
+        PLAN.add(() -> { capture(mc, "D4_drones_passive_close"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (!(sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)) return;
+                be.pressRound(sp);          // cancela la pasiva
+                be.toggleDroneMode();
+                be.pressRound(sp);          // empieza la agresiva
+                sp.teleportTo(sp.serverLevel(), at[0].getX() + 0.5, at[0].getY() + 2, at[0].getZ() - 3.5, 0f, 10f);
+            });
+            wait = 50;
+        });
+        PLAN.add(() -> { capture(mc, "D5_drones_aggressive_a"); wait = 25; });
+        PLAN.add(() -> { capture(mc, "D6_drones_aggressive_b"); wait = 3; });
+        PLAN.add(openScreen);
+        PLAN.add(() -> { capture(mc, "D7_drones_screen_aggressive"); mc.setScreen(null); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> sp.teleportTo(sp.serverLevel(), at[0].getX() + 0.5, at[0].getY() + 6, at[0].getZ() - 11, 0f, 15f));
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "D8_drones_from_outside"); wait = 3; });
+        // Resultado de la última ronda en la vista Drones y el estado más largo de la vista Gravedad (sin mejora).
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                sp.teleportTo(sp.serverLevel(), at[0].getX() + 0.5, at[0].getY() + 2, at[0].getZ() - 3.5, 0f, 10f);
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)
+                    be.droneRound().cancel(sp.serverLevel());
+            });
+            wait = 10;
+        });
+        PLAN.add(openScreen);
+        PLAN.add(() -> { capture(mc, "D9_drones_last_result"); wait = 3; });
+        PLAN.add(() -> {
+            onServer(mc, sp -> {
+                if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be)
+                    be.upgradeHandler().setStackInSlot(0, net.minecraft.world.item.ItemStack.EMPTY);
+            });
+            com.hmc.zenkai.client.gui.screens.GravityChamberScreen.devSetDroneView(false);
+            wait = 15;
+        });
+        PLAN.add(() -> { capture(mc, "DA_gravity_no_upgrade"); mc.setScreen(null); wait = 3; });
+    }
+
+    /**
      * Motor de Ki (modo «motor», con mundo «new:», necesita Create en run/mods): dos motores, uno con el eje
      * mirando al jugador y otro de espaldas, vistos de frente, de espaldas y en diagonal; luego la pantalla
      * en modo motor (FE a medias, Ki Súper en el tanque, un puerto en Tirar y otro en Nada) y en modo dínamo.
@@ -824,15 +941,137 @@ public final class ScreenShots {
         shot(mc, "34_training_shadow_result_record", () -> new ShadowResultScreen(120, 120));
     }
 
+    /**
+     * Máquina de fabricación (modo «fabricator», con mundo «new:»): pestaña Fabricar pausada y en marcha, pestaña
+     * Atributos vacía, con pieza imbuida + sangre (Ki Base), con una pieza que pide Ki Súper y Base en el tanque
+     * (rojo) y con Ki Divino (la mitad). Primero en el idioma del juego y luego en es_mx (se restaura al acabar).
+     * Con JEI en run/mods, además las tres categorías propias (fabricación, imbuir, sangre). Prefijo F.
+     */
+    private static void fabricatorPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[1];
+        final String originalLang = mc.options.languageCode;
+        PLAN.add(() -> onServer(mc, sp -> {
+            BlockPos pos = sp.blockPosition().offset(2, 0, 0);
+            at[0] = pos;
+            sp.serverLevel().setBlock(pos, com.hmc.zenkai.registry.ModBlocks.ARMOR_FABRICATOR.get().defaultBlockState(), 3);
+        }));
+        PLAN.add(() -> wait = 10);
+        for (String lang : new String[]{"", "es_mx"}) {
+            String sfx = lang.isEmpty() ? "" : "_" + lang;
+            if (!lang.isEmpty()) {
+                PLAN.add(() -> {
+                    mc.setScreen(null);
+                    mc.options.languageCode = lang;
+                    mc.getLanguageManager().setSelected(lang);
+                    mc.reloadResourcePacks();
+                    wait = 120;
+                });
+            }
+            fabricatorStep(mc, at, "F0_craft_paused" + sfx, be -> {
+                be.fillEnergyForTests(60_000);
+                be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+                        com.hmc.zenkai.feature.kichamber.KiEnergyType.BASE.fluid().source().get(), 4000));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_PATTERN,
+                        com.hmc.zenkai.feature.armor.ArmorSets.pattern(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST,
+                        new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KATCHIN_INGOT.get(), 20));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_OUTPUT,
+                        net.minecraft.world.item.ItemStack.EMPTY);
+                be.selectPiece(1);
+                if (be.craftEnabled()) be.toggleCraft();
+                be.setLastTab(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu.TAB_CRAFT);
+            });
+            fabricatorStep(mc, at, "F1_craft_working" + sfx, be -> { if (!be.craftEnabled()) be.toggleCraft(); });
+            fabricatorStep(mc, at, "F2_attr_empty" + sfx, be -> {
+                be.setLastTab(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu.TAB_ATTR);
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR,
+                        net.minecraft.world.item.ItemStack.EMPTY);
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_BLOOD,
+                        net.minecraft.world.item.ItemStack.EMPTY);
+            });
+            fabricatorStep(mc, at, "F3_attr_base" + sfx, be -> {
+                var piece = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE);
+                piece.set(com.hmc.zenkai.registry.ModDataComponents.IMBUED.get(), com.hmc.zenkai.feature.armor.ImbuedAttributes.NONE
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.STRENGTH, 5)
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.CONSTITUTION, 3)
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.DEXTERITY, 12)
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.WILLPOWER, 1)
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.SPIRIT, 40));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR, piece);
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_BLOOD,
+                        com.hmc.zenkai.content.item.BloodItem.of(com.hmc.zenkai.registry.ModItems.STRENGTH_BLOOD.get(), 5, 64));
+            });
+            // Carga de imbuir a medias: se arranca con la pantalla ya abierta y se captura a los ~12 ticks.
+            PLAN.add(() -> {
+                onServer(mc, sp -> {
+                    if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity be)
+                        be.startImbue();
+                });
+                wait = 12;
+            });
+            PLAN.add(() -> { capture(mc, "F3b_attr_charging" + sfx); wait = 30; });
+            fabricatorStep(mc, at, "F4_attr_super_missing" + sfx, be -> be.items().setStackInSlot(
+                    com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR,
+                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE)));
+            fabricatorStep(mc, at, "F5_attr_divine_half" + sfx, be -> be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+                    com.hmc.zenkai.feature.kichamber.KiEnergyType.DIVINE.fluid().source().get(), 4000)));
+            if (net.neoforged.fml.ModList.get().isLoaded("jei")) {
+                for (int c = 0; c < 3; c++) {
+                    final int cat = c;
+                    PLAN.add(() -> { mc.setScreen(null); com.hmc.zenkai.compat.jei.JeiDev.show(cat); wait = 30; });
+                    PLAN.add(() -> { capture(mc, "F" + (6 + cat) + "_jei_" + cat + sfx); mc.setScreen(null); wait = 5; });
+                }
+            }
+        }
+        // Consola de gravedad abierta por el camino REAL (clic en el bloque) con la vista Drones guardada: debe reabrir en Drones.
+        PLAN.add(() -> {
+            mc.setScreen(null);
+            onServer(mc, sp -> {
+                var level = sp.serverLevel();
+                BlockPos pos = at[0].offset(0, 0, 2);
+                level.setBlock(pos, com.hmc.zenkai.registry.ModBlocks.GRAVITY_CHAMBER.get().defaultBlockState(), 3);
+                if (level.getBlockEntity(pos) instanceof com.hmc.zenkai.content.blockentity.GravityChamberBlockEntity be) be.setDroneView(true);
+                level.getBlockState(pos).useWithoutItem(level, sp, new net.minecraft.world.phys.BlockHitResult(
+                        pos.getCenter(), net.minecraft.core.Direction.UP, pos, false));
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, "F9_gravity_remembers_drones"); mc.setScreen(null); wait = 3; });
+        PLAN.add(() -> {
+            mc.options.languageCode = originalLang;
+            mc.getLanguageManager().setSelected(originalLang);
+            mc.options.save();
+            wait = 5;
+        });
+    }
+
+    /** Cambia la máquina en el servidor, la (re)abre con su pestaña guardada y captura. */
+    private static void fabricatorStep(Minecraft mc, BlockPos[] at, String name,
+                                       java.util.function.Consumer<com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity> change) {
+        PLAN.add(() -> {
+            mc.setScreen(null);
+            onServer(mc, sp -> {
+                if (!(sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity be)) return;
+                change.accept(be);
+                sp.openMenu(be, buf -> { buf.writeBlockPos(at[0]); buf.writeVarInt(be.lastTab()); });
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, name); wait = 3; });
+    }
+
     private static void buildPlan(Minecraft mc) {
         if (world.startsWith("new:")) {
             if ("chamber".equals(mode)) chamberPlan(mc);
             else if ("tanks".equals(mode)) tanksPlan(mc);
             else if ("motor".equals(mode)) motorPlan(mc);
             else if ("gravity".equals(mode)) gravityPlan(mc);
+            else if ("drones".equals(mode)) dronesPlan(mc);
             else if ("tech".equals(mode)) techPlan(mc);
             else if ("wrench".equals(mode)) wrenchPlan(mc);
             else if ("ponder".equals(mode)) ponderPlan(mc);
+            else if ("fabricator".equals(mode)) fabricatorPlan(mc);
             else containersPlan(mc);
             return;
         }

@@ -45,6 +45,11 @@ public class ModBlockEntities {
                     .of(EnergyGeneratorBlockEntity::new, ModBlocks.ENERGY_GENERATOR.get())
                     .build(null));
 
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity>> ARMOR_FABRICATOR =
+            BLOCK_ENTITIES.register("armor_fabricator", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity::new, ModBlocks.ARMOR_FABRICATOR.get())
+                    .build(null));
+
     public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity>> KI_CONTAINMENT_CHAMBER =
             BLOCK_ENTITIES.register("ki_containment_chamber", () -> BlockEntityType.Builder
                     .of(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity::new,

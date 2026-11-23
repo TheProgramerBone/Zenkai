@@ -56,7 +56,7 @@ public final class GravityChamberGameTests {
     }
 
     /** Sala de radio r alrededor de la consola: interior a aire y corteza de piedra. */
-    private static void buildRoom(ServerLevel level, GravityChamberBlockEntity be, int r) {
+    static void buildRoom(ServerLevel level, GravityChamberBlockEntity be, int r) {
         be.setRadiusForTests(r);
         BlockPos c = GravityChamberBlockEntity.sphereCenter(be.getBlockPos(), r);
         for (int dx = -r - 1; dx <= r + 1; dx++) {

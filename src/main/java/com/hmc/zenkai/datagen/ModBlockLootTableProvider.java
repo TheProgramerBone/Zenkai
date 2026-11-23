@@ -113,6 +113,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get());
         dropSelf(ModBlocks.KATCHIN_BLOCK.get());
+        dropSelf(ModBlocks.ARMOR_FABRICATOR.get());
         dropSelf(ModBlocks.CUT_KATCHIN.get());
         dropSelf(ModBlocks.CUT_KATCHIN_STAIRS.get());
         dropSelf(ModBlocks.CUT_KATCHIN_WALL.get());

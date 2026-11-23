@@ -43,6 +43,11 @@ public class ModMenuTypes {
                     () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.TankMenu::new));
 
     /** Consola de la cámara de gravedad (0.7.0, Fase 3). */
+    /** Máquina de fabricación de armaduras (0.7.0, Fase 5b). */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu>> ARMOR_FABRICATOR =
+            MENUS.register("armor_fabricator",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu::new));
+
     public static final DeferredHolder<MenuType<?>, MenuType<GravityChamberMenu>> GRAVITY_CHAMBER =
             MENUS.register("gravity_chamber",
                     () -> IMenuTypeExtension.create(GravityChamberMenu::new));

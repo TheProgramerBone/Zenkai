@@ -16,6 +16,9 @@ package com.hmc.zenkai.feature.training;
  *    distinto con su propia GUI.
  *  - MEDITATION: solo `MeditationSessionPacket` (el minijuego de ritmo).
  *  - TARGET_PRACTICE: solo `TargetPracticeSessionPacket` (el minijuego de orbes).
+ *  - GRAVITY: solo las rondas de drones de la cámara de gravedad (Fase 4 de la 0.7.0,
+ *    `GravityDroneRound`). La gravedad ambiental de la cámara NO entra aquí: esa multiplica el TP
+ *    de cualquier categoría por {@code WeightSystem.tpFactor}, como las pesas.
  *
  * Qué entrenamiento NO cuenta para TP en absoluto (aclarado aquí para que quede explícito, no
  * porque haya cambiado con esta sesión): golpear a otro jugador CON `PartyService.
@@ -30,4 +33,6 @@ public enum TrainingCategory {
     TARGET_PRACTICE,
     /** TP de actividades de addons ({@code TrainingApi.award}): fatiga propia, separada de las tres de Zenkai. */
     ADDON,
+    /** Rondas de drones de la cámara de gravedad: fatiga propia (decisión del usuario, 2026-11-16). */
+    GRAVITY,
 }

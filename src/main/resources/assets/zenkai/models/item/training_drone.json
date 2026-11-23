@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:item/training_drone_0"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "zenkai:wear": 1
+      },
+      "model": "zenkai:item/training_drone_1"
+    },
+    {
+      "predicate": {
+        "zenkai:wear": 2
+      },
+      "model": "zenkai:item/training_drone_2"
+    },
+    {
+      "predicate": {
+        "zenkai:wear": 3
+      },
+      "model": "zenkai:item/training_drone_3"
+    }
+  ]
+}

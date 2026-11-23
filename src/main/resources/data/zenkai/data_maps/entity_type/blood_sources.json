@@ -1,0 +1,246 @@
+{
+  "values": {
+    "minecraft:pillager": [
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:vindicator": [
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:witch": [
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:evoker": [
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:hoglin": [
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:piglin_brute": [
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:ravager": [
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:enderman": [
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:allay": [
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:zombie": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:husk": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:drowned": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:wither_skeleton": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:blaze": [
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:elder_guardian": [
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:wither": [
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "minecraft:ender_dragon": [
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 1,
+        "chance": 0.1
+      },
+      {
+        "blood": "zenkai:spirit_blood",
+        "quality": 1,
+        "chance": 0.1
+      }
+    ],
+    "zenkai:saibaman": [
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 2,
+        "chance": 0.25
+      },
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 2,
+        "chance": 0.25
+      }
+    ],
+    "zenkai:red_ogre": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 2,
+        "chance": 0.25
+      },
+      {
+        "blood": "zenkai:strength_blood",
+        "quality": 2,
+        "chance": 0.25
+      }
+    ],
+    "zenkai:blue_ogre": [
+      {
+        "blood": "zenkai:constitution_blood",
+        "quality": 2,
+        "chance": 0.25
+      },
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 2,
+        "chance": 0.25
+      }
+    ],
+    "zenkai:shadow_clone": [
+      {
+        "blood": "zenkai:dexterity_blood",
+        "quality": 2,
+        "chance": 0.25
+      },
+      {
+        "blood": "zenkai:willpower_blood",
+        "quality": 2,
+        "chance": 0.25
+      }
+    ]
+  }
+}

@@ -114,7 +114,10 @@ public class GravityChamberBlock extends BaseEntityBlock {
         if (level.isClientSide) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof GravityChamberBlockEntity be && player instanceof ServerPlayer sp) {
             be.revalidateNow();
-            sp.openMenu(be, buf -> buf.writeBlockPos(pos));
+            sp.openMenu(be, buf -> {
+                buf.writeBlockPos(pos);
+                buf.writeBoolean(be.droneView());   // GravityChamberMenu la lee para reabrir en la misma vista
+            });
         }
         return InteractionResult.CONSUME;
     }

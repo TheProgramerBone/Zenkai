@@ -179,6 +179,11 @@ public final class ClientZenkaiPalTick {
             // rápido con adelante virtual (ver FlightCruise), así que fastFlightMode sigue true mientras dura.
             // Al salir del crucero con Control se vuelve al vuelo rápido (cruiseReturn) y un Control más lo apaga por completo;
             // si el crucero se corta solo (atrás, pared) el ciclo se reinicia en el vuelo rápido normal.
+            // En MODO COMBATE no hay crucero (pedido del usuario, 2026-11-22): alternar en el aire entre el vuelo
+            // rápido de persecución y el lento para esquivar o disparar ki era incómodo si el ciclo pasaba por el
+            // crucero. Ahí el ciclo es OFF -> Vuelo rápido -> OFF, y entrar en combate yendo en crucero lo corta
+            // (se queda el vuelo rápido).
+            boolean combatFlight = CombatModeClientState.isActive();
             while (mc.options.keySprint.consumeClick()) {
                 if (!flying) continue;
                 boolean cruisingNow = com.hmc.zenkai.client.fly.FlightCruise.isActive();
@@ -188,12 +193,16 @@ public final class ClientZenkaiPalTick {
                 } else if (cruisingNow) {
                     com.hmc.zenkai.client.fly.FlightCruise.stop(lp);
                     cruiseReturn = true;
-                } else if (cruiseReturn) {
+                } else if (cruiseReturn || combatFlight) {
                     fastFlightMode = false;
                     cruiseReturn = false;
                 } else {
                     com.hmc.zenkai.client.fly.FlightCruise.start(lp);
                 }
+            }
+            if (combatFlight && com.hmc.zenkai.client.fly.FlightCruise.isActive()) {
+                com.hmc.zenkai.client.fly.FlightCruise.stop(lp);
+                cruiseReturn = false;
             }
             if (!fastFlightMode || !flying) cruiseReturn = false;
             if (!flying) fastFlightMode = false;

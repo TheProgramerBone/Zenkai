@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "R": {
+      "tag": "c:storage_blocks/redstone"
+    },
+    "T": {
+      "item": "minecraft:crafting_table"
+    }
+  },
+  "pattern": [
+    "KAK",
+    "ITI",
+    "KRK"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:armor_fabricator"
+  }
+}

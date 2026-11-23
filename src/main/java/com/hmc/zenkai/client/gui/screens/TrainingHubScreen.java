@@ -96,6 +96,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     private Double combatFatigueEfficiency;
     private Double meditationFatigueEfficiency;
     private Double targetPracticeFatigueEfficiency;
+    private Double gravityFatigueEfficiency;
     /** Récord de TP de cada minijuego; null hasta que responde el servidor (viaja con la fatiga). */
     private Integer shadowRecord, meditationRecord, targetPracticeRecord;
 
@@ -122,6 +123,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         combatFatigueEfficiency = null;
         meditationFatigueEfficiency = null;
         targetPracticeFatigueEfficiency = null;
+        gravityFatigueEfficiency = null;
         shadowRecord = meditationRecord = targetPracticeRecord = null;
         showGravityPopup = false;
         PacketDistributor.sendToServer(new TrainingFatigueRequestPacket());
@@ -132,7 +134,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
      *  pero este hub no implementa esa interfaz (no es un minijuego), así que es una función
      *  público normal en vez de una sobrescritura. */
     public void onFatigueReceived(double combatEfficiency, double meditationEfficiency,
-                                   double targetPracticeEfficiency,
+                                   double targetPracticeEfficiency, double gravityEfficiency,
                                    int shadowRecord, int meditationRecord, int targetPracticeRecord) {
         this.shadowRecord = shadowRecord;
         this.meditationRecord = meditationRecord;
@@ -140,6 +142,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         combatFatigueEfficiency = combatEfficiency;
         meditationFatigueEfficiency = meditationEfficiency;
         targetPracticeFatigueEfficiency = targetPracticeEfficiency;
+        gravityFatigueEfficiency = gravityEfficiency;
     }
 
     /** Botón «?» (repite el tutorial) a la derecha del título del panel de modificadores, donde
@@ -319,8 +322,11 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                 baseMult, combatFatigueEfficiency);
         ty = fatigueRow(g, x, ty, w, mouseX, mouseY, "screen.zenkai.training_hub.panel.effective_meditation",
                 baseMult, meditationFatigueEfficiency);
-        fatigueRow(g, x, ty, w, mouseX, mouseY, "screen.zenkai.training_hub.panel.effective_target_practice",
+        ty = fatigueRow(g, x, ty, w, mouseX, mouseY, "screen.zenkai.training_hub.panel.effective_target_practice",
                 baseMult, targetPracticeFatigueEfficiency);
+        // 4ª fila (Fase 4 de la 0.7.0): rondas de drones de la cámara de gravedad, fatiga GRAVITY propia.
+        fatigueRow(g, x, ty, w, mouseX, mouseY, "screen.zenkai.training_hub.panel.effective_gravity",
+                baseMult, gravityFatigueEfficiency);
     }
 
     /** Una fila "eficiencia de X" = baseMult (pesas × HTC) × fatiga de esa categoría. Devuelve

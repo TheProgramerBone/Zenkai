@@ -344,7 +344,7 @@ public class ModNetworking {
                 (payload, context) -> context.enqueueWork(
                         () -> ClientPayloadHandlers.onTrainingFatigue(payload.combatEfficiency(),
                                 payload.meditationEfficiency(), payload.targetPracticeEfficiency(),
-                                payload.shadowRecord(), payload.meditationRecord(),
+                                payload.gravityEfficiency(), payload.shadowRecord(), payload.meditationRecord(),
                                 payload.targetPracticeRecord())));
 
         registrar.playToServer(

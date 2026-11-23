@@ -94,6 +94,7 @@ public class Zenkai {
         ModCreativeModeTabs.register(modEventBus);
         ModWoodTypes.init();
         ModStructures.register(modEventBus);
+        com.hmc.zenkai.registry.ModArmorMaterials.register(modEventBus);
         ModItems.register(modEventBus);
         ModFluids.register(modEventBus);
         ModBlocks.register(modEventBus);
@@ -106,6 +107,8 @@ public class Zenkai {
         ModPlacementModifierTypes.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
         ModDataComponents.register(modEventBus);
+        com.hmc.zenkai.registry.ModRecipes.register(modEventBus);
+        com.hmc.zenkai.feature.armor.PatternLootModifier.register(modEventBus);
         ModParticles.register(modEventBus);
         ZenkaiTriggers.register(modEventBus);
         ModStructureProcessors.register(modEventBus);
@@ -236,6 +239,12 @@ public class Zenkai {
                 ModBlockEntities.GRAVITY_CHAMBER.get(), (be, side) -> be.energyHandler());
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.GRAVITY_CHAMBER_PORT.get(), (be, side) -> be.energyAt(side));
+
+        // Máquina de fabricación (Fase 5b): FE y fluido de Ki por cualquier cara.
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.energyHandler());
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.fluidHandler());
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────
@@ -251,6 +260,7 @@ public class Zenkai {
             event.register(ModMenuTypes.PLAYER_BODY.get(), com.hmc.zenkai.client.gui.screens.PlayerBodyScreen::new);
             event.register(ModMenuTypes.TANK.get(), com.hmc.zenkai.client.gui.screens.TankScreen::new);
             event.register(ModMenuTypes.GRAVITY_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.GravityChamberScreen::new);
+            event.register(ModMenuTypes.ARMOR_FABRICATOR.get(), com.hmc.zenkai.client.gui.screens.ArmorFabricatorScreen::new);
         }
 
         @SubscribeEvent
@@ -281,6 +291,10 @@ public class Zenkai {
             ItemProperties.register(ModItems.SCOUTER.get(),
                     ResourceLocation.fromNamespaceAndPath(MOD_ID, "broken"),
                     (stack, lvl, ent, seed) -> ScouterStacks.isBroken(stack) ? 1.0F : 0.0F);
+            // Dron de entrenamiento: 4 estados de desgaste (0..3) por los usos que le quedan.
+            ItemProperties.register(ModItems.TRAINING_DRONE.get(),
+                    ResourceLocation.fromNamespaceAndPath(MOD_ID, "wear"),
+                    (stack, lvl, ent, seed) -> com.hmc.zenkai.content.item.TrainingDroneItem.wearStage(stack));
 
             // Block entities
             BlockEntityRenderers.register(
@@ -306,6 +320,8 @@ public class Zenkai {
 
             // Entidades
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
+            EntityRenderers.register(ModEntities.TRAINING_DRONE.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.entity.TrainingDroneRenderer::new);
 
             EntityRenderers.register(ModEntities.KINTOUN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,

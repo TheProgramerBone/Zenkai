@@ -5,6 +5,8 @@ import com.hmc.zenkai.client.gui.menu.GravityChamberMenu;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.block.GravityChamberBlock;
 import com.hmc.zenkai.content.item.GravityUpgradeItem;
+import com.hmc.zenkai.content.item.TrainingDroneItem;
+import com.hmc.zenkai.feature.gravity.GravityDroneRound;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.gravity.GravityFields;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -73,6 +75,10 @@ import java.util.UUID;
  * (aquí mismo: modificadores transitorios propios y drenaje con suelo en 1). El PL de un mob sale de
  * {@link ZenkaiStats#resolveDisplayPowerLevel}, que cubre mobs sin stats propias.
  *
+ * DRONES (Fase 4): ocho ranuras de {@link TrainingDroneItem}; el botón «Iniciar ronda» genera hasta
+ * {@link #maxDrones()} entidades y la ronda entera vive en {@link GravityDroneRound}. Las ranuras se
+ * bloquean mientras dura (entrar y salir), para que nadie esquive el gasto de usos sacando el ítem.
+ *
  * RENDIMIENTO (requisito del usuario): el relleno se hace cada 100 ticks escalonado por posición, con
  * colecciones de fastutil reutilizadas y el LevelChunk en caché (unas 3 600 celdas con R = 10, sin crear
  * objetos por celda) y sin cargar chunks; las entidades se repasan cada 5 ticks; los modificadores solo se
@@ -112,11 +118,37 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         protected void onContentsChanged(int slot) { setChanged(); }
     };
 
+    /** Ranuras de drones (Fase 4). Bloqueadas durante una ronda, también para la automatización. */
+    private final ItemStackHandler drones = new ItemStackHandler(GravityDroneRound.MAX_DRONES) {
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            return stack.getItem() instanceof TrainingDroneItem && !droneRound.running();
+        }
+
+        @Override
+        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return droneRound.running() ? ItemStack.EMPTY : super.extractItem(slot, amount, simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) { return 1; }
+
+        @Override
+        protected void onContentsChanged(int slot) { setChanged(); }
+    };
+    private final GravityDroneRound droneRound = new GravityDroneRound(this);
+    /** Modo de la próxima ronda: false = pasivo (blancos), true = agresivo (disparan). Guardado. */
+    private boolean aggressiveMode;
+    /** Dificultad de la próxima ronda (Fase 4, tabla en DroneDifficulty). Guardada. */
+    private com.hmc.zenkai.feature.gravity.DroneDifficulty droneDifficulty = com.hmc.zenkai.feature.gravity.DroneDifficulty.NORMAL;
+
     private int targetG = 10;
     private int radius = DEFAULT_RADIUS;
     private boolean hologram;
     /** Interruptor de la gravedad (botón de la pantalla): apagada no genera ni gasta, la sala se sigue validando. */
     private boolean enabled = true;
+    /** Última vista de la pantalla (true = Drones). Guardada: la consola reabre en la vista en que se dejó. */
+    private boolean droneView;
 
     // Resultado de la validación (servidor) y lo que de él se sincroniza.
     private boolean formed;
@@ -150,6 +182,23 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
 
     public IEnergyStorage energyHandler() { return energy; }
     public ItemStackHandler upgradeHandler() { return upgrade; }
+    public ItemStackHandler droneHandler() { return drones; }
+    public GravityDroneRound droneRound() { return droneRound; }
+    public boolean aggressiveMode() { return aggressiveMode; }
+    public com.hmc.zenkai.feature.gravity.DroneDifficulty droneDifficulty() { return droneDifficulty; }
+
+    /** Pasa a la siguiente dificultad (no durante una ronda). */
+    public void cycleDroneDifficulty() {
+        if (droneRound.running()) return;
+        droneDifficulty = droneDifficulty.next();
+        setChanged();
+    }
+    /** Celdas del interior validado (solo servidor; vacío sin sala). Para la ronda de drones. */
+    public long[] interiorCells() { return interior.toLongArray(); }
+    public boolean interiorContainsKey(long key) { return interior.contains(key); }
+
+    /** Escribe una ranura de drones saltándose el bloqueo de la ronda (solo la ronda gasta usos así). */
+    public void setDroneDirect(int slot, ItemStack stack) { drones.setStackInSlot(slot, stack); }
     public boolean isFormed() { return formed; }
     public boolean isActive() { return active; }
     public int radius() { return radius; }
@@ -166,7 +215,7 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
     public int effectiveGravity() { return Math.max(1, Math.min(targetG, maxGravity())); }
     public int targetGravity() { return targetG; }
 
-    /** g que está generando de verdad (1 si está apagada). La usarán los drones (Fase 4). */
+    /** g que está generando de verdad (1 si está apagada). */
     public double activeGravity() { return active ? effectiveGravity() : 1.0; }
 
     /** Drones a la vez (Fase 4): cuanto mayor la esfera, más drones (decisión del usuario, 2026-11-19). */
@@ -224,6 +273,24 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         syncToClient();
     }
 
+    /** Cambia el modo de la próxima ronda (no durante una ronda). */
+    public void toggleDroneMode() {
+        if (droneRound.running()) return;
+        aggressiveMode = !aggressiveMode;
+        setChanged();
+    }
+
+    /** Botón de la ronda: la empieza o, si ya hay una, la cancela (solo su dueño). */
+    public void pressRound(Player player) {
+        if (!(level instanceof ServerLevel sl) || !(player instanceof net.minecraft.server.level.ServerPlayer sp)) return;
+        if (droneRound.running()) {
+            if (sp.getUUID().equals(droneRound.owner())) droneRound.cancel(sl);
+            return;
+        }
+        String err = droneRound.start(sl, sp, aggressiveMode, droneDifficulty);
+        if (err != null) sp.displayClientMessage(Component.translatable(err).withStyle(net.minecraft.ChatFormatting.RED), true);
+    }
+
     public void toggleHologram() {
         hologram = !hologram;
         setChanged();
@@ -259,6 +326,10 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         if (nowActive) be.setChanged();
 
         if (nowActive && now % ENTITY_INTERVAL == 0 && level instanceof ServerLevel sl) be.tickEntities(sl, now);
+        // La ronda se repasa aunque la cámara se haya apagado: así ve la falta de energía y la cancela.
+        if (be.droneRound.running() && now % GravityDroneRound.TICK_INTERVAL == 0 && level instanceof ServerLevel sl) {
+            be.droneRound.tick(sl, now);
+        }
     }
 
     private void tickEntities(ServerLevel level, long now) {
@@ -490,6 +561,7 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         super.setRemoved();
         CLIENT_LOADED.remove(this);
         releaseMobs();
+        droneRound.abort(level);
     }
 
     @Override
@@ -497,11 +569,20 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         super.onChunkUnloaded();
         CLIENT_LOADED.remove(this);
         releaseMobs();
+        droneRound.abort(level);
     }
 
-    /** Al romperse: suelta la mejora, libera a los mobs y desenlaza los puertos. */
+    /** Al romperse: termina la ronda, suelta la mejora y los drones, libera a los mobs y desenlaza los puertos. */
     public void onBroken() {
         if (level == null) return;
+        droneRound.abort(level);
+        for (int i = 0; i < drones.getSlots(); i++) {
+            ItemStack d = drones.getStackInSlot(i);
+            if (d.isEmpty()) continue;
+            Containers.dropItemStack(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
+                    worldPosition.getZ() + 0.5, d.copy());
+            drones.setStackInSlot(i, ItemStack.EMPTY);
+        }
         ItemStack s = upgrade.getStackInSlot(0);
         if (!s.isEmpty()) {
             Containers.dropItemStack(level, worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
@@ -543,6 +624,17 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
                 case GravityChamberMenu.D_COST -> active ? lastCost : costPerTick(effectiveGravity(), radius);
                 case GravityChamberMenu.D_PORTS -> ports.size();
                 case GravityChamberMenu.D_ENABLED -> enabled ? 1 : 0;
+                case GravityChamberMenu.D_MAX_DRONES -> maxDrones();
+                case GravityChamberMenu.D_DRONE_MODE -> aggressiveMode ? 1 : 0;
+                case GravityChamberMenu.D_ROUND_RUNNING -> droneRound.running() ? 1 : 0;
+                case GravityChamberMenu.D_ROUND_LEFT -> level == null ? 0 : droneRound.secondsLeft(level.getGameTime());
+                case GravityChamberMenu.D_ROUND_DONE -> droneRound.doneCount();
+                case GravityChamberMenu.D_ROUND_TOTAL -> droneRound.total();
+                case GravityChamberMenu.D_LAST_RESULT -> droneRound.lastResult();
+                case GravityChamberMenu.D_LAST_TP_LO -> droneRound.lastTp() & 0xFFFF;
+                case GravityChamberMenu.D_LAST_TP_HI -> droneRound.lastTp() >>> 16;
+                case GravityChamberMenu.D_ROUND_AGGRESSIVE -> droneRound.aggressive() ? 1 : 0;
+                case GravityChamberMenu.D_DIFFICULTY -> droneDifficulty.ordinal();
                 default -> 0;
             };
         }
@@ -553,6 +645,13 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
     };
 
     public ContainerData containerData() { return data; }
+    public boolean droneView() { return droneView; }
+
+    public void setDroneView(boolean v) {
+        if (droneView == v) return;
+        droneView = v;
+        setChanged();
+    }
 
     // ── NBT y sync ───────────────────────────────────────────────────────────
 
@@ -566,6 +665,10 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         tag.putBoolean("Hologram", hologram);
         tag.putBoolean("Enabled", enabled);
         tag.putLongArray("Ports", ports.toLongArray());
+        tag.put("Drones", drones.serializeNBT(reg));
+        tag.putBoolean("DroneAggressive", aggressiveMode);
+        tag.putInt("DroneDifficulty", droneDifficulty.ordinal());
+        tag.putBoolean("DroneView", droneView);
     }
 
     @Override
@@ -577,6 +680,11 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         radius = Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, tag.contains("Radius") ? tag.getInt("Radius") : DEFAULT_RADIUS));
         hologram = tag.getBoolean("Hologram");
         if (tag.contains("Enabled")) enabled = tag.getBoolean("Enabled");
+        if (tag.contains("Drones")) ItemHandlers.loadKeepingSize(drones, reg, tag.getCompound("Drones"));
+        aggressiveMode = tag.getBoolean("DroneAggressive");
+        droneView = tag.getBoolean("DroneView");
+        droneDifficulty = com.hmc.zenkai.feature.gravity.DroneDifficulty.byId(
+                tag.contains("DroneDifficulty") ? tag.getInt("DroneDifficulty") : com.hmc.zenkai.feature.gravity.DroneDifficulty.NORMAL.ordinal());
         ports.clear();
         for (long p : tag.getLongArray("Ports")) ports.add(p);
         // Lo que solo viaja al cliente (no se guarda en disco).

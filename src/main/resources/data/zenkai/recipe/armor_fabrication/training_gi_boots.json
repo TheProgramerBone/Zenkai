@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:training_gi",
+  "piece": "boots",
+  "material": {
+    "item": "zenkai:katchin_cloth"
+  },
+  "count": 4,
+  "energy": 20000,
+  "time": 100,
+  "result": {
+    "id": "zenkai:training_gi_boots"
+  }
+}
