@@ -207,6 +207,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 state -> state.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? fabOn : fabOff);
         simpleBlockItem(ModBlocks.ARMOR_FABRICATOR.get(), fabOff);
 
+        // Infusora de Ki (Fase 5c): igual que la de fabricación, con su cara de cristal.
+        ModelFile infOff = models().orientable("ki_infuser", modLoc("block/ki_infuser_side"),
+                modLoc("block/ki_infuser_front"), modLoc("block/ki_infuser_top"));
+        ModelFile infOn = models().orientable("ki_infuser_on", modLoc("block/ki_infuser_side"),
+                modLoc("block/ki_infuser_front_on"), modLoc("block/ki_infuser_top"));
+        horizontalBlock(ModBlocks.KI_INFUSER.get(),
+                state -> state.getValue(com.hmc.zenkai.content.block.KiInfuserBlock.LIT) ? infOn : infOff);
+        simpleBlockItem(ModBlocks.KI_INFUSER.get(), infOff);
+
         // Cámara de gravedad: el modelo de pedestal es a mano (models/block/gravity_chamber*.json);
         // aquí solo la orientación y la pantalla encendida. El puerto es un cubo con una textura.
         horizontalBlock(ModBlocks.GRAVITY_CHAMBER.get(), state ->

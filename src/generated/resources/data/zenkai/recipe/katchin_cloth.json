@@ -1,17 +1,20 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "misc",
-  "key": {
-    "T": {
-      "item": "zenkai:katchin_thread"
+  "type": "zenkai:infused_crafting",
+  "base": {
+    "type": "minecraft:crafting_shaped",
+    "category": "misc",
+    "key": {
+      "T": {
+        "item": "zenkai:katchin_thread"
+      }
+    },
+    "pattern": [
+      "TT",
+      "TT"
+    ],
+    "result": {
+      "count": 1,
+      "id": "zenkai:katchin_cloth"
     }
-  },
-  "pattern": [
-    "TT",
-    "TT"
-  ],
-  "result": {
-    "count": 1,
-    "id": "zenkai:katchin_cloth"
   }
 }

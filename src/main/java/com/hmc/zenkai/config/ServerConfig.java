@@ -685,6 +685,10 @@ public class ServerConfig {
     public static int    armorFabricatorFeCapacity()   { return techCap(200_000); }
     public static int    armorFabricatorMaxReceive()   { return techRate(4_096); }
     public static int    armorFabricatorTankCapacity() { return techCap(8_000); }
+    // Infusora de Ki (Fase 5c). Constantes como la de fabricación; el coste por lingote vive en KiInfusion.
+    public static int    kiInfuserFeCapacity()   { return techCap(100_000); }
+    public static int    kiInfuserMaxReceive()   { return techRate(4_096); }
+    public static int    kiInfuserTankCapacity() { return techCap(8_000); }
 
     public static double kiChamberSpeedMult()          { return (4.0); }
     public static double kiChamberStoragePercent()     { return (100.0); }

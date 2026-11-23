@@ -51,6 +51,11 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 2. ÍTEMS ESPECIALES Y COSMÉTICOS
         // ==========================================
 
+        // Infusión de Ki (Fase 5c): qué acepta la infusora y qué lleva el tipo de un paso al siguiente.
+        tag(com.hmc.zenkai.feature.armor.KiInfusion.INFUSABLE).add(ModItems.KATCHIN_INGOT.get());
+        tag(com.hmc.zenkai.feature.armor.KiInfusion.CARRIERS).add(
+                ModItems.KATCHIN_INGOT.get(), ModItems.KATCHIN_THREAD.get(), ModItems.KATCHIN_CLOTH.get());
+
         tag(ItemTags.DYEABLE).add(
                 ModItems.SCOUTER.get()
         );

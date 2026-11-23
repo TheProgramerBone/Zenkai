@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:empty", "weight": 88 },
+        { "type": "minecraft:item", "name": "zenkai:reset_template", "weight": 4 },
+        { "type": "minecraft:item", "name": "zenkai:copy_template", "weight": 3 },
+        { "type": "minecraft:item", "name": "zenkai:transfer_template", "weight": 3 },
+        { "type": "minecraft:item", "name": "zenkai:augment_template", "weight": 2 }
+      ]
+    }
+  ]
+}

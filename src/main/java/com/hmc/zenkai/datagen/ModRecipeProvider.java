@@ -341,25 +341,49 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_advanced",has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
 
         // ── Katchin ──────────────────────────────────────────────────────────
+        // Fase 5c: lingotes INFUNDIDOS no hacen bloque (el bloque colocado perdería la infusión sin avisar).
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.KATCHIN_BLOCK.get(), 1)
                 .pattern("KK").pattern("KK")
                 .define('K', ModItems.KATCHIN_INGOT.get())
-                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT))
+                .save(infused(recipeOutput, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode.REJECT));
 
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_INGOT.get(), 4)
                 .requires(ModBlocks.KATCHIN_BLOCK)
                 .unlockedBy("has_katchin_block", has(ModBlocks.KATCHIN_BLOCK))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "katchin_ingot_from_block"));
 
-        // Hilo y tela de katchin (Fase 5a, decisión 2026-11-22): mesa de crafteo, sin máquina.
+        // Hilo y tela de katchin (Fase 5a, decisión 2026-11-22): mesa de crafteo, sin máquina. Fase 5c: heredan la
+        // infusión de Ki del lingote/hilo (zenkai:infused_crafting en modo inherit).
+        RecipeOutput inherit = infused(recipeOutput, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode.INHERIT);
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_THREAD.get(), 4)
                 .requires(ModItems.KATCHIN_INGOT)
-                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(inherit);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KATCHIN_CLOTH.get(), 1)
                 .pattern("TT").pattern("TT")
                 .define('T', ModItems.KATCHIN_THREAD.get())
-                .unlockedBy("has_katchin_thread", has(ModItems.KATCHIN_THREAD)).save(recipeOutput);
+                .unlockedBy("has_katchin_thread", has(ModItems.KATCHIN_THREAD)).save(inherit);
+
+        // Infusora de Ki (Fase 5c). Receta PROVISIONAL como las de la 2b: katchin, circuito avanzado, cristal de
+        // energía (la ventana de ki) y un caldero (el baño donde se infunde).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.KI_INFUSER.get(), 1)
+                .pattern("KAK").pattern("ECE").pattern("KRK")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('A', ModItems.ADVANCED_CIRCUIT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .define('C', Items.CAULDRON)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
+        // Plantillas de atributos (Fase 5c). Como la plantilla de mejora de netherita (decisión del usuario 2026-11-22):
+        // NO se fabrican desde cero, solo se DUPLICAN teniendo una, para obligar a explorar (salen de cofres). Mesa:
+        // 7 lingotes de katchin + la plantilla + el motivo de la acción → 2. La máquina de fabricación las duplica con
+        // menos material pero mucha FE (recetas zenkai:template_duplication).
+        attributeTemplate(recipeOutput, ModItems.RESET_TEMPLATE.get(), Ingredient.of(Items.SPONGE));
+        attributeTemplate(recipeOutput, ModItems.COPY_TEMPLATE.get(), Ingredient.of(Items.BOOK));
+        attributeTemplate(recipeOutput, ModItems.TRANSFER_TEMPLATE.get(), Ingredient.of(Tags.Items.ENDER_PEARLS));
+        attributeTemplate(recipeOutput, ModItems.AUGMENT_TEMPLATE.get(), Ingredient.of(ModItems.ENERGY_CRYSTAL));
 
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CUT_KATCHIN.get(), 4)
                 .pattern("KK")
@@ -740,5 +764,38 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('P', previous)
                 .unlockedBy("has_gravity_chamber", has(ModBlocks.GRAVITY_CHAMBER.get()))
                 .save(out);
+    }
+
+    /**
+     * Duplicado de una plantilla de atributos en la mesa, calcado del de la plantilla de mejora de netherita
+     * ("#S#", "#C#", "###" con diamantes y netherrack): katchin alrededor, la plantilla arriba y el motivo en el centro.
+     */
+    private static void attributeTemplate(RecipeOutput out, Item template, Ingredient motif) {
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, template, 2)
+                .pattern("KTK").pattern("KMK").pattern("KKK")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('T', template)
+                .define('M', motif)
+                .unlockedBy("has_template", has(template))
+                .save(out, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                        BuiltInRegistries.ITEM.getKey(template).getPath() + "_duplication"));
+    }
+
+    /**
+     * Salida que envuelve cada receta de mesa en {@code zenkai:infused_crafting} (Fase 5c) con ese modo: así los
+     * builders vanilla generan la receta que respeta la infusión de Ki sin escribir el JSON a mano.
+     */
+    private static RecipeOutput infused(RecipeOutput out, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode mode) {
+        return new RecipeOutput() {
+            @Override
+            public void accept(@NotNull ResourceLocation id, @NotNull Recipe<?> recipe,
+                               @org.jetbrains.annotations.Nullable net.minecraft.advancements.AdvancementHolder adv,
+                               net.neoforged.neoforge.common.conditions.ICondition @NotNull ... conditions) {
+                out.accept(id, new com.hmc.zenkai.feature.armor.InfusedCraftingRecipe((CraftingRecipe) recipe, mode), adv, conditions);
+            }
+
+            @Override
+            public net.minecraft.advancements.Advancement.@NotNull Builder advancement() { return out.advancement(); }
+        };
     }
 }

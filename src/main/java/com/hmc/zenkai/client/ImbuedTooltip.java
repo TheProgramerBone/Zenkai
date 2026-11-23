@@ -3,6 +3,7 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.armor.ImbuedAttributes;
+import com.hmc.zenkai.feature.kichamber.KiEnergyType;
 import com.hmc.zenkai.registry.ModDataComponents;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.ChatFormatting;
@@ -25,11 +26,16 @@ public final class ImbuedTooltip {
 
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent e) {
+        List<Component> lines = e.getToolTip();
+        // Detrás del nombre (línea 0): la infusión (Fase 5c) y lo imbuido son lo primero que se quiere ver de la pieza.
+        int at = Math.min(1, lines.size());
+        KiEnergyType inf = e.getItemStack().get(ModDataComponents.KI_INFUSION.get());
+        if (inf != null) {
+            lines.add(at++, Component.translatable("tooltip.zenkai.ki_infusion",
+                    Component.translatable(inf.langKey()).withStyle(s -> s.withColor(inf.argb() & 0xFFFFFF))));
+        }
         ImbuedAttributes imb = e.getItemStack().get(ModDataComponents.IMBUED.get());
         if (imb == null || imb.isEmpty()) return;
-        List<Component> lines = e.getToolTip();
-        // Detrás del nombre (línea 0): lo que imbuye el jugador es lo primero que quiere ver de la pieza.
-        int at = Math.min(1, lines.size());
         lines.add(at++, Component.translatable("tooltip.zenkai.imbued.header").withStyle(ChatFormatting.GRAY));
         for (ZenkaiAttributes a : ImbuedAttributes.IMBUABLE) {
             int v = imb.get(a);

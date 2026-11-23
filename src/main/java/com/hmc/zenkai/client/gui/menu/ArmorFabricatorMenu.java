@@ -4,6 +4,7 @@ import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
 import com.hmc.zenkai.content.item.BloodItem;
 import com.hmc.zenkai.feature.armor.ArmorSets;
+import com.hmc.zenkai.feature.armor.AttributeTemplates;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
 import com.hmc.zenkai.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -29,7 +30,7 @@ import java.util.Objects;
 /**
  * Menú de la máquina de fabricación (Fase 5b). Ranuras en this.slots, en el orden de ArmorFabricatorBlockEntity:
  *   0..5 mejoras (siempre visibles) · 6 patrón · 7..15 material · 16 salida (pestaña FABRICAR)
- *   17 pieza · 18 sangre (pestaña ATRIBUTOS) · 19..54 inventario y hotbar.
+ *   17 pieza · 18 sangre · 19 plantilla · 20 pieza destino (pestaña ATRIBUTOS) · 21..56 inventario y hotbar.
  * Las ranuras de la pestaña oculta se desactivan con Slot.isActive: ni se dibujan ni se pueden tocar. La pestaña vive
  * en el menú y se cambia en los DOS lados (el cliente la pone al pulsar, el servidor al recibir el botón vanilla).
  * LAS COORDENADAS SON PARTE DEL ASSET: cada ranura tiene su pozo en armor_fabricator_*.png
@@ -57,6 +58,8 @@ public class ArmorFabricatorMenu extends AbstractContainerMenu {
     public static final int MAT_X = 66, MAT_Y = 58;
     public static final int OUT_X = 166, OUT_Y = 76;
     public static final int ARMOR_X = 66, ARMOR_Y = 36, BLOOD_X = 66, BLOOD_Y = 64;
+    /** Fase 5c: arriba pieza → destino (copiar/transferir); abajo sangre y plantilla. */
+    public static final int TARGET_X = 96, TARGET_Y = 36, TEMPLATE_X = 96, TEMPLATE_Y = 64;
     private static final int INV_X = 47, INV_Y = 170, HOTBAR_Y = 229;
 
     private final ContainerData data;
@@ -94,6 +97,8 @@ public class ArmorFabricatorMenu extends AbstractContainerMenu {
         addMachineSlot(machine, ArmorFabricatorBlockEntity.SLOT_OUTPUT, OUT_X, OUT_Y, TAB_CRAFT);
         addMachineSlot(machine, ArmorFabricatorBlockEntity.SLOT_ARMOR, ARMOR_X, ARMOR_Y, TAB_ATTR);
         addMachineSlot(machine, ArmorFabricatorBlockEntity.SLOT_BLOOD, BLOOD_X, BLOOD_Y, TAB_ATTR);
+        addMachineSlot(machine, ArmorFabricatorBlockEntity.SLOT_TEMPLATE, TEMPLATE_X, TEMPLATE_Y, TAB_ATTR);
+        addMachineSlot(machine, ArmorFabricatorBlockEntity.SLOT_TARGET, TARGET_X, TARGET_Y, TAB_ATTR);
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) addSlot(new Slot(inv, col + row * 9 + 9, INV_X + col * 18, INV_Y + row * 18));
@@ -167,7 +172,9 @@ public class ArmorFabricatorMenu extends AbstractContainerMenu {
         }
         if (id == BTN_IMBUE) {
             ArmorFabricatorBlockEntity.ImbueResult r = be.startImbue();
-            if (r != ArmorFabricatorBlockEntity.ImbueResult.OK) {
+            if (r == ArmorFabricatorBlockEntity.ImbueResult.BAD_TEMPLATE && be.templateProblemKey() != null) {
+                sp.displayClientMessage(Component.translatable(be.templateProblemKey()), true);
+            } else if (r != ArmorFabricatorBlockEntity.ImbueResult.OK) {
                 sp.displayClientMessage(Component.translatable(r.langKey()), true);
             }
             return true;
@@ -201,11 +208,15 @@ public class ArmorFabricatorMenu extends AbstractContainerMenu {
             if (!moved && tab == TAB_ATTR) {
                 if (stack.getItem() instanceof BloodItem) {
                     moved = moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_BLOOD, ArmorFabricatorBlockEntity.SLOT_BLOOD + 1, false);
+                } else if (AttributeTemplates.kindOf(stack) != null) {
+                    moved = moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_TEMPLATE, ArmorFabricatorBlockEntity.SLOT_TEMPLATE + 1, false);
                 } else if (ArmorFabricatorBlockEntity.isArmorPiece(stack)) {
-                    moved = moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_ARMOR, ArmorFabricatorBlockEntity.SLOT_ARMOR + 1, false);
+                    // Primero la pieza; si ya hay una, al destino (copiar/transferir).
+                    moved = moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_ARMOR, ArmorFabricatorBlockEntity.SLOT_ARMOR + 1, false)
+                            || moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_TARGET, ArmorFabricatorBlockEntity.SLOT_TARGET + 1, false);
                 }
             } else if (!moved && tab == TAB_CRAFT && !ArmorFabricatorBlockEntity.isArmorPiece(stack)) {
-                if (ArmorSets.setOf(stack) != null) {
+                if (ArmorSets.setOf(stack) != null || AttributeTemplates.kindOf(stack) != null) {
                     moved = moveItemStackTo(stack, ArmorFabricatorBlockEntity.SLOT_PATTERN, ArmorFabricatorBlockEntity.SLOT_PATTERN + 1, false);
                 } else {
                     int first = ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST;

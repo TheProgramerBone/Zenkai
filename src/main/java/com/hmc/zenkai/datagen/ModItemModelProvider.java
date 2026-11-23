@@ -63,6 +63,10 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.TRAINING_GI_LEGGINGS.get());
         basicItem(ModItems.TRAINING_GI_BOOTS.get());
         basicItem(ModItems.ARMOR_PATTERN.get());
+        basicItem(ModItems.RESET_TEMPLATE.get());
+        basicItem(ModItems.COPY_TEMPLATE.get());
+        basicItem(ModItems.TRANSFER_TEMPLATE.get());
+        basicItem(ModItems.AUGMENT_TEMPLATE.get());
         basicItem(ModItems.STRENGTH_BLOOD.get());
         basicItem(ModItems.DEXTERITY_BLOOD.get());
         basicItem(ModItems.SPIRIT_BLOOD.get());

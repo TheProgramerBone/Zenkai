@@ -599,6 +599,15 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? 10 : 0)));
 
+    /** Infusora de Ki (0.7.0, Fase 5c): infunde lingotes de katchin con el fluido de Ki del tanque. */
+    public static final DeferredBlock<Block> KI_INFUSER = registerBlock("ki_infuser",
+            () -> new com.hmc.zenkai.content.block.KiInfuserBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.KiInfuserBlock.LIT) ? 10 : 0)));
+
     /** Motor de Ki (0.7.0): convierte FE y fluido de Ki en rotación de Create y al revés. Compat OPCIONAL:
      *  el bloque se registra siempre, pero sin Create es inerte y se oculta (ver KiMotorFactory). */
     public static final DeferredBlock<Block> KI_MOTOR = registerBlock("ki_motor",

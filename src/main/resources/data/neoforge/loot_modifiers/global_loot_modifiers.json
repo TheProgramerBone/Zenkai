@@ -1,6 +1,7 @@
 {
   "replace": false,
   "entries": [
-    "zenkai:training_gi_pattern_in_chests"
+    "zenkai:training_gi_pattern_in_chests",
+    "zenkai:attribute_templates_in_chests"
   ]
 }

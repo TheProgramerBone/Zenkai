@@ -48,6 +48,11 @@ public class ModMenuTypes {
             MENUS.register("armor_fabricator",
                     () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu::new));
 
+    /** Infusora de Ki (0.7.0, Fase 5c). */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.KiInfuserMenu>> KI_INFUSER =
+            MENUS.register("ki_infuser",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.KiInfuserMenu::new));
+
     public static final DeferredHolder<MenuType<?>, MenuType<GravityChamberMenu>> GRAVITY_CHAMBER =
             MENUS.register("gravity_chamber",
                     () -> IMenuTypeExtension.create(GravityChamberMenu::new));

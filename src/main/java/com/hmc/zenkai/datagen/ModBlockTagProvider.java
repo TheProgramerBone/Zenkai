@@ -46,6 +46,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.SCOUTER_BENCH.get(),
                 ModBlocks.ENERGY_GENERATOR.get(),
                 ModBlocks.ARMOR_FABRICATOR.get(),
+                ModBlocks.KI_INFUSER.get(),
                 ModBlocks.ENERGY_CABLE.get(),
                 ModBlocks.FLUID_PIPE.get(),
                 ModBlocks.ENERGY_TANK.get(),

@@ -1,0 +1,16 @@
+{
+  "type": "zenkai:template_duplication",
+  "template": {
+    "item": "zenkai:reset_template"
+  },
+  "material": {
+    "item": "zenkai:katchin_ingot"
+  },
+  "count": 2,
+  "energy": 60000,
+  "time": 200,
+  "result": {
+    "id": "zenkai:reset_template",
+    "count": 2
+  }
+}

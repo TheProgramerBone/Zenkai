@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "C": {
+      "item": "minecraft:cauldron"
+    },
+    "E": {
+      "item": "zenkai:energy_crystal"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "R": {
+      "tag": "c:storage_blocks/redstone"
+    }
+  },
+  "pattern": [
+    "KAK",
+    "ECE",
+    "KRK"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:ki_infuser"
+  }
+}

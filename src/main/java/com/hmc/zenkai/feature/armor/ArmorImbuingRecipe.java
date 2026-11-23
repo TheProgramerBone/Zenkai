@@ -33,7 +33,9 @@ import java.util.Locale;
  * Tipo superior al pedido (orden Base &lt; Super &lt; Divino &lt; Legendario, el del enum): vale, y gasta la MITAD de
  * fluido por cada tipo de más ({@link #scaledMb}); uno inferior no vale. La FE y la sangre no cambian.
  * Solo dice el tipo: la cantidad sale de {@link ImbueCost} en ArmorFabricatorBlockEntity.preview.
- * La infusora (5c) podrá sobreescribir esto con el tipo con que se infundió el material.
+ * Una pieza INFUNDIDA (Fase 5c, {@link KiInfusion}) pide el tipo de su infusión y eso manda sobre receta y automático
+ * (decisión del usuario 2026-11-22). Consecuencia buscada: una armadura Saiyan infundida en Base pide Ki Base aunque sin
+ * infundir pediría Súper.
  */
 public record ArmorImbuingRecipe(Ingredient piece, KiEnergyType ki) implements Recipe<ArmorImbuingRecipe.Input> {
 
@@ -58,8 +60,13 @@ public record ArmorImbuingRecipe(Ingredient piece, KiEnergyType ki) implements R
             (buf, r) -> { Ingredient.CONTENTS_STREAM_CODEC.encode(buf, r.piece); buf.writeEnum(r.ki); },
             buf -> new ArmorImbuingRecipe(Ingredient.CONTENTS_STREAM_CODEC.decode(buf), buf.readEnum(KiEnergyType.class)));
 
-    /** Tipo que pide la pieza: el más alto de las recetas que casan, o el automático. Vale en cliente (recetas sincronizadas). */
+    /**
+     * Tipo que pide la pieza: el de su infusión si la tiene; si no, el más alto de las recetas que casan, o el automático.
+     * Vale en cliente (recetas sincronizadas).
+     */
     public static KiEnergyType requiredFor(@Nullable Level level, ItemStack piece) {
+        KiEnergyType infused = KiInfusion.of(piece);
+        if (infused != null) return infused;
         KiEnergyType explicit = explicitFor(level, piece);
         return explicit != null ? explicit : autoTier(piece);
     }

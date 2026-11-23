@@ -9,7 +9,10 @@ import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.armor.ArmorFabricationRecipe;
 import com.hmc.zenkai.feature.armor.ArmorSets;
+import com.hmc.zenkai.feature.armor.AttributeTemplates;
 import com.hmc.zenkai.feature.armor.ImbuedAttributes;
+import com.hmc.zenkai.feature.armor.KiInfusion;
+import com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
 import com.hmc.zenkai.registry.ModDataComponents;
 import com.hmc.zenkai.registry.ModRecipes;
@@ -66,9 +69,10 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
     /** Interruptor de la fabricación: franja libre entre los botones de pieza y la barra de progreso. */
     private static final int TOGGLE_X = 124, TOGGLE_Y = 57, TOGGLE_W = 94, TOGGLE_H = 14;
     private static final int IMBUE_X = 62, IMBUE_Y = 90, IMBUE_W = 56, IMBUE_H = 18;
-    /** Barra de carga de imbuir: en el hueco entre las ranuras (acaban en x=84) y el panel (empieza en 124), a la
-     *  altura del espacio entre la pieza y la sangre. Pequeña a propósito (pedido del usuario 2026-11-22). */
-    private static final int CHARGE_X = 90, CHARGE_Y = 57, CHARGE_W = 28, CHARGE_H = 5;
+    /** Barra de carga de imbuir: centrada en el hueco vertical entre la ranura de la pieza (pozo hasta y=53) y la de la
+     *  sangre (pozo desde y=63), con el ancho del ítem (x 66..82). Pequeña a propósito (pedido del usuario 2026-11-22;
+     *  antes iba a la derecha de las ranuras). */
+    private static final int CHARGE_X = 66, CHARGE_Y = 56, CHARGE_W = 16, CHARGE_H = 4;
     private static final int INV_LABEL_X = 47, INV_LABEL_Y = 157;
 
     private static final String[] UPGRADE_KEYS = {
@@ -142,9 +146,48 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         toggleButton.visible = craft;
         toggleButton.setMessage(Component.translatable(menu.craftEnabled()
                 ? "screen.zenkai.armor_fabricator.toggle.pause" : "screen.zenkai.armor_fabricator.toggle.resume"));
-        imbueButton.active = preview() != null && !menu.imbuing();
+        boolean template = hasTemplate();
+        imbueButton.setMessage(Component.translatable(template ? "screen.zenkai.armor_fabricator.template.apply"
+                : "screen.zenkai.armor_fabricator.imbue"));
+        AttributeTemplates.Plan plan = templatePlan();
+        imbueButton.active = !menu.imbuing() && (template ? plan != null && plan.ok() : preview() != null);
         tabCraft.active = !craft;
         tabAttr.active = craft;
+    }
+
+    private boolean hasTemplate() { return !menu.machineStack(ArmorFabricatorBlockEntity.SLOT_TEMPLATE).isEmpty(); }
+
+    @Nullable
+    private AttributeTemplates.Plan templatePlan() {
+        return ArmorFabricatorBlockEntity.templatePlan(minecraft == null ? null : minecraft.level,
+                menu.machineStack(ArmorFabricatorBlockEntity.SLOT_TEMPLATE),
+                menu.machineStack(ArmorFabricatorBlockEntity.SLOT_ARMOR),
+                menu.machineStack(ArmorFabricatorBlockEntity.SLOT_TARGET));
+    }
+
+    /** Coste que enseña el bloque inferior de Atributos: el de la plantilla si hay una, si no el de la sangre. */
+    private record Cost(long fe, long mb, @Nullable KiEnergyType fluid,
+                        java.util.function.Function<KiEnergyType, Long> mbWith) {}
+
+    @Nullable
+    private Cost cost() {
+        if (hasTemplate()) {
+            AttributeTemplates.Plan p = templatePlan();
+            if (p == null || !p.ok()) return null;
+            return new Cost(p.fe(), p.mb(), p.fluid(), p::mbWith);
+        }
+        ArmorFabricatorBlockEntity.ImbuePreview p = preview();
+        if (p == null) return null;
+        return new Cost(p.fe(), p.mb(), p.fluid(), p::mbWith);
+    }
+
+    /** Receta de duplicado de la plantilla puesta en la ranura del patrón (pestaña Fabricar). */
+    private Optional<RecipeHolder<TemplateDuplicationRecipe>> duplication() {
+        if (minecraft == null || minecraft.level == null) return Optional.empty();
+        ItemStack t = menu.machineStack(ArmorFabricatorBlockEntity.SLOT_PATTERN);
+        if (AttributeTemplates.kindOf(t) == null) return Optional.empty();
+        return minecraft.level.getRecipeManager().getRecipeFor(ModRecipes.TEMPLATE_DUPLICATION.get(),
+                new TemplateDuplicationRecipe.Input(t), minecraft.level);
     }
 
     @Nullable
@@ -195,6 +238,12 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         }
         drawBar(g, PROG_X, PROG_Y, PROG_W, PROG_H, menu.progressFraction());
 
+        Optional<RecipeHolder<TemplateDuplicationRecipe>> dup = duplication();
+        if (AttributeTemplates.kindOf(menu.machineStack(ArmorFabricatorBlockEntity.SLOT_PATTERN)) != null) {
+            renderDuplication(g, dup);
+            return;
+        }
+
         int y = CRAFT_INFO_Y;
         Optional<RecipeHolder<ArmorFabricationRecipe>> r = recipeFor(menu.selectedPiece());
         Component status;
@@ -215,7 +264,7 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         } else if (!menu.machineStack(ArmorFabricatorBlockEntity.SLOT_OUTPUT).isEmpty()) {
             status = Component.translatable("screen.zenkai.armor_fabricator.status.output_full");
             color = ZenkaiTechPalette.DENIED_ON_SCREEN;
-        } else if (materialCount(r.get().value()) < r.get().value().count()) {
+        } else if (materialCount(r.get().value().material()) < r.get().value().count()) {
             status = Component.translatable("screen.zenkai.armor_fabricator.status.no_material");
             color = ZenkaiTechPalette.DENIED_ON_SCREEN;
         } else {
@@ -226,8 +275,12 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         y += INFO_LH + 2;
         if (r.isPresent()) {
             ArmorFabricationRecipe rec = r.get().value();
-            int have = materialCount(rec);
-            infoRow(g, CRAFT_INFO_X, y, "screen.zenkai.armor_fabricator.material",
+            int have = materialCount(rec.material());
+            // Fase 5c: con material infundido la etiqueta pasa a ser el tipo con que saldrá la pieza, en su color (no
+            // cabe una cuarta fila en el panel). Detalle en el tooltip de la fila.
+            KiEnergyType inf = have >= rec.count() ? craftInfusion(rec) : null;
+            String label = inf == null ? "screen.zenkai.armor_fabricator.material" : inf.langKey();
+            infoRow(g, CRAFT_INFO_X, y, label, inf == null ? ZenkaiTechPalette.DIM_ON_SCREEN : inf.argb(),
                     Component.literal(ZenkaiNumbers.screen((long) have) + " / " + ZenkaiNumbers.screen((long) rec.count())),
                     have >= rec.count() ? ZenkaiTechPalette.TEXT_ON_SCREEN : ZenkaiTechPalette.DENIED_ON_SCREEN);
             y += INFO_LH;
@@ -236,11 +289,52 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         }
     }
 
-    private int materialCount(ArmorFabricationRecipe r) {
+    /** Tipo de infusión con que saldría la pieza (el más bajo del material que se gastaría), o null. */
+    @Nullable
+    private KiEnergyType craftInfusion(ArmorFabricationRecipe rec) {
+        return ArmorFabricatorBlockEntity.infusionOf(rec.material(), rec.count(), menu::machineStack);
+    }
+
+    /** Pestaña Fabricar con una plantilla en la ranura del patrón: duplicarla. */
+    private void renderDuplication(GuiGraphics g, Optional<RecipeHolder<TemplateDuplicationRecipe>> dup) {
+        int y = CRAFT_INFO_Y;
+        Component status;
+        int color;
+        if (dup.isEmpty()) {
+            status = Component.translatable("screen.zenkai.armor_fabricator.status.no_duplication");
+            color = ZenkaiTechPalette.DENIED_ON_SCREEN;
+        } else if (!menu.craftEnabled()) {
+            status = Component.translatable("screen.zenkai.armor_fabricator.status.paused");
+            color = ZenkaiTechPalette.DIM_ON_SCREEN;
+        } else if (menu.isWorking()) {
+            status = Component.translatable(menu.isTurbo() ? "screen.zenkai.armor_fabricator.status.turbo"
+                    : "screen.zenkai.armor_fabricator.status.duplicating");
+            color = ZenkaiTechPalette.OK_ON_SCREEN;
+        } else if (materialCount(dup.get().value().material()) < dup.get().value().count()) {
+            status = Component.translatable("screen.zenkai.armor_fabricator.status.no_material");
+            color = ZenkaiTechPalette.DENIED_ON_SCREEN;
+        } else {
+            status = Component.translatable("screen.zenkai.armor_fabricator.status.no_energy_or_output");
+            color = ZenkaiTechPalette.DENIED_ON_SCREEN;
+        }
+        PanelText.onDark(g, font, PanelText.fit(font, status, INFO_W), CRAFT_INFO_X, y, color);
+        y += INFO_LH + 2;
+        if (dup.isEmpty()) return;
+        TemplateDuplicationRecipe d = dup.get().value();
+        int have = materialCount(d.material());
+        infoRow(g, CRAFT_INFO_X, y, "screen.zenkai.armor_fabricator.material",
+                Component.literal(ZenkaiNumbers.screen((long) have) + " / " + ZenkaiNumbers.screen((long) d.count())),
+                have >= d.count() ? ZenkaiTechPalette.TEXT_ON_SCREEN : ZenkaiTechPalette.DENIED_ON_SCREEN);
+        y += INFO_LH;
+        infoRow(g, CRAFT_INFO_X, y, "screen.zenkai.armor_fabricator.cost",
+                Component.literal(ZenkaiNumbers.screen((long) d.energy()) + " FE"), ZenkaiTechPalette.TEXT_ON_SCREEN);
+    }
+
+    private int materialCount(net.minecraft.world.item.crafting.Ingredient material) {
         int n = 0;
         for (int i = 0; i < ArmorFabricatorBlockEntity.MATERIAL_SLOTS; i++) {
             ItemStack s = menu.machineStack(ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST + i);
-            if (!s.isEmpty() && r.material().test(s)) n += s.getCount();
+            if (!s.isEmpty() && material.test(s)) n += s.getCount();
         }
         return n;
     }
@@ -267,27 +361,43 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         }
 
         y = ATTR_COST_Y;
-        ArmorFabricatorBlockEntity.ImbuePreview p = preview();
-        if (p == null) {
-            for (var line : font.split(Component.translatable("screen.zenkai.armor_fabricator.imbue.hint"), INFO_W)) {
-                g.drawString(font, line, x, y, ZenkaiTechPalette.DIM_ON_SCREEN, true);
+        Cost c = cost();
+        if (c == null) {
+            // Sin coste que enseñar: el motivo de la plantilla si hay una, si no la pista de qué poner.
+            AttributeTemplates.Plan plan = templatePlan();
+            Component hint = plan != null ? Component.translatable(plan.problem().langKey())
+                    : Component.translatable(hasTemplate() ? "screen.zenkai.armor_fabricator.template.no_piece"
+                    : "screen.zenkai.armor_fabricator.imbue.hint");
+            int color = plan != null && plan.problem() != AttributeTemplates.Problem.NO_PIECE
+                    ? ZenkaiTechPalette.DENIED_ON_SCREEN : ZenkaiTechPalette.DIM_ON_SCREEN;
+            for (var line : font.split(hint, INFO_W)) {
+                g.drawString(font, line, x, y, color, true);
                 y += INFO_LH;
             }
             return;
         }
-        infoRow(g, x, y, "screen.zenkai.armor_fabricator.imbue.gain", attrGain(p.attribute(), p.points()),
-                ZenkaiTechPalette.OK_ON_SCREEN);
+        if (hasTemplate()) {
+            AttributeTemplates.Kind kind = AttributeTemplates.kindOf(menu.machineStack(ArmorFabricatorBlockEntity.SLOT_TEMPLATE));
+            infoRow(g, x, y, "screen.zenkai.armor_fabricator.template.action",
+                    Component.translatable("screen.zenkai.armor_fabricator.template.kind." + kind.id()),
+                    ZenkaiTechPalette.OK_ON_SCREEN);
+        } else {
+            ArmorFabricatorBlockEntity.ImbuePreview p = preview();
+            infoRow(g, x, y, "screen.zenkai.armor_fabricator.imbue.gain", attrGain(p.attribute(), p.points()),
+                    ZenkaiTechPalette.OK_ON_SCREEN);
+        }
         y += INFO_LH;
-        boolean feOk = menu.energy() >= p.fe();
+        boolean feOk = menu.energy() >= c.fe();
         infoRow(g, x, y, "screen.zenkai.armor_fabricator.cost",
-                Component.literal(ZenkaiNumbers.screen(p.fe()) + " FE"),
+                Component.literal(ZenkaiNumbers.screen(c.fe()) + " FE"),
                 feOk ? ZenkaiTechPalette.TEXT_ON_SCREEN : ZenkaiTechPalette.DENIED_ON_SCREEN);
         y += INFO_LH;
+        if (c.fluid() == null) return;   // reiniciar y transferir no gastan fluido
         // Con un tipo válido en el tanque (el pedido o uno superior) se muestra ESE tipo y lo que gasta; si no, el pedido.
         KiEnergyType inTank = menu.tankType();
-        long mb = p.mbWith(inTank);
-        KiEnergyType shown = mb >= 0 ? inTank : p.fluid();
-        long shownMb = mb >= 0 ? mb : p.mb();
+        long mb = c.mbWith().apply(inTank);
+        KiEnergyType shown = mb >= 0 ? inTank : c.fluid();
+        long shownMb = mb >= 0 ? mb : c.mb();
         boolean fluidOk = mb >= 0 && menu.tankAmount() >= mb;
         // El color del tipo va en la ETIQUETA: el Ki Divino es rojo y en la cifra se confundía con «falta» (captura 2026-11-22).
         infoRow(g, x, y, shown.langKey(), shown.argb(), Component.literal(ZenkaiNumbers.screen(shownMb) + " mB"),
@@ -360,6 +470,7 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
             return;
         }
         if (menu.tab() == ArmorFabricatorMenu.TAB_ATTR && kiTooltip(g, mouseX, mouseY, lmx, lmy)) return;
+        if (menu.tab() == ArmorFabricatorMenu.TAB_CRAFT && infusionTooltip(g, mouseX, mouseY, lmx, lmy)) return;
         if (menu.tab() == ArmorFabricatorMenu.TAB_CRAFT) {
             for (int i = 0; i < pieceButtons.size(); i++) {
                 if (pieceButtons.get(i).isMouseOver(mouseX, mouseY)) {
@@ -379,18 +490,56 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         }
     }
 
+    /** Tooltip de la fila de material de Fabricar: con qué infusión saldría la pieza y qué le da (Fase 5c). */
+    private boolean infusionTooltip(GuiGraphics g, int mouseX, int mouseY, int lmx, int lmy) {
+        int rowY = CRAFT_INFO_Y + INFO_LH + 2;
+        if (lmx < CRAFT_INFO_X || lmx >= INFO_RIGHT || lmy < rowY - 1 || lmy >= rowY + INFO_LH - 1) return false;
+        if (AttributeTemplates.kindOf(menu.machineStack(ArmorFabricatorBlockEntity.SLOT_PATTERN)) != null) return false;
+        Optional<RecipeHolder<ArmorFabricationRecipe>> r = recipeFor(menu.selectedPiece());
+        if (r.isEmpty()) return false;
+        ArmorFabricationRecipe rec = r.get().value();
+        KiEnergyType inf = materialCount(rec.material()) >= rec.count() ? craftInfusion(rec) : null;
+        List<TipLine> lines = new ArrayList<>();
+        if (inf == null) {
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.none").withStyle(ChatFormatting.BOLD)));
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.none.tip").withStyle(ChatFormatting.GRAY)));
+        } else {
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.result",
+                    Component.translatable(inf.langKey()).withStyle(st -> st.withColor(inf.argb() & 0xFFFFFF)))
+                    .withStyle(ChatFormatting.BOLD)));
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.durability",
+                    ZenkaiNumbers.fmt2(KiInfusion.durabilityMult(inf))).withStyle(ChatFormatting.GRAY)));
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.imbue",
+                    ZenkaiNumbers.fmt2(KiInfusion.imbueCostMult(inf)),
+                    Component.translatable(inf.langKey())).withStyle(ChatFormatting.GRAY)));
+        }
+        lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.infusion.lowest").withStyle(ChatFormatting.DARK_GRAY)));
+        drawTooltip(g, mouseX, mouseY, lines);
+        return true;
+    }
+
     /** Tooltip de la fila de Ki de Atributos: tipo pedido y lo que gasta cada tipo que vale. */
     private boolean kiTooltip(GuiGraphics g, int mouseX, int mouseY, int lmx, int lmy) {
         int rowY = ATTR_COST_Y + 2 * INFO_LH;
         if (lmx < ATTR_INFO_X || lmx >= INFO_RIGHT || lmy < rowY - 1 || lmy >= rowY + INFO_LH - 1) return false;
-        ArmorFabricatorBlockEntity.ImbuePreview p = preview();
-        if (p == null) return false;
+        Cost p = cost();
+        if (p == null || p.fluid() == null) return false;
+        KiEnergyType req = p.fluid();
         List<TipLine> lines = new ArrayList<>();
         lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.ki.requires",
-                Component.translatable(p.fluid().langKey()).withStyle(st -> st.withColor(p.fluid().argb() & 0xFFFFFF)))
+                Component.translatable(req.langKey()).withStyle(st -> st.withColor(req.argb() & 0xFFFFFF)))
                 .withStyle(ChatFormatting.BOLD)));
+        // Pieza infundida: el tipo sale de su infusión y el coste lleva su descuento (Fase 5c).
+        ItemStack payer = menu.machineStack(hasTemplate() && AttributeTemplates.kindOf(
+                menu.machineStack(ArmorFabricatorBlockEntity.SLOT_TEMPLATE)) == AttributeTemplates.Kind.COPY
+                ? ArmorFabricatorBlockEntity.SLOT_TARGET : ArmorFabricatorBlockEntity.SLOT_ARMOR);
+        KiEnergyType inf = KiInfusion.of(payer);
+        if (inf != null) {
+            lines.add(TipLine.of(Component.translatable("screen.zenkai.armor_fabricator.ki.infused",
+                    ZenkaiNumbers.fmt2(KiInfusion.imbueCostMult(inf))).withStyle(ChatFormatting.GRAY)));
+        }
         for (KiEnergyType t : KiEnergyType.values()) {
-            long mb = p.mbWith(t);
+            long mb = p.mbWith().apply(t);
             if (mb < 0) continue;
             lines.add(TipLine.of(Component.translatable(t.langKey()).withStyle(st -> st.withColor(t.argb() & 0xFFFFFF))
                     .append(Component.literal(": " + ZenkaiNumbers.screen(mb) + " mB").withStyle(ChatFormatting.GRAY))));
@@ -410,6 +559,8 @@ public class ArmorFabricatorScreen extends TechPanelScreen<ArmorFabricatorMenu> 
         }
         if (idx == ArmorFabricatorBlockEntity.SLOT_ARMOR) return "screen.zenkai.armor_fabricator.slot.armor";
         if (idx == ArmorFabricatorBlockEntity.SLOT_BLOOD) return "screen.zenkai.armor_fabricator.slot.blood";
+        if (idx == ArmorFabricatorBlockEntity.SLOT_TEMPLATE) return "screen.zenkai.armor_fabricator.slot.template";
+        if (idx == ArmorFabricatorBlockEntity.SLOT_TARGET) return "screen.zenkai.armor_fabricator.slot.target";
         return null;
     }
 

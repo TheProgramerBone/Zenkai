@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "zenkai:block/ki_infuser_front",
+    "side": "zenkai:block/ki_infuser_side",
+    "top": "zenkai:block/ki_infuser_top"
+  }
+}

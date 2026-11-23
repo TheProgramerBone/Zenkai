@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-22T21:59:54.5405542	Item Models: zenkai
+// 1.21.1	2026-11-22T23:03:49.1368546	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -48,9 +48,11 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/arcosian_seco
 f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/arcosian_third_form_helmet.json
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/arcosian_third_form_leggings.json
 7ea71cddd497289aacad4a322872bf0ffa4f12da assets/zenkai/models/item/armor_pattern.json
+8bb4e0a090b89e31b957b840f111c4ba4b7f660e assets/zenkai/models/item/augment_template.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/blue_ogre_spawn_egg.json
 477cbe418774071a890ad865103124bc1f40a9a6 assets/zenkai/models/item/constitution_blood.json
+544b4dd07df5524b6ae47905bc3b8222014850c9 assets/zenkai/models/item/copy_template.json
 223c60960208644fed9c0a545071a39d13d9a0c7 assets/zenkai/models/item/cut_hfil_cinder_sandstone_slab.json
 529e90664349a5dc51fc3469181219dd8621a53b assets/zenkai/models/item/cut_hfil_cinder_sandstone_stairs.json
 0032241d31f8d2aae76e52193b80f631c8977052 assets/zenkai/models/item/cut_hfil_cinder_sandstone_wall.json
@@ -170,6 +172,7 @@ c05a26afc97f1d391e49da02d06906a7f8be6b6e assets/zenkai/models/item/polished_hfil
 1aadc798c09d7d4459915d777d51a0e3940a2211 assets/zenkai/models/item/polished_sacred_stone_wall.json
 b290a2ac4143d0dabfb39df34cb0c6cc9968d8d1 assets/zenkai/models/item/raw_katchin.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/red_ogre_spawn_egg.json
+1109d25198f397fb191cfe2ed24660d616954ccf assets/zenkai/models/item/reset_template.json
 2c9476ba6af9b117de6bb1e6d746c5e800e6c9b8 assets/zenkai/models/item/sacred_stone.json
 a21c89c45fd490a4a84157f210dee37391ac16fc assets/zenkai/models/item/sacred_stone_brick_slab.json
 0d8bb44a60c67db7e77866a7575b3d13c10c69ab assets/zenkai/models/item/sacred_stone_brick_stairs.json
@@ -251,6 +254,7 @@ a367e6abbb7ef46c639a944b3edad7aa35c1af96 assets/zenkai/models/item/structural_co
 214e28f3fe1cf55552a9467db71087caadd6158b assets/zenkai/models/item/training_gi_chestplate.json
 70a5b027e9b9fb42072a7d1aa020743c61da9b12 assets/zenkai/models/item/training_gi_helmet.json
 5e2f627cfcce6196792eeee0128a1119026ca753 assets/zenkai/models/item/training_gi_leggings.json
+09bdd95be4e9c09d78d8c5ed2ecbe116d0b6a54c assets/zenkai/models/item/transfer_template.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/uranai_baba_spawn_egg.json
 d284292c52c8736c016fb678cd9a930dbfd03bab assets/zenkai/models/item/willpower_blood.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/yemma_spawn_egg.json

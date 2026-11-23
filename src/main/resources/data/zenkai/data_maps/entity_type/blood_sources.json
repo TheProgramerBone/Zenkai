@@ -229,18 +229,6 @@
         "quality": 2,
         "chance": 0.25
       }
-    ],
-    "zenkai:shadow_clone": [
-      {
-        "blood": "zenkai:dexterity_blood",
-        "quality": 2,
-        "chance": 0.25
-      },
-      {
-        "blood": "zenkai:willpower_blood",
-        "quality": 2,
-        "chance": 0.25
-      }
     ]
   }
 }

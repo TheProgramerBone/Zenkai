@@ -137,6 +137,18 @@ public final class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.VAR_INT)
                     .build());
 
+    /**
+     * Tipo de Ki con que se infundió el material (Fase 5c de la 0.7.0, KiInfusion): lo pone la infusora en el lingote y
+     * lo heredan hilo, tela y la armadura fabricada. Ausente = sin infundir. Se guarda por nombre («base», «divine»…)
+     * para que reordenar el enum no cambie los saves; por red viaja el ordinal.
+     */
+    public static final Supplier<DataComponentType<com.hmc.zenkai.feature.kichamber.KiEnergyType>> KI_INFUSION =
+            COMPONENTS.register("ki_infusion", () -> DataComponentType.<com.hmc.zenkai.feature.kichamber.KiEnergyType>builder()
+                    .persistent(com.hmc.zenkai.feature.armor.ArmorImbuingRecipe.KI_CODEC)
+                    .networkSynchronized(net.neoforged.neoforge.network.codec.NeoForgeStreamCodecs.enumCodec(
+                            com.hmc.zenkai.feature.kichamber.KiEnergyType.class))
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

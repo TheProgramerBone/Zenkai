@@ -50,6 +50,11 @@ public class ModBlockEntities {
                     .of(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity::new, ModBlocks.ARMOR_FABRICATOR.get())
                     .build(null));
 
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity>> KI_INFUSER =
+            BLOCK_ENTITIES.register("ki_infuser", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity::new, ModBlocks.KI_INFUSER.get())
+                    .build(null));
+
     public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity>> KI_CONTAINMENT_CHAMBER =
             BLOCK_ENTITIES.register("ki_containment_chamber", () -> BlockEntityType.Builder
                     .of(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity::new,

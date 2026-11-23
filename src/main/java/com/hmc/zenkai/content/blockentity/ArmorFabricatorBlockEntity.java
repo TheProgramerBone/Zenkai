@@ -10,6 +10,9 @@ import com.hmc.zenkai.feature.armor.ArmorImbuingRecipe;
 import com.hmc.zenkai.feature.armor.ArmorSets;
 import com.hmc.zenkai.feature.armor.ImbueCost;
 import com.hmc.zenkai.feature.armor.ImbuedAttributes;
+import com.hmc.zenkai.feature.armor.AttributeTemplates;
+import com.hmc.zenkai.feature.armor.KiInfusion;
+import com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
 import com.hmc.zenkai.registry.ModBlockEntities;
 import com.hmc.zenkai.registry.ModDataComponents;
@@ -66,6 +69,14 @@ import java.util.Optional;
  *
  * Ranuras de mejora: las seis de la cámara de contención con su mismo significado (P7; se reutilizan sus validadores),
  * salvo que aquí la batería DESCARGA en la máquina en vez de cargarse.
+ *
+ * Fase 5c (2026-11-22):
+ * - INFUSIÓN: la pieza fabricada hereda el tipo de infusión MÁS BAJO del material gastado (sin infundir si alguno no lo
+ *   estaba) y sube su durabilidad (KiInfusion). Imbuir una pieza infundida pide el fluido de su infusión y cuesta menos.
+ * - PLANTILLAS en Atributos: con una plantilla en su ranura, el botón aplica la plantilla en vez de imbuir con sangre
+ *   (misma carga y mismo cobro al final); copiar y transferir usan la ranura de pieza destino (AttributeTemplates).
+ * - DUPLICAR plantillas en Fabricar: una plantilla en la ranura del patrón usa TemplateDuplicationRecipe; la plantilla
+ *   se gasta y salen dos.
  */
 public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvider {
 
@@ -75,7 +86,9 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
     public static final int SLOT_MATERIAL_FIRST = 7, MATERIAL_SLOTS = 9;                    // 7..15
     public static final int SLOT_OUTPUT = 16;
     public static final int SLOT_ARMOR = 17, SLOT_BLOOD = 18;
-    public static final int SLOTS = 19;
+    /** Fase 5c: plantilla de atributos y pieza destino (copiar/transferir). Al FINAL para no mover las anteriores. */
+    public static final int SLOT_TEMPLATE = 19, SLOT_TARGET = 20;
+    public static final int SLOTS = 21;
 
     /** mB de fluido que gasta el turbo por tick de trabajo. */
     public static final int TURBO_MB_PER_TICK = 5;
@@ -92,16 +105,19 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
 
     public static boolean validFor(int slot, ItemStack stack) {
         if (slot < UPGRADE_SLOTS) return KiContainmentChamberBlockEntity.validFor(slot, stack);
-        if (slot == SLOT_PATTERN) return ArmorSets.setOf(stack) != null;
+        // Ranura del patrón: un patrón (fabricar) o una plantilla de atributos (duplicarla).
+        if (slot == SLOT_PATTERN) return ArmorSets.setOf(stack) != null || AttributeTemplates.kindOf(stack) != null;
         if (slot == SLOT_OUTPUT) return false;
-        if (slot == SLOT_ARMOR) return isArmorPiece(stack);
+        if (slot == SLOT_ARMOR || slot == SLOT_TARGET) return isArmorPiece(stack);
         if (slot == SLOT_BLOOD) return stack.getItem() instanceof BloodItem;
+        if (slot == SLOT_TEMPLATE) return AttributeTemplates.kindOf(stack) != null;
         return true;   // material: cualquier cosa (la receta decide si sirve)
     }
 
     public static int slotLimit(int slot) {
         if (slot < UPGRADE_SLOTS) return KiContainmentChamberBlockEntity.slotLimit(slot);
-        if (slot == SLOT_PATTERN || slot == SLOT_ARMOR) return 1;
+        if (slot == SLOT_ARMOR || slot == SLOT_TARGET) return 1;
+        // Patrón: uno; una pila de plantillas para duplicar también vale (se gasta de una en una).
         return 64;
     }
 
@@ -121,6 +137,21 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
         @Override protected void onContentsChanged(int slot) { setChanged(); }
         @Override public boolean isItemValid(int slot, @NotNull ItemStack stack) { return validFor(slot, stack); }
         @Override public int getSlotLimit(int slot) { return slotLimit(slot); }
+
+        /**
+         * deserializeNBT de vanilla REDIMENSIONA el handler al «Size» guardado: una máquina colocada antes de la 5c (19
+         * ranuras) cargaría con 19 y la ranura de plantilla reventaría con un índice fuera de rango. Se vuelve a ampliar
+         * conservando lo que había.
+         */
+        @Override
+        public void deserializeNBT(HolderLookup.@NotNull Provider reg, @NotNull CompoundTag nbt) {
+            super.deserializeNBT(reg, nbt);
+            if (stacks.size() < SLOTS) {
+                net.minecraft.core.NonNullList<ItemStack> grown = net.minecraft.core.NonNullList.withSize(SLOTS, ItemStack.EMPTY);
+                for (int i = 0; i < stacks.size(); i++) grown.set(i, stacks.get(i));
+                stacks = grown;
+            }
+        }
     };
 
     private final FluidTank tank = new FluidTank(ServerConfig.armorFabricatorTankCapacity(),
@@ -270,31 +301,85 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
     }
 
     /** Cuántas unidades del material de la receta hay en las 9 ranuras. */
-    public int materialCount(ArmorFabricationRecipe r) {
+    public int materialCount(ArmorFabricationRecipe r) { return materialCount(r.material()); }
+
+    /** Receta de duplicado para la plantilla puesta en la ranura del patrón, o vacío. */
+    public Optional<RecipeHolder<TemplateDuplicationRecipe>> currentDuplication() {
+        if (level == null) return Optional.empty();
+        ItemStack t = items.getStackInSlot(SLOT_PATTERN);
+        if (AttributeTemplates.kindOf(t) == null) return Optional.empty();
+        return level.getRecipeManager().getRecipeFor(ModRecipes.TEMPLATE_DUPLICATION.get(),
+                new TemplateDuplicationRecipe.Input(t), level);
+    }
+
+    /** Unidades de un material en las 9 ranuras. */
+    public int materialCount(net.minecraft.world.item.crafting.Ingredient material) {
         int n = 0;
         for (int i = 0; i < MATERIAL_SLOTS; i++) {
             ItemStack s = items.getStackInSlot(SLOT_MATERIAL_FIRST + i);
-            if (!s.isEmpty() && r.material().test(s)) n += s.getCount();
+            if (!s.isEmpty() && material.test(s)) n += s.getCount();
         }
         return n;
     }
 
+    /**
+     * Tipo de infusión que tendría la pieza si se fabricara ahora: el más bajo de las primeras {@code count} unidades
+     * del material, en el mismo orden en que {@link #consumeMaterial} las gasta (la pantalla lo enseña antes de fabricar).
+     */
+    @Nullable
+    public static KiEnergyType infusionOf(net.minecraft.world.item.crafting.Ingredient material, int count,
+                                          java.util.function.IntFunction<ItemStack> slotGetter) {
+        KiInfusion.Lowest lowest = new KiInfusion.Lowest();
+        int left = count;
+        for (int i = 0; i < MATERIAL_SLOTS && left > 0; i++) {
+            ItemStack s = slotGetter.apply(SLOT_MATERIAL_FIRST + i);
+            if (s.isEmpty() || !material.test(s)) continue;
+            lowest.add(s);
+            left -= Math.min(left, s.getCount());
+        }
+        return lowest.result();
+    }
+
     private void tickFabrication(Level level) {
-        Optional<RecipeHolder<ArmorFabricationRecipe>> found = currentRecipe();
         working = false;
         turbo = false;
+        Optional<RecipeHolder<TemplateDuplicationRecipe>> dup = currentDuplication();
+        if (dup.isPresent()) {
+            TemplateDuplicationRecipe d = dup.get().value();
+            work(level, d.time(), d.energyPerTick(), d.material(), d.count(), d.result(), () -> {
+                consumeMaterial(d.material(), d.count());
+                items.extractItem(SLOT_PATTERN, 1, false);   // la plantilla se gasta (el patrón no)
+                return d.assemble(new TemplateDuplicationRecipe.Input(ItemStack.EMPTY), level.registryAccess());
+            });
+            return;
+        }
+        Optional<RecipeHolder<ArmorFabricationRecipe>> found = currentRecipe();
         if (found.isEmpty()) { reset(); return; }
         ArmorFabricationRecipe r = found.get().value();
-        maxProgress = r.time();
+        work(level, r.time(), r.energyPerTick(), r.material(), r.count(), r.result(), () -> {
+            KiEnergyType inf = infusionOf(r.material(), r.count(), items::getStackInSlot);
+            consumeMaterial(r.material(), r.count());
+            return KiInfusion.applyToArmor(r.assemble(new ArmorFabricationRecipe.Input(r.pattern(), r.piece()),
+                    level.registryAccess()), inf);
+        });
+    }
+
+    /**
+     * Avance común de fabricar y duplicar: FE por tick, turbo con fluido tolerado, mejoras de velocidad y pausa. Al
+     * completar llama a {@code finish} (gasta y devuelve lo que sale) y lo mete en la salida.
+     */
+    private void work(Level level, int time, int fePerTick, net.minecraft.world.item.crafting.Ingredient material, int count,
+                      ItemStack preview, java.util.function.Supplier<ItemStack> finish) {
+        maxProgress = time;
         if (!craftEnabled) return;   // pausada: ni material ni FE, y el avance se queda donde estaba
-        if (!items.getStackInSlot(SLOT_OUTPUT).isEmpty() || materialCount(r) < r.count()) { reset(); return; }
+        if (!fitsOutput(preview) || materialCount(material) < count) { reset(); return; }
 
         int step = 1 + (int) Math.round(speedUpgrades() * SPEED_PER_UPGRADE);
         KiEnergyType t = tankType();
         boolean canTurbo = t != null && tolerates(t) && tank.getFluidAmount() >= TURBO_MB_PER_TICK;
         if (canTurbo) step *= 2;
-        step = Math.min(step, r.time() - progress);
-        long fe = (long) r.energyPerTick() * step;
+        step = Math.min(step, time - progress);
+        long fe = (long) fePerTick * step;
         if (energy.stored < fe) return;   // sin FE se para, sin perder el avance
 
         energy.stored -= (int) fe;
@@ -304,25 +389,36 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
         }
         working = true;
         progress += step;
-        if (progress >= r.time()) {
-            consumeMaterial(r);
-            items.setStackInSlot(SLOT_OUTPUT, r.assemble(new ArmorFabricationRecipe.Input(r.pattern(), r.piece()),
-                    level.registryAccess()));
+        if (progress >= time) {
+            ItemStack out = finish.get();
+            ItemStack cur = items.getStackInSlot(SLOT_OUTPUT);
+            if (cur.isEmpty()) items.setStackInSlot(SLOT_OUTPUT, out);
+            else cur.grow(out.getCount());
             progress = 0;
         }
         setChanged();
+    }
+
+    /**
+     * ¿Cabe lo que sale en la salida? Vacía, o el mismo ítem con los mismos componentes y sitio (las plantillas
+     * duplicadas se apilan; una armadura nunca, por su tope de 1).
+     */
+    private boolean fitsOutput(ItemStack result) {
+        ItemStack cur = items.getStackInSlot(SLOT_OUTPUT);
+        if (cur.isEmpty()) return true;
+        return ItemStack.isSameItemSameComponents(cur, result) && cur.getCount() + result.getCount() <= cur.getMaxStackSize();
     }
 
     private void reset() {
         if (progress != 0) { progress = 0; setChanged(); }
     }
 
-    private void consumeMaterial(ArmorFabricationRecipe r) {
-        int left = r.count();
+    private void consumeMaterial(net.minecraft.world.item.crafting.Ingredient material, int count) {
+        int left = count;
         for (int i = 0; i < MATERIAL_SLOTS && left > 0; i++) {
             int slot = SLOT_MATERIAL_FIRST + i;
             ItemStack s = items.getStackInSlot(slot);
-            if (s.isEmpty() || !r.material().test(s)) continue;
+            if (s.isEmpty() || !material.test(s)) continue;
             int take = Math.min(left, s.getCount());
             items.extractItem(slot, take, false);
             left -= take;
@@ -338,10 +434,32 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
         ZenkaiAttributes attr = b.attribute();
         int q = BloodItem.quality(blood);
         int cur = piece.getOrDefault(ModDataComponents.IMBUED.get(), ImbuedAttributes.NONE).get(attr);
-        long fe = ImbueCost.totalCost(cur, q);
-        long mb = ImbueCost.totalCost(cur, q, IMBUE_MB_PER_POINT,
-                ServerConfig.imbueCostThreshold(), ServerConfig.imbueCostScale());
+        // Fase 5c: una pieza infundida abarata FE y fluido (multiplica el resultado, la curva no se toca).
+        KiEnergyType inf = KiInfusion.of(piece);
+        long fe = KiInfusion.discounted(ImbueCost.totalCost(cur, q), inf);
+        long mb = KiInfusion.discounted(ImbueCost.totalCost(cur, q, IMBUE_MB_PER_POINT,
+                ServerConfig.imbueCostThreshold(), ServerConfig.imbueCostScale()), inf);
         return new ImbuePreview(attr, q, cur, fe, mb, requiredKiType(level, piece));
+    }
+
+    /** Plan de la plantilla puesta (null si no hay plantilla). Lo usan el botón y la pantalla. */
+    @Nullable
+    public static AttributeTemplates.Plan templatePlan(@Nullable Level level, ItemStack template, ItemStack piece,
+                                                       ItemStack target) {
+        return AttributeTemplates.plan(level, template, piece, target);
+    }
+
+    @Nullable
+    private AttributeTemplates.Plan templatePlan() {
+        return templatePlan(level, items.getStackInSlot(SLOT_TEMPLATE), items.getStackInSlot(SLOT_ARMOR),
+                items.getStackInSlot(SLOT_TARGET));
+    }
+
+    /** Clave de lang del motivo por el que la plantilla puesta no se puede aplicar, o null. */
+    @Nullable
+    public String templateProblemKey() {
+        AttributeTemplates.Plan p = templatePlan();
+        return p == null || p.ok() ? null : p.problem().langKey();
     }
 
     /**
@@ -354,7 +472,7 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
 
     /** Resultado de pulsar Imbuir: OK o el motivo por el que no se pudo (clave de lang). */
     public enum ImbueResult {
-        OK, NO_INPUT, NO_ENERGY, NO_FLUID;
+        OK, NO_INPUT, NO_ENERGY, NO_FLUID, BAD_TEMPLATE;
         public String langKey() { return "screen.zenkai.armor_fabricator.imbue." + name().toLowerCase(java.util.Locale.ROOT); }
     }
 
@@ -389,8 +507,9 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
         setChanged();
     }
 
-    /** ¿Se podría imbuir ahora mismo? OK o el motivo. */
+    /** ¿Se podría imbuir (o aplicar la plantilla puesta) ahora mismo? OK o el motivo. */
     private ImbueResult canImbue() {
+        if (!items.getStackInSlot(SLOT_TEMPLATE).isEmpty()) return canApplyTemplate(templatePlan());
         ImbuePreview p = preview(level, items.getStackInSlot(SLOT_ARMOR), items.getStackInSlot(SLOT_BLOOD));
         if (p == null) return ImbueResult.NO_INPUT;
         if (energy.stored < p.fe()) return ImbueResult.NO_ENERGY;
@@ -399,8 +518,40 @@ public class ArmorFabricatorBlockEntity extends BlockEntity implements MenuProvi
         return ImbueResult.OK;
     }
 
-    /** Imbuye una vez (una sangre) al momento, sin carga: lo llama el final de la carga (y los gametests). Servidor. */
+    private ImbueResult canApplyTemplate(@Nullable AttributeTemplates.Plan p) {
+        if (p == null) return ImbueResult.NO_INPUT;
+        if (!p.ok()) return ImbueResult.BAD_TEMPLATE;
+        if (energy.stored < p.fe()) return ImbueResult.NO_ENERGY;
+        long mb = p.mbWith(tankType());
+        if (mb < 0 || tank.getFluidAmount() < mb) return ImbueResult.NO_FLUID;
+        return ImbueResult.OK;
+    }
+
+    /**
+     * Aplica la plantilla al momento: cobra FE y fluido, gasta UNA plantilla y deja las piezas nuevas en sus ranuras.
+     * Lo llama el final de la carga (y los gametests). Servidor.
+     */
+    public ImbueResult applyTemplate() {
+        AttributeTemplates.Plan p = templatePlan();
+        ImbueResult check = canApplyTemplate(p);
+        if (check != ImbueResult.OK) return check;
+        long mb = p.mbWith(tankType());
+        energy.stored -= (int) p.fe();
+        if (mb > 0) tank.drain((int) mb, IFluidHandler.FluidAction.EXECUTE);
+        AttributeTemplates.Result r = AttributeTemplates.apply(p, items.getStackInSlot(SLOT_ARMOR), items.getStackInSlot(SLOT_TARGET));
+        items.extractItem(SLOT_TEMPLATE, 1, false);
+        items.setStackInSlot(SLOT_ARMOR, r.piece());
+        if (p.kind().needsTarget()) items.setStackInSlot(SLOT_TARGET, r.target());
+        setChanged();
+        return ImbueResult.OK;
+    }
+
+    /**
+     * Imbuye una vez (una sangre) al momento, sin carga: lo llama el final de la carga (y los gametests). Servidor.
+     * Con una plantilla puesta aplica la plantilla (el botón es el mismo).
+     */
     public ImbueResult imbue() {
+        if (!items.getStackInSlot(SLOT_TEMPLATE).isEmpty()) return applyTemplate();
         ItemStack piece = items.getStackInSlot(SLOT_ARMOR);
         ItemStack blood = items.getStackInSlot(SLOT_BLOOD);
         ImbuePreview p = preview(level, piece, blood);

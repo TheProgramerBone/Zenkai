@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "M": {
+      "item": "zenkai:energy_crystal"
+    },
+    "T": {
+      "item": "zenkai:augment_template"
+    }
+  },
+  "pattern": [
+    "KTK",
+    "KMK",
+    "KKK"
+  ],
+  "result": {
+    "count": 2,
+    "id": "zenkai:augment_template"
+  }
+}

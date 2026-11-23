@@ -245,6 +245,14 @@ public class Zenkai {
                 ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.energyHandler());
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
                 ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.fluidHandler());
+
+        // Infusora de Ki (Fase 5c): FE, fluido de Ki e ítems (entra por la entrada, sale por la salida) por cualquier cara.
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.KI_INFUSER.get(), (be, side) -> be.energyHandler());
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.KI_INFUSER.get(), (be, side) -> be.fluidHandler());
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.KI_INFUSER.get(), (be, side) -> be.automationHandler());
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────
@@ -261,6 +269,7 @@ public class Zenkai {
             event.register(ModMenuTypes.TANK.get(), com.hmc.zenkai.client.gui.screens.TankScreen::new);
             event.register(ModMenuTypes.GRAVITY_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.GravityChamberScreen::new);
             event.register(ModMenuTypes.ARMOR_FABRICATOR.get(), com.hmc.zenkai.client.gui.screens.ArmorFabricatorScreen::new);
+            event.register(ModMenuTypes.KI_INFUSER.get(), com.hmc.zenkai.client.gui.screens.KiInfuserScreen::new);
         }
 
         @SubscribeEvent

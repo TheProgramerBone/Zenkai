@@ -177,6 +177,20 @@ public class ModItems {
      */
     public static final DeferredItem<Item> ARMOR_PATTERN = ITEMS.registerItem("armor_pattern",
             com.hmc.zenkai.content.item.ArmorPatternItem::new, new Item.Properties().stacksTo(1));
+    /**
+     * Plantillas de atributos (Fase 5c): reiniciar, copiar, transferir y aumentar lo imbuido de una pieza. Cuatro ítems
+     * (no uno con componente como el patrón): cada uno tiene su arte, su receta y su entrada de loot. Ver AttributeTemplates.
+     */
+    public static final DeferredItem<Item> RESET_TEMPLATE = template("reset_template", com.hmc.zenkai.feature.armor.AttributeTemplates.Kind.RESET);
+    public static final DeferredItem<Item> COPY_TEMPLATE = template("copy_template", com.hmc.zenkai.feature.armor.AttributeTemplates.Kind.COPY);
+    public static final DeferredItem<Item> TRANSFER_TEMPLATE = template("transfer_template", com.hmc.zenkai.feature.armor.AttributeTemplates.Kind.TRANSFER);
+    public static final DeferredItem<Item> AUGMENT_TEMPLATE = template("augment_template", com.hmc.zenkai.feature.armor.AttributeTemplates.Kind.AUGMENT);
+
+    private static DeferredItem<Item> template(String id, com.hmc.zenkai.feature.armor.AttributeTemplates.Kind kind) {
+        return ITEMS.registerItem(id, p -> new com.hmc.zenkai.content.item.AttributeTemplateItem(kind, p),
+                new Item.Properties().rarity(Rarity.UNCOMMON));
+    }
+
     /** Sangre por ATRIBUTO (Fase 5b, P2; 2026-11-22 el usuario pidió quitar el «por raza»: así un zombi puede soltar
      *  Sangre de Fuerza sin que suene raro). Cada una sube su atributo en la pestaña de atributos; la calidad (+1/+2/+5)
      *  va en el componente {@code zenkai:blood_quality}. Los ids viejos por raza (saiyan_blood…) se migran con

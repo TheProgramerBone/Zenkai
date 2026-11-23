@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "M": {
+      "tag": "c:ender_pearls"
+    },
+    "T": {
+      "item": "zenkai:transfer_template"
+    }
+  },
+  "pattern": [
+    "KTK",
+    "KMK",
+    "KKK"
+  ],
+  "result": {
+    "count": 2,
+    "id": "zenkai:transfer_template"
+  }
+}

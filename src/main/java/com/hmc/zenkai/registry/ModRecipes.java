@@ -33,6 +33,17 @@ public final class ModRecipes {
     public static final Supplier<RecipeSerializer<ArmorImbuingRecipe>> ARMOR_IMBUING_SERIALIZER =
             SERIALIZERS.register("armor_imbuing", ArmorImbuingRecipe.Serializer::new);
 
+    /** Receta de mesa que respeta la infusión de Ki del katchin (Fase 5c): hereda el tipo o rechaza lo infundido. */
+    public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.armor.InfusedCraftingRecipe>> INFUSED_CRAFTING_SERIALIZER =
+            SERIALIZERS.register("infused_crafting", com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Serializer::new);
+
+    /** Duplicado de plantillas de atributos en la máquina de fabricación (Fase 5c). */
+    public static final Supplier<RecipeType<com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe>> TEMPLATE_DUPLICATION =
+            TYPES.register("template_duplication", () -> RecipeType.simple(
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "template_duplication")));
+    public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe>> TEMPLATE_DUPLICATION_SERIALIZER =
+            SERIALIZERS.register("template_duplication", com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe.Serializer::new);
+
     public static void register(IEventBus bus) {
         TYPES.register(bus);
         SERIALIZERS.register(bus);

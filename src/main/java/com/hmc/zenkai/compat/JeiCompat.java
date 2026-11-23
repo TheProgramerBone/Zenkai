@@ -50,7 +50,7 @@ import java.util.List;
  * {@code zenkai:blood_quality}).
  *
  * Recetas (0.7.0, 2026-11-22, pedido del usuario): fabricación de armaduras, imbuir (tipo de Ki por pieza) y qué mob
- * suelta qué sangre. Catalizador de las dos primeras: la máquina de fabricación; zona clicable sobre la barra de
+ * suelta qué sangre; Fase 5c: infusora de Ki y duplicado de plantillas. Catalizador de las dos primeras: la máquina de fabricación; zona clicable sobre la barra de
  * progreso, solo en la pestaña Fabricar (en Atributos no hay hueco libre que no sea un botón).
  */
 @JeiPlugin
@@ -106,7 +106,8 @@ public class JeiCompat implements IModPlugin {
     public void registerCategories(@NotNull IRecipeCategoryRegistration registration) {
         var gui = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(new ArmorFabricationCategory(gui), new ArmorImbuingCategory(gui),
-                new BloodDropsCategory(gui));
+                new BloodDropsCategory(gui), new com.hmc.zenkai.compat.jei.KiInfusionCategory(gui),
+                new com.hmc.zenkai.compat.jei.TemplateDuplicationCategory(gui));
     }
 
     @Override
@@ -144,6 +145,18 @@ public class JeiCompat implements IModPlugin {
         drops.sort((a, b) -> b.maxQuality() != a.maxQuality() ? b.maxQuality() - a.maxQuality()
                 : BuiltInRegistries.ENTITY_TYPE.getKey(a.entity()).compareTo(BuiltInRegistries.ENTITY_TYPE.getKey(b.entity())));
         registration.addRecipes(BloodDropsCategory.TYPE, drops);
+
+        // Fase 5c: infusora (una entrada por tipo de Ki, con lo que diga el tag zenkai:ki_infusable) y duplicado.
+        List<ItemStack> infusable = new ArrayList<>();
+        BuiltInRegistries.ITEM.getTagOrEmpty(com.hmc.zenkai.feature.armor.KiInfusion.INFUSABLE)
+                .forEach(h -> infusable.add(new ItemStack(h.value())));
+        if (!infusable.isEmpty()) {
+            List<com.hmc.zenkai.compat.jei.KiInfusionCategory.Display> inf = new ArrayList<>();
+            for (KiEnergyType t : KiEnergyType.values()) inf.add(new com.hmc.zenkai.compat.jei.KiInfusionCategory.Display(infusable, t));
+            registration.addRecipes(com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE, inf);
+        }
+        registration.addRecipes(com.hmc.zenkai.compat.jei.TemplateDuplicationCategory.TYPE,
+                new ArrayList<>(recipes.getAllRecipesFor(ModRecipes.TEMPLATE_DUPLICATION.get())));
     }
 
     @Override
@@ -158,7 +171,9 @@ public class JeiCompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(@NotNull IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(ModBlocks.ARMOR_FABRICATOR.get(), ArmorFabricationCategory.TYPE, ArmorImbuingCategory.TYPE);
+        registration.addRecipeCatalyst(ModBlocks.ARMOR_FABRICATOR.get(), ArmorFabricationCategory.TYPE, ArmorImbuingCategory.TYPE,
+                com.hmc.zenkai.compat.jei.TemplateDuplicationCategory.TYPE);
+        registration.addRecipeCatalyst(ModBlocks.KI_INFUSER.get(), com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE);
     }
 
     @Override
