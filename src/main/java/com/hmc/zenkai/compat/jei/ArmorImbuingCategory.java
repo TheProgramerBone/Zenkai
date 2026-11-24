@@ -1,6 +1,6 @@
 package com.hmc.zenkai.compat.jei;
 
-import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
+import com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity;
 import com.hmc.zenkai.feature.armor.ArmorImbuingRecipe;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
 import com.hmc.zenkai.registry.ModBlocks;
@@ -40,7 +40,7 @@ public class ArmorImbuingCategory extends AbstractRecipeCategory<ArmorImbuingCat
 
     public ArmorImbuingCategory(IGuiHelper gui) {
         super(TYPE, Component.translatable("jei.zenkai.armor_imbuing"),
-                gui.createDrawableItemLike(ModBlocks.ARMOR_FABRICATOR.get()), W, H);
+                gui.createDrawableItemLike(ModBlocks.IMBUING_STATION.get()), W, H);
         this.arrow = gui.getRecipeArrow();
     }
 
@@ -49,8 +49,8 @@ public class ArmorImbuingCategory extends AbstractRecipeCategory<ArmorImbuingCat
         IRecipeSlotBuilder in = b.addSlot(RecipeIngredientRole.INPUT, 1, 1).setStandardSlotBackground().addItemStacks(d.pieces());
         b.addSlot(RecipeIngredientRole.INPUT, 1, 21).setStandardSlotBackground().addItemStacks(JeiBloods.all());
         IRecipeSlotBuilder fluid = b.addSlot(RecipeIngredientRole.INPUT, 21, 11).setStandardSlotBackground()
-                .setFluidRenderer((long) ArmorFabricatorBlockEntity.IMBUE_MB_PER_POINT, false, 16, 16);
-        long base = (long) ArmorFabricatorBlockEntity.IMBUE_MB_PER_POINT;
+                .setFluidRenderer((long) ImbuingStationBlockEntity.IMBUE_MB_PER_POINT, false, 16, 16);
+        long base = (long) ImbuingStationBlockEntity.IMBUE_MB_PER_POINT;
         for (KiEnergyType t : KiEnergyType.values()) {
             long mb = ArmorImbuingRecipe.scaledMb(base, d.ki(), t);
             if (mb > 0) fluid.addFluidStack(t.fluid().source().get(), mb);

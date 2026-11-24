@@ -50,6 +50,16 @@ public class ModBlockEntities {
                     .of(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity::new, ModBlocks.ARMOR_FABRICATOR.get())
                     .build(null));
 
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.CrusherBlockEntity>> CRUSHER =
+            BLOCK_ENTITIES.register("crusher", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.CrusherBlockEntity::new, ModBlocks.CRUSHER.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity>> IMBUING_STATION =
+            BLOCK_ENTITIES.register("imbuing_station", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity::new, ModBlocks.IMBUING_STATION.get())
+                    .build(null));
+
     public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity>> KI_INFUSER =
             BLOCK_ENTITIES.register("ki_infuser", () -> BlockEntityType.Builder
                     .of(com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity::new, ModBlocks.KI_INFUSER.get())
@@ -89,6 +99,12 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("gravity_chamber_port", () -> BlockEntityType.Builder
                     .of(com.hmc.zenkai.content.blockentity.GravityChamberPortBlockEntity::new,
                             ModBlocks.GRAVITY_CHAMBER_PORT.get())
+                    .build(null));
+
+    /** Cápsula Hoi-Poi colocada (Fase 6): guarda el stack y el modo (contorno / armada / llena). */
+    public static final Supplier<BlockEntityType<com.hmc.zenkai.content.blockentity.CapsuleBlockEntity>> CAPSULE =
+            BLOCK_ENTITIES.register("capsule", () -> BlockEntityType.Builder
+                    .of(com.hmc.zenkai.content.blockentity.CapsuleBlockEntity::new, ModBlocks.CAPSULE.get())
                     .build(null));
 
     public static void register(IEventBus eventBus) {

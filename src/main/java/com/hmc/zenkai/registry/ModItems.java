@@ -84,7 +84,8 @@ public class ModItems {
             Item::new, new Item.Properties());
 
     // ── Mejoras de máquina y batería (0.7.0, Fase 2b) ────────────────────────
-    // La tolerancia a Ki Base viene de serie en las máquinas: solo hay mejora para los otros tres tipos.
+    // La tolerancia a Ki Normal (id «base») viene de serie en las máquinas: solo hay mejora para los otros tres tipos.
+    // Desde el 2026-11-23 van en UNA sola ranura y cada nivel absorbe a los de debajo (KiContainmentChamberBlockEntity.tolerates).
     public static final DeferredItem<Item> KI_TOLERANCE_SUPER = ITEMS.registerItem("ki_tolerance_super",
             com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> KI_TOLERANCE_DIVINE = ITEMS.registerItem("ki_tolerance_divine",
@@ -95,6 +96,9 @@ public class ModItems {
             com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> MACHINE_STORAGE_UPGRADE = ITEMS.registerItem("machine_storage_upgrade",
             com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16));
+    /** Eficiencia de fluido (2026-11-24): recorta el fluido de Ki que gasta la máquina (turbo, infusión, imbuido). */
+    public static final DeferredItem<Item> MACHINE_EFFICIENCY_UPGRADE = ITEMS.registerItem("machine_efficiency_upgrade",
+            com.hmc.zenkai.content.item.MachineUpgradeItem::new, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
     public static final DeferredItem<Item> ENERGY_BATTERY = ITEMS.registerItem("energy_battery",
             com.hmc.zenkai.content.item.EnergyBatteryItem::new, new Item.Properties());
     // Mejoras de la cámara de gravedad (Fase 3): fijan la g máxima de la consola.
@@ -114,6 +118,35 @@ public class ModItems {
     public static final DeferredItem<Item> TRAINING_DRONE = ITEMS.registerItem("training_drone",
             com.hmc.zenkai.content.item.TrainingDroneItem::new, new Item.Properties().rarity(Rarity.UNCOMMON));
 
+    /**
+     * Cápsulas Hoi-Poi (Fase 6), una por rango. Las ids siguen el patrón {@code capsule_<metal>}: CapsuleItemIds reconoce
+     * una cápsula escrita en un NBT por ese prefijo (cápsulas dentro de cápsulas), así que no se renombran.
+     */
+    public static final DeferredItem<Item> CAPSULE_COPPER = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.COPPER, Rarity.COMMON);
+    public static final DeferredItem<Item> CAPSULE_IRON = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.IRON, Rarity.COMMON);
+    public static final DeferredItem<Item> CAPSULE_GOLD = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.GOLD, Rarity.UNCOMMON);
+    public static final DeferredItem<Item> CAPSULE_DIAMOND = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.DIAMOND, Rarity.UNCOMMON);
+    public static final DeferredItem<Item> CAPSULE_KATCHIN = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.KATCHIN, Rarity.RARE);
+    public static final DeferredItem<Item> CAPSULE_NETHERITE = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.NETHERITE, Rarity.EPIC);
+
+    private static DeferredItem<Item> capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier tier, Rarity rarity) {
+        Item.Properties props = new Item.Properties().rarity(rarity);
+        if (tier == com.hmc.zenkai.feature.capsule.CapsuleTier.NETHERITE) props.fireResistant();
+        return ITEMS.registerItem("capsule_" + tier.id(), p -> new com.hmc.zenkai.content.item.CapsuleItem(tier, p), props);
+    }
+
+    /** Ítem de cada rango (para el pick-block del bloque colocado y las recetas). */
+    public static Item capsule(com.hmc.zenkai.feature.capsule.CapsuleTier tier) {
+        return switch (tier) {
+            case COPPER -> CAPSULE_COPPER.get();
+            case IRON -> CAPSULE_IRON.get();
+            case GOLD -> CAPSULE_GOLD.get();
+            case DIAMOND -> CAPSULE_DIAMOND.get();
+            case KATCHIN -> CAPSULE_KATCHIN.get();
+            case NETHERITE -> CAPSULE_NETHERITE.get();
+        };
+    }
+
     /** Llave: pantalla de caras en cruz y desmontar (WrenchItem). En el tag c:tools/wrench. */
     public static final DeferredItem<Item> WRENCH = ITEMS.registerItem("wrench",
             com.hmc.zenkai.content.item.WrenchItem::new, new Item.Properties());
@@ -125,12 +158,36 @@ public class ModItems {
     /**
      * Hilo y tela de katchin (Fase 5a de la 0.7.0): el katchin es el material ÚNICO de fabricación de armaduras (modelo de
      * DMZ, §3.4); el lingote sirve para lo metálico y el hilo/tela para la ropa. Mesa de crafteo: 1 lingote → 4 hilos y
-     * 4 hilos en 2×2 → 1 tela (decisión 2026-11-22). En la 5c heredan el tipo de infusión del lingote (componente).
+     * 4 hilos en 2×2 → 1 tela (decisión 2026-11-22).
      */
     public static final DeferredItem<Item> KATCHIN_THREAD = ITEMS.registerItem("katchin_thread",
             Item::new, new Item.Properties().rarity(Rarity.RARE));
     public static final DeferredItem<Item> KATCHIN_CLOTH = ITEMS.registerItem("katchin_cloth",
             Item::new, new Item.Properties().rarity(Rarity.RARE));
+
+    /**
+     * Katchin infundido como ítems propios (rework del 2026-11-23): 4 niveles × lingote, hilo y tela; el bloque de cada
+     * nivel está en ModBlocks. Ids con el prefijo del FLUIDO del nivel (ki_base/ki_super/ki_divine/ki_legendary, decisión
+     * del usuario): «Ki Base» se llama «Ki Normal» solo en la traducción. Agrupados por forma para el orden del creativo.
+     */
+    public static final java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredItem<Item>> INFUSED_KATCHIN_INGOTS =
+            infusedKatchin(InfusedKatchinItem.Form.INGOT, "ingot");
+    public static final java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredItem<Item>> INFUSED_KATCHIN_THREADS =
+            infusedKatchin(InfusedKatchinItem.Form.THREAD, "thread");
+    public static final java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredItem<Item>> INFUSED_KATCHIN_CLOTHS =
+            infusedKatchin(InfusedKatchinItem.Form.CLOTH, "cloth");
+
+    private static java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredItem<Item>> infusedKatchin(
+            InfusedKatchinItem.Form form, String suffix) {
+        var map = new java.util.EnumMap<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredItem<Item>>(
+                com.hmc.zenkai.feature.kichamber.KiEnergyType.class);
+        for (var t : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
+            Rarity r = t.ordinal() >= com.hmc.zenkai.feature.kichamber.KiEnergyType.DIVINE.ordinal() ? Rarity.EPIC : Rarity.RARE;
+            map.put(t, ITEMS.registerItem(t.fluidName() + "_katchin_" + suffix,
+                    p -> new InfusedKatchinItem(t, form, p), new Item.Properties().rarity(r)));
+        }
+        return java.util.Collections.unmodifiableMap(map);
+    }
 
     // ── Armaduras de Dragon Ball (Fase 5b de la 0.7.0): solo de la máquina de fabricación ──
     public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_HELMET = dbArmor("saiyan_armor_helmet",
@@ -225,6 +282,12 @@ public class ModItems {
             Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> ENERGY_CRYSTAL = ITEMS.registerItem("energy_crystal",
+            Item::new, new Item.Properties());
+
+    /** Polvos del Triturador (Fase 5d): el de katchin se funde en lingote; ambos son ingrediente de recetas nuevas. */
+    public static final DeferredItem<Item> KATCHIN_DUST = ITEMS.registerItem("katchin_dust",
+            Item::new, new Item.Properties());
+    public static final DeferredItem<Item> ENERGY_CRYSTAL_DUST = ITEMS.registerItem("energy_crystal_dust",
             Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> SACRED_STONE = ITEMS.registerItem("sacred_stone",

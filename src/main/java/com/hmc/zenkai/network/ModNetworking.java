@@ -839,5 +839,15 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket.TYPE,
                 com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket::handle);
+
+        // Cápsulas Hoi-Poi (Fase 6): pantalla con el resumen del servidor y botón Guardar.
+        registrar.playToClient(
+                com.hmc.zenkai.feature.capsule.OpenCapsuleScreenPayload.TYPE,
+                com.hmc.zenkai.feature.capsule.OpenCapsuleScreenPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openCapsuleScreen(payload)));
+        registrar.playToServer(
+                com.hmc.zenkai.feature.capsule.CapsuleArmPayload.TYPE,
+                com.hmc.zenkai.feature.capsule.CapsuleArmPayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.capsule.CapsuleArmPayload::handle);
     }
 }

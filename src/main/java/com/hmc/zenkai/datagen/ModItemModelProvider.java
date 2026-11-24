@@ -33,6 +33,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.KI_TOLERANCE_LEGENDARY.get());
         basicItem(ModItems.MACHINE_SPEED_UPGRADE.get());
         basicItem(ModItems.MACHINE_STORAGE_UPGRADE.get());
+        basicItem(ModItems.MACHINE_EFFICIENCY_UPGRADE.get());
         basicItem(ModItems.ENERGY_BATTERY.get());
         basicItem(ModItems.ELITE_CIRCUIT.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
@@ -50,6 +51,11 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.KATCHIN_INGOT.get());
         basicItem(ModItems.KATCHIN_THREAD.get());
         basicItem(ModItems.KATCHIN_CLOTH.get());
+        basicItem(ModItems.KATCHIN_DUST.get());
+        basicItem(ModItems.ENERGY_CRYSTAL_DUST.get());
+        ModItems.INFUSED_KATCHIN_INGOTS.values().forEach(i -> basicItem(i.get()));
+        ModItems.INFUSED_KATCHIN_THREADS.values().forEach(i -> basicItem(i.get()));
+        ModItems.INFUSED_KATCHIN_CLOTHS.values().forEach(i -> basicItem(i.get()));
         basicItem(ModItems.SAIYAN_ARMOR_HELMET.get());
         basicItem(ModItems.SAIYAN_ARMOR_CHESTPLATE.get());
         basicItem(ModItems.SAIYAN_ARMOR_LEGGINGS.get());

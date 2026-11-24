@@ -16,6 +16,9 @@ public class ModTags {
         public static final TagKey<Block> DRAGON_BALLS_BLOCK = createTag("dragon_balls_block");
         public static final TagKey<Block> NAMEKIAN_ORE_REPLACEABLES = createTag("namekian_ore_replaceables");
         public static final TagKey<Block> KI_INDESTRUCTIBLE = createTag("ki_indestructible");
+        /** Bloques que una cápsula Hoi-Poi NO guarda (se quedan en el mundo): esferas, máquinas ligadas a su sitio, bedrock,
+         *  spawners, portales… Ampliable por datapack (P18). */
+        public static final TagKey<Block> CAPSULE_BLACKLIST_BLOCKS = createTag("capsule_blacklist_blocks");
 
         private static TagKey<Block> createTag(String name) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));
@@ -66,6 +69,8 @@ public class ModTags {
         public static final TagKey<EntityType<?>> DIVINE = createTag("divine");
         /** No les afecta la gravedad de la cámara de gravedad (maestros y NPC). Ampliable por datapack. */
         public static final TagKey<EntityType<?>> GRAVITY_IMMUNE = createTag("gravity_immune");
+        /** Entidades que una cápsula Hoi-Poi NO guarda: jefes, maestros, Shenlong, cuerpos de jugador… (P10/P18). */
+        public static final TagKey<EntityType<?>> CAPSULE_BLACKLIST = createTag("capsule_blacklist");
 
         private static TagKey<EntityType<?>> createTag(String name) {
             return TagKey.create(Registries.ENTITY_TYPE,

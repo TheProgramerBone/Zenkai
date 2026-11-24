@@ -10,12 +10,15 @@
     },
     "K": {
       "item": "zenkai:katchin_ingot"
+    },
+    "T": {
+      "item": "zenkai:ki_tolerance_divine"
     }
   },
   "pattern": [
     " K ",
-    "KCK",
-    " E "
+    "KTK",
+    "ECE"
   ],
   "result": {
     "count": 1,

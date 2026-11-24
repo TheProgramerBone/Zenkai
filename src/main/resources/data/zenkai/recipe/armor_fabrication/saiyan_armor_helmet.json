@@ -3,7 +3,7 @@
   "pattern": "zenkai:saiyan_armor",
   "piece": "helmet",
   "material": {
-    "item": "zenkai:katchin_ingot"
+    "tag": "zenkai:katchin_ingots"
   },
   "count": 5,
   "energy": 25000,

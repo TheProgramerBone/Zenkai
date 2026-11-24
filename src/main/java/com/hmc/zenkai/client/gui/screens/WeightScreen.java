@@ -268,7 +268,7 @@ public class WeightScreen extends Screen {
         pose.popPose();
         g.drawString(this.font, "t", x + PLATE_W - 10, y + PLATE_H - 12, ZenkaiPalette.TEXT_DIM, true);
         if (hover && !editing) {
-            g.renderTooltip(this.font, Component.translatable("screen.zenkai.weight.field.hint"), mouseX, mouseY);
+            com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.translatable("screen.zenkai.weight.field.hint"), mouseX, mouseY);
         }
     }
 

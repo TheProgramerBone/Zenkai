@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:elite_circuit"
+    },
+    "E": {
+      "item": "zenkai:energy_crystal"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    }
+  },
+  "pattern": [
+    " K ",
+    "ECE",
+    " K "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:machine_efficiency_upgrade"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "zenkai:ki_infusion",
+  "item_input": {
+    "item": "zenkai:ki_divine_katchin_ingot",
+    "count": 1
+  },
+  "fluid_input": {
+    "ki": "legendary",
+    "amount": 250
+  },
+  "output": {
+    "id": "zenkai:ki_legendary_katchin_ingot",
+    "count": 1
+  },
+  "energy": 10000,
+  "time": 100
+}

@@ -491,7 +491,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
             if (t != null) kickTooltip = t;
         }
         g.disableScissor();
-        if (kickTooltip != null) g.renderTooltip(this.font, kickTooltip, mouseX, mouseY);
+        if (kickTooltip != null) com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, kickTooltip, mouseX, mouseY);
 
         drawListScrollbar(g, state.members().size());
 

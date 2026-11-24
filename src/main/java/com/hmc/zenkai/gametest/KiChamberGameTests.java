@@ -340,7 +340,7 @@ public final class KiChamberGameTests {
     public static void toleranceUpgradeKeepsItCold(GameTestHelper helper) {
         KiContainmentChamberBlockEntity be = chamber(helper);
         ServerPlayer sp = ssj1Player(helper);
-        be.upgradeHandler().setStackInSlot(KiContainmentChamberBlockEntity.SLOT_TOL_SUPER,
+        be.upgradeHandler().setStackInSlot(KiContainmentChamberBlockEntity.SLOT_TOLERANCE,
                 new ItemStack(ModItems.KI_TOLERANCE_SUPER.get()));
 
         helper.assertTrue(be.tolerates(KiEnergyType.SUPER), "Con la mejora, el Ki Súper está tolerado");
@@ -349,6 +349,36 @@ public final class KiChamberGameTests {
         double heat = 0;
         for (int i = 0; i < 60; i++) heat = be.testHeatTick(sp);
         helper.assertTrue(heat == 0.0, "Con tolerancia no hay calor; calor " + heat);
+        helper.succeed();
+    }
+
+    /** Una sola ranura de tolerancia (2026-11-23): cada nivel absorbe a los de debajo, nunca a los de encima. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void toleranceAbsorbsLowerLevels(GameTestHelper helper) {
+        ItemStack leg = new ItemStack(ModItems.KI_TOLERANCE_LEGENDARY.get()), div = new ItemStack(ModItems.KI_TOLERANCE_DIVINE.get());
+        for (KiEnergyType t : KiEnergyType.values()) {
+            helper.assertTrue(KiContainmentChamberBlockEntity.tolerates(leg, t), "La Legendaria tolera " + t);
+        }
+        helper.assertTrue(KiContainmentChamberBlockEntity.tolerates(div, KiEnergyType.SUPER), "La Divina tolera Súper");
+        helper.assertFalse(KiContainmentChamberBlockEntity.tolerates(div, KiEnergyType.LEGENDARY), "La Divina no tolera Legendario");
+        helper.assertTrue(KiContainmentChamberBlockEntity.tolerates(ItemStack.EMPTY, KiEnergyType.BASE), "Normal viene de serie");
+        helper.assertTrue(KiContainmentChamberBlockEntity.validFor(KiContainmentChamberBlockEntity.SLOT_TOLERANCE, div),
+                "Cualquier tolerancia entra en la misma ranura");
+        helper.succeed();
+    }
+
+    /** Una cámara guardada con las seis ranuras viejas: lo que no encaja se aparta, no cuenta como otra mejora. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void oldSixSlotLayoutSpillsInvalid(GameTestHelper helper) {
+        KiContainmentChamberBlockEntity be = chamber(helper);
+        var old = new net.neoforged.neoforge.items.ItemStackHandler(6);
+        old.setStackInSlot(1, new ItemStack(ModItems.KI_TOLERANCE_DIVINE.get()));   // vieja Divina → hoy ranura de velocidad
+        old.setStackInSlot(5, new ItemStack(ModItems.ENERGY_BATTERY.get()));        // vieja batería → sobra por el final
+        var reg = helper.getLevel().registryAccess();
+        be.upgradeHandler().deserializeNBT(reg, old.serializeNBT(reg));
+        helper.assertTrue(be.upgradeHandler().getSlots() == KiContainmentChamberBlockEntity.UPGRADE_SLOTS, "Vuelve a cuatro ranuras");
+        helper.assertTrue(be.upgradeHandler().getStackInSlot(KiContainmentChamberBlockEntity.SLOT_SPEED).isEmpty(),
+                "La tolerancia vieja no se queda en la ranura de velocidad");
         helper.succeed();
     }
 

@@ -70,6 +70,29 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
         RenderSystem.enableBlend();
         g.setColor(1f, 1f, 1f, 1f);
         g.blit(background(), leftPos, topPos, 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
+        drawSlotGhosts(g);
+    }
+
+    /**
+     * Silueta de una ranura de máquina vacía (2026-11-24, como los iconos de ranura de Curios del mod y el escudo o la
+     * armadura vacíos del inventario vanilla; PNG de tools/gen_slot_icons.py): {@code handlerIndex} es la ranura de la máquina; null = sin icono. Se dibuja en renderBg, o sea DEBAJO
+     * de los ítems y del resalte, y desaparece al poner algo.
+     */
+    @org.jetbrains.annotations.Nullable
+    protected ResourceLocation slotGhost(int handlerIndex) { return null; }
+
+    /** Igual con la ranura entera, para pantallas donde dos handlers repiten índice (cámara de gravedad). */
+    @org.jetbrains.annotations.Nullable
+    protected ResourceLocation slotGhost(net.minecraft.world.inventory.Slot slot) { return slotGhost(slot.getSlotIndex()); }
+
+    protected void drawSlotGhosts(GuiGraphics g) {
+        for (net.minecraft.world.inventory.Slot s : menu.slots) {
+            if (!(s instanceof net.neoforged.neoforge.items.SlotItemHandler) || s.hasItem() || !s.isActive()) continue;
+            ResourceLocation tex = slotGhost(s);
+            if (tex == null) continue;
+            g.blit(tex, leftPos + s.x, topPos + s.y, 0, 0, 16, 16, 16, 16);
+        }
+        g.setColor(1f, 1f, 1f, 1f);
     }
 
     @Override
@@ -100,6 +123,14 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
         Component styled = Component.literal(title.getString().toUpperCase(Locale.ROOT))
                 .withStyle(ChatFormatting.BOLD);
         PanelText.onDark(g, font, styled, x, y, ZenkaiTechPalette.TITLE);
+    }
+
+    /**
+     * Cabecera de la familia desde el 2026-11-23: placa al ancho del título y LED suelto a la derecha, sin aro y centrado
+     * ({@link com.hmc.zenkai.client.gui.TechHeader}). {@code led} null = sin piloto (tanques).
+     */
+    protected void drawHeader(GuiGraphics g, @Nullable Boolean led) {
+        com.hmc.zenkai.client.gui.TechHeader.draw(g, font, title, led);
     }
 
     /** Etiqueta "Inventory" sobre la bandeja. Bandeja = carcasa: oscuro y sin sombra. */
@@ -140,7 +171,7 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
 
     /**
      * Tanque de fluido de Ki: hermano de drawVBar (mismo marco y fondo), con el sprite del fluido
-     * dentro y el cristal encima. Especificación en .claude/docs/gui.md («Tanque de fluido de Ki»).
+     * dentro y el cristal encima. Especificación en .claude/docs/gui-tecnologia.md («Tanque de fluido de Ki»).
      * Tres capas: marco y fondo; el sprite still del fluido repetido en celdas de 16 px desde
      * abajo, SIN tinte (el color ya viene en el sprite); y el cristal tech_tank.png repetido de
      * abajo arriba, de modo que con 104 px de alto las marcas mayores caen en 1/4, 1/2 y 3/4.
@@ -218,16 +249,27 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
     protected void drawTooltip(GuiGraphics g, int mouseX, int mouseY, List<TipLine> lines) {
         if (lines.isEmpty()) return;
 
+        // Cada línea decide sola cuántos renglones necesita (TooltipText.maxWidth, menos la sangría del icono).
+        record Row(@Nullable ItemStack icon, net.minecraft.util.FormattedCharSequence text, boolean indent, boolean first) {}
+        int maxW = com.hmc.zenkai.client.gui.TooltipText.maxWidth(this.width);
+        List<Row> rows = new java.util.ArrayList<>();
+        for (TipLine l : lines) {
+            boolean ic = l.icon() != null;
+            List<net.minecraft.util.FormattedCharSequence> parts = font.split(l.text(), Math.max(40, maxW - (ic ? 20 : 0)));
+            if (parts.isEmpty()) parts = List.of(net.minecraft.util.FormattedCharSequence.EMPTY);
+            for (int i = 0; i < parts.size(); i++) rows.add(new Row(i == 0 ? l.icon() : null, parts.get(i), ic, i == 0));
+        }
+
         int w = 0;
         int h = 0;
-        for (TipLine l : lines) {
-            w = Math.max(w, (l.icon() != null ? 20 : 0) + font.width(l.text()));
-            h += l.icon() != null ? 18 : 11;
+        for (Row r : rows) {
+            w = Math.max(w, (r.indent() ? 20 : 0) + font.width(r.text()));
+            h += r.icon() != null ? 18 : 11;
         }
 
         int x = mouseX + 12;
         int y = mouseY - 12;
-        if (x + w + 5 > this.width) x = mouseX - w - 16;
+        if (x + w + 5 > this.width) x = Math.max(5, mouseX - w - 16);
         if (y + h + 5 > this.height) y = this.height - h - 5;
         if (y < 5) y = 5;
 
@@ -241,14 +283,13 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
         g.fill(x + w + 4, y - 4, x + w + 5, y + h + 4, ZenkaiTechPalette.TOOLTIP_EDGE);
 
         int cy = y;
-        for (TipLine l : lines) {
-            if (l.icon() != null) {
-                g.renderFakeItem(l.icon(), x, cy);
-                PanelText.onDark(g, font, l.text(), x + 20, cy + 4,
-                        ZenkaiTechPalette.TEXT_ON_SCREEN);
+        for (Row r : rows) {
+            if (r.icon() != null) {
+                g.renderFakeItem(r.icon(), x, cy);
+                g.drawString(font, r.text(), x + 20, cy + 4, ZenkaiTechPalette.TEXT_ON_SCREEN, true);
                 cy += 18;
             } else {
-                PanelText.onDark(g, font, l.text(), x, cy, ZenkaiTechPalette.TEXT_ON_SCREEN);
+                g.drawString(font, r.text(), x + (r.indent() ? 20 : 0), cy, ZenkaiTechPalette.TEXT_ON_SCREEN, true);
                 cy += 11;
             }
         }

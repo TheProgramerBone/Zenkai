@@ -170,12 +170,6 @@ public class ModCreativeModeTabs {
                 output.accept(com.hmc.zenkai.content.item.BloodItem.of(item, 2, 1));
                 output.accept(com.hmc.zenkai.content.item.BloodItem.of(item, 5, 1));
             }
-            // Lingote de katchin: además del normal, uno infundido de cada tipo de Ki (Fase 5c).
-            if (item == ModItems.KATCHIN_INGOT.get()) {
-                for (var t : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
-                    output.accept(com.hmc.zenkai.feature.armor.KiInfusion.infused(new net.minecraft.world.item.ItemStack(item), t));
-                }
-            }
             // Batería: además de la vacía, una cargada al máximo.
             if (item == ModItems.ENERGY_BATTERY.get()) output.accept(fullBattery());
             // Gelatina: además de la rosa, un ítem por cada color de tinte (el color viaja en el

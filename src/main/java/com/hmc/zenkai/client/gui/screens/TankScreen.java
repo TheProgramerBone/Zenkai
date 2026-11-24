@@ -38,7 +38,6 @@ public class TankScreen extends TechPanelScreen<TankMenu> {
     private static final ResourceLocation BG_FLUID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/tank_fluid.png");
 
-    private static final int TITLE_X = 12, TITLE_Y = 7;
     /** == pozo de medidor heredado de ki_chamber.png. */
     private static final int BAR_X = 18, BAR_Y = 32, BAR_W = 16, BAR_H = 104;
     private static final int LABEL_DY = -10;
@@ -54,7 +53,7 @@ public class TankScreen extends TechPanelScreen<TankMenu> {
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics g, int mouseX, int mouseY) {
-        drawTitle(g, TITLE_X, TITLE_Y);
+        drawHeader(g, null);
         drawInventoryLabel(g, INV_LABEL_X, INV_LABEL_Y);
 
         boolean energy = menu.isEnergy();

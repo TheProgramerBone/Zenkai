@@ -102,4 +102,9 @@ public final class ClientPayloadHandlers {
     public static void openGalacticMenu() {
         Minecraft.getInstance().setScreen(new GalacticMenuScreen());
     }
+
+    /** Pantalla de una cápsula Hoi-Poi colocada (Fase 6), con el resumen que calculó el servidor. */
+    public static void openCapsuleScreen(com.hmc.zenkai.feature.capsule.OpenCapsuleScreenPayload payload) {
+        Minecraft.getInstance().setScreen(new com.hmc.zenkai.client.gui.screens.CapsuleScreen(payload));
+    }
 }

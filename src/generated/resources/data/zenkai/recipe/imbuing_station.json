@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "B": {
+      "item": "minecraft:brewing_stand"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "R": {
+      "tag": "c:storage_blocks/redstone"
+    }
+  },
+  "pattern": [
+    "KAK",
+    "IBI",
+    "KRK"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:imbuing_station"
+  }
+}

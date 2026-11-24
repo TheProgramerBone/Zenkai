@@ -1,0 +1,184 @@
+{
+  "variants": {
+    "facing=north,full=false,tier=copper": {
+      "model": "zenkai:block/capsule_copper"
+    },
+    "facing=east,full=false,tier=copper": {
+      "model": "zenkai:block/capsule_copper",
+      "y": 90
+    },
+    "facing=south,full=false,tier=copper": {
+      "model": "zenkai:block/capsule_copper",
+      "y": 180
+    },
+    "facing=west,full=false,tier=copper": {
+      "model": "zenkai:block/capsule_copper",
+      "y": 270
+    },
+    "facing=north,full=true,tier=copper": {
+      "model": "zenkai:block/capsule_copper_full"
+    },
+    "facing=east,full=true,tier=copper": {
+      "model": "zenkai:block/capsule_copper_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=copper": {
+      "model": "zenkai:block/capsule_copper_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=copper": {
+      "model": "zenkai:block/capsule_copper_full",
+      "y": 270
+    },
+    "facing=north,full=false,tier=iron": {
+      "model": "zenkai:block/capsule_iron"
+    },
+    "facing=east,full=false,tier=iron": {
+      "model": "zenkai:block/capsule_iron",
+      "y": 90
+    },
+    "facing=south,full=false,tier=iron": {
+      "model": "zenkai:block/capsule_iron",
+      "y": 180
+    },
+    "facing=west,full=false,tier=iron": {
+      "model": "zenkai:block/capsule_iron",
+      "y": 270
+    },
+    "facing=north,full=true,tier=iron": {
+      "model": "zenkai:block/capsule_iron_full"
+    },
+    "facing=east,full=true,tier=iron": {
+      "model": "zenkai:block/capsule_iron_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=iron": {
+      "model": "zenkai:block/capsule_iron_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=iron": {
+      "model": "zenkai:block/capsule_iron_full",
+      "y": 270
+    },
+    "facing=north,full=false,tier=gold": {
+      "model": "zenkai:block/capsule_gold"
+    },
+    "facing=east,full=false,tier=gold": {
+      "model": "zenkai:block/capsule_gold",
+      "y": 90
+    },
+    "facing=south,full=false,tier=gold": {
+      "model": "zenkai:block/capsule_gold",
+      "y": 180
+    },
+    "facing=west,full=false,tier=gold": {
+      "model": "zenkai:block/capsule_gold",
+      "y": 270
+    },
+    "facing=north,full=true,tier=gold": {
+      "model": "zenkai:block/capsule_gold_full"
+    },
+    "facing=east,full=true,tier=gold": {
+      "model": "zenkai:block/capsule_gold_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=gold": {
+      "model": "zenkai:block/capsule_gold_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=gold": {
+      "model": "zenkai:block/capsule_gold_full",
+      "y": 270
+    },
+    "facing=north,full=false,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond"
+    },
+    "facing=east,full=false,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond",
+      "y": 90
+    },
+    "facing=south,full=false,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond",
+      "y": 180
+    },
+    "facing=west,full=false,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond",
+      "y": 270
+    },
+    "facing=north,full=true,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond_full"
+    },
+    "facing=east,full=true,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=diamond": {
+      "model": "zenkai:block/capsule_diamond_full",
+      "y": 270
+    },
+    "facing=north,full=false,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin"
+    },
+    "facing=east,full=false,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin",
+      "y": 90
+    },
+    "facing=south,full=false,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin",
+      "y": 180
+    },
+    "facing=west,full=false,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin",
+      "y": 270
+    },
+    "facing=north,full=true,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin_full"
+    },
+    "facing=east,full=true,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=katchin": {
+      "model": "zenkai:block/capsule_katchin_full",
+      "y": 270
+    },
+    "facing=north,full=false,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite"
+    },
+    "facing=east,full=false,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite",
+      "y": 90
+    },
+    "facing=south,full=false,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite",
+      "y": 180
+    },
+    "facing=west,full=false,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite",
+      "y": 270
+    },
+    "facing=north,full=true,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite_full"
+    },
+    "facing=east,full=true,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite_full",
+      "y": 90
+    },
+    "facing=south,full=true,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite_full",
+      "y": 180
+    },
+    "facing=west,full=true,tier=netherite": {
+      "model": "zenkai:block/capsule_netherite_full",
+      "y": 270
+    }
+  }
+}

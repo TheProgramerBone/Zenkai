@@ -1,0 +1,18 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:saiyan_armor_boots"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_ingot"
+    },
+    {
+      "id": "zenkai:katchin_ingot",
+      "chance": 0.6
+    }
+  ],
+  "infusion_aware": true
+}

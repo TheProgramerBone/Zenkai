@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:golden_helmet"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "minecraft:gold_ingot",
+      "count": 2
+    },
+    {
+      "id": "minecraft:gold_nugget",
+      "count": 4,
+      "chance": 0.25
+    }
+  ]
+}

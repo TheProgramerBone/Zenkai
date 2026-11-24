@@ -3,7 +3,7 @@
   "pattern": "zenkai:saiyan_armor",
   "piece": "chestplate",
   "material": {
-    "item": "zenkai:katchin_ingot"
+    "tag": "zenkai:katchin_ingots"
   },
   "count": 8,
   "energy": 40000,

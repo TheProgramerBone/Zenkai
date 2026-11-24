@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:spider_eye"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "zenkai:dexterity_blood",
+      "chance": 0.05
+    }
+  ]
+}

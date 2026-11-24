@@ -1,8 +1,5 @@
 package com.hmc.zenkai.content.blockentity;
 
-import net.minecraft.nbt.CompoundTag;
-import net.neoforged.neoforge.energy.IEnergyStorage;
-
 /**
  * Búfer de FE del banco de scouter. Consume; NO genera ni reparte.
  *
@@ -17,47 +14,13 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
  *   MAX_RECEIVE  — techo de entrada por tick, para que una red grande no lo llene de golpe
  *                  y el jugador vea la barra subir.
  */
-public class BenchEnergy implements IEnergyStorage {
+public class BenchEnergy extends MachineEnergy {
 
     public static final int CAPACITY = 100_000;
     public static final int MAX_RECEIVE = 1_000;
 
-    private int energy;
-
-    public int get() { return energy; }
-    public int capacity() { return CAPACITY; }
-
-    /** Gasto interno del banco. No pasa por la interfaz a propósito. */
-    public boolean spend(int amount) {
-        if (amount <= 0) return true;
-        if (energy < amount) return false;
-        energy -= amount;
-        return true;
+    // Desde el 2026-11-23 la lógica vive en MachineEnergy: aquí solo la dirección (entrada) y los dos límites.
+    public BenchEnergy() {
+        super(Io.INPUT, () -> CAPACITY, () -> MAX_RECEIVE, true, () -> { });
     }
-
-    public void load(CompoundTag tag) {
-        energy = Math.max(0, Math.min(CAPACITY, tag.getInt("Energy")));
-    }
-
-    public void save(CompoundTag tag) {
-        tag.putInt("Energy", energy);
-    }
-
-    // ── IEnergyStorage: solo entrada ─────────────────────────────────────────
-
-    @Override
-    public int receiveEnergy(int maxReceive, boolean simulate) {
-        int accepted = Math.min(CAPACITY - energy, Math.min(MAX_RECEIVE, maxReceive));
-        if (accepted <= 0) return 0;
-        if (!simulate) energy += accepted;
-        return accepted;
-    }
-
-    @Override
-    public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-
-    @Override public int getEnergyStored() { return energy; }
-    @Override public int getMaxEnergyStored() { return CAPACITY; }
-    @Override public boolean canExtract() { return false; }
-    @Override public boolean canReceive() { return true; }
 }

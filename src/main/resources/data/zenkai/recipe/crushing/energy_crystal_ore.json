@@ -1,0 +1,22 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:ores/energy_crystal"
+  },
+  "time": 200,
+  "energy": 4000,
+  "results": [
+    {
+      "id": "zenkai:energy_crystal",
+      "count": 4
+    },
+    {
+      "id": "zenkai:energy_crystal",
+      "chance": 0.5
+    },
+    {
+      "id": "minecraft:cobblestone",
+      "chance": 0.125
+    }
+  ]
+}

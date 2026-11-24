@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:saiyan_armor_chestplate"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_ingot",
+      "count": 3
+    },
+    {
+      "id": "zenkai:katchin_ingot",
+      "chance": 0.2
+    }
+  ],
+  "infusion_aware": true
+}

@@ -238,7 +238,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         g.drawString(this.font, value, ix + iw - 6 - this.font.width(value), iy + 63,
                 ZenkaiPalette.TP_ON_DARK, true);
         if (record != null && record >= 20_000 && hovered) {
-            g.renderTooltip(this.font, Component.literal(ZenkaiNumbers.exact((long) record) + " TP"), mouseX, mouseY);
+            com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.literal(ZenkaiNumbers.exact((long) record) + " TP"), mouseX, mouseY);
         }
     }
 

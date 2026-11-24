@@ -733,41 +733,15 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
     public void setRadiusForTests(int r) { radius = r; }
     public boolean interiorContains(BlockPos p) { return interior.contains(p.asLong()); }
 
-    // ── Búfer de FE: solo entrada, gasto interno (patrón de BenchEnergy) ─────
+    // ── Búfer de FE: solo entrada, gasto interno (MachineEnergy desde el 2026-11-23) ─────
 
-    public static final class Energy implements IEnergyStorage {
-        private int energy;
-
-        public int get() { return energy; }
-        public int capacity() { return ServerConfig.gravityChamberFeCapacity(); }
-
-        boolean spend(int amount) {
-            if (amount <= 0) return true;
-            if (energy < amount) return false;
-            energy -= amount;
-            return true;
+    public static final class Energy extends MachineEnergy {
+        Energy() {
+            super(Io.INPUT, ServerConfig::gravityChamberFeCapacity, ServerConfig::gravityChamberMaxReceive, true, () -> { });
         }
-
-        void load(CompoundTag tag) { energy = Math.max(0, Math.min(capacity(), tag.getInt("Energy"))); }
-
-        void save(CompoundTag tag) { tag.putInt("Energy", energy); }
-
-        @Override
-        public int receiveEnergy(int maxReceive, boolean simulate) {
-            int accepted = Math.min(capacity() - energy, Math.min(ServerConfig.gravityChamberMaxReceive(), maxReceive));
-            if (accepted <= 0) return 0;
-            if (!simulate) energy += accepted;
-            return accepted;
-        }
-
-        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
-        @Override public int getEnergyStored() { return energy; }
-        @Override public int getMaxEnergyStored() { return capacity(); }
-        @Override public boolean canExtract() { return false; }
-        @Override public boolean canReceive() { return true; }
     }
 
     /** Solo para gametests: llena el búfer sin pasar por el tope de entrada. */
-    public void fillEnergyForTests(int fe) { energy.energy = Math.min(energy.capacity(), fe); }
+    public void fillEnergyForTests(int fe) { energy.setForTests(fe); }
     public int energyStored() { return energy.get(); }
 }

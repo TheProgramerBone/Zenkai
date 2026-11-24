@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:item/capsule_diamond"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "zenkai:full": 1
+      },
+      "model": "zenkai:item/capsule_diamond_full"
+    }
+  ]
+}

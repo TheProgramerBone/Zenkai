@@ -149,6 +149,13 @@ public final class ModDataComponents {
                             com.hmc.zenkai.feature.kichamber.KiEnergyType.class))
                     .build());
 
+    /** Contenido de una cápsula Hoi-Poi llena (Fase 6): id del archivo y resumen. Ausente = vacía. Ver CapsuleContent. */
+    public static final Supplier<DataComponentType<com.hmc.zenkai.feature.capsule.CapsuleContent>> CAPSULE_CONTENT =
+            COMPONENTS.register("capsule_content", () -> DataComponentType.<com.hmc.zenkai.feature.capsule.CapsuleContent>builder()
+                    .persistent(com.hmc.zenkai.feature.capsule.CapsuleContent.CODEC)
+                    .networkSynchronized(com.hmc.zenkai.feature.capsule.CapsuleContent.STREAM_CODEC)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

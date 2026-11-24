@@ -51,10 +51,28 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 2. ÍTEMS ESPECIALES Y COSMÉTICOS
         // ==========================================
 
-        // Infusión de Ki (Fase 5c): qué acepta la infusora y qué lleva el tipo de un paso al siguiente.
-        tag(com.hmc.zenkai.feature.armor.KiInfusion.INFUSABLE).add(ModItems.KATCHIN_INGOT.get());
-        tag(com.hmc.zenkai.feature.armor.KiInfusion.CARRIERS).add(
-                ModItems.KATCHIN_INGOT.get(), ModItems.KATCHIN_THREAD.get(), ModItems.KATCHIN_CLOTH.get());
+        // Katchin de cualquier nivel (rework del 2026-11-23): material de las recetas de fabricación. La máquina solo
+        // cuenta el ítem de la primera ranura que casa (sin mezcla de niveles).
+        var ingots = tag(com.hmc.zenkai.feature.armor.KiInfusion.INGOTS).add(ModItems.KATCHIN_INGOT.get());
+        ModItems.INFUSED_KATCHIN_INGOTS.values().forEach(i -> ingots.add(i.get()));
+        var threads = tag(com.hmc.zenkai.feature.armor.KiInfusion.THREADS).add(ModItems.KATCHIN_THREAD.get());
+        ModItems.INFUSED_KATCHIN_THREADS.values().forEach(i -> threads.add(i.get()));
+        var cloths = tag(com.hmc.zenkai.feature.armor.KiInfusion.CLOTHS).add(ModItems.KATCHIN_CLOTH.get());
+        ModItems.INFUSED_KATCHIN_CLOTHS.values().forEach(i -> cloths.add(i.get()));
+        // Polvos del Triturador (Fase 5d): etiquetas comunes para que Mekanism, Create y otros mods los reconozcan.
+        var dustKatchin = net.minecraft.tags.ItemTags.create(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("c", "dusts/katchin"));
+        var dustCrystal = net.minecraft.tags.ItemTags.create(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("c", "dusts/energy_crystal"));
+        tag(dustKatchin).add(ModItems.KATCHIN_DUST.get());
+        tag(dustCrystal).add(ModItems.ENERGY_CRYSTAL_DUST.get());
+        tag(net.neoforged.neoforge.common.Tags.Items.DUSTS).addTags(dustKatchin, dustCrystal);
+        // Sets de Zenkai: su tope de puntos sale solo de la infusión (decisión del usuario 2026-11-23).
+        tag(com.hmc.zenkai.feature.armor.KiInfusion.UNCAPPED).add(
+                ModItems.SAIYAN_ARMOR_HELMET.get(), ModItems.SAIYAN_ARMOR_CHESTPLATE.get(),
+                ModItems.SAIYAN_ARMOR_LEGGINGS.get(), ModItems.SAIYAN_ARMOR_BOOTS.get(),
+                ModItems.NAMEK_CLOTHES_HELMET.get(), ModItems.NAMEK_CLOTHES_CHESTPLATE.get(),
+                ModItems.NAMEK_CLOTHES_LEGGINGS.get(), ModItems.NAMEK_CLOTHES_BOOTS.get(),
+                ModItems.TRAINING_GI_HELMET.get(), ModItems.TRAINING_GI_CHESTPLATE.get(),
+                ModItems.TRAINING_GI_LEGGINGS.get(), ModItems.TRAINING_GI_BOOTS.get());
 
         tag(ItemTags.DYEABLE).add(
                 ModItems.SCOUTER.get()

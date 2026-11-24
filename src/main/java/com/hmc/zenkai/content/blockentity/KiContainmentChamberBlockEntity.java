@@ -97,8 +97,9 @@ import java.util.UUID;
  * la tasa del tipo (1/8/24/32 por defecto) hasta un tope por tick, y la FE se empuja a los vecinos
  * de las dos mitades. Con el conversor apagado el tanque se guarda entero para las tuberías.
  *
- * MEJORAS (Fase 2b), seis ranuras: tolerancia a Ki Súper, Divino y Legendario (la de Base viene
- * de serie), velocidad (hasta 3: multiplica el tope de FE por tick), almacenamiento (hasta 4:
+ * MEJORAS (Fase 2b; compactadas a cuatro el 2026-11-23): UNA ranura de tolerancia que acepta la
+ * Súper, la Divina o la Legendaria, y cada una absorbe a las de debajo (la de Normal viene de
+ * serie), velocidad (hasta 3: multiplica el tope de FE por tick), almacenamiento (hasta 4:
  * amplía tanque y búfer) y una BATERÍA, que se carga del búfer antes de empujar a los vecinos.
  * La velocidad NO acelera el drenaje de ki: ese ritmo es el freno anti-exploit.
  *
@@ -120,9 +121,10 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
     private static final RawAnimation DOOR_CLOSED = RawAnimation.begin().thenLoop("door_closed");
 
     // ── Ranuras de mejora (un solo sitio para block entity, menú y pantalla) ──
-    public static final int SLOT_TOL_SUPER = 0, SLOT_TOL_DIVINE = 1, SLOT_TOL_LEGENDARY = 2;
-    public static final int SLOT_SPEED = 3, SLOT_STORAGE = 4, SLOT_BATTERY = 5;
-    public static final int UPGRADE_SLOTS = 6;
+    // UNA sola ranura de tolerancia (idea del usuario, 2026-11-23; antes una por tipo): cada nivel absorbe a los de
+    // debajo. Las dos ranuras que se liberaron se QUITARON (decisión del usuario): las máquinas quedan con cuatro.
+    public static final int SLOT_TOLERANCE = 0, SLOT_SPEED = 1, SLOT_STORAGE = 2, SLOT_BATTERY = 3;
+    public static final int UPGRADE_SLOTS = 4;
     public static final int MAX_SPEED = 3, MAX_STORAGE = 4;
 
     /** Calor de sobrecarga: 0 fría, HEAT_ALARM empieza la alarma, HEAT_MAX explota. */
@@ -134,9 +136,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
     /** ¿Qué ítem vale en cada ranura? Lo usan el handler, los Slot del menú y el shift-clic. */
     public static boolean validFor(int slot, ItemStack stack) {
         return switch (slot) {
-            case SLOT_TOL_SUPER -> stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_SUPER.get());
-            case SLOT_TOL_DIVINE -> stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get());
-            case SLOT_TOL_LEGENDARY -> stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_LEGENDARY.get());
+            case SLOT_TOLERANCE -> toleranceLevel(stack) != null;
             case SLOT_SPEED -> stack.is(com.hmc.zenkai.registry.ModItems.MACHINE_SPEED_UPGRADE.get());
             case SLOT_STORAGE -> stack.is(com.hmc.zenkai.registry.ModItems.MACHINE_STORAGE_UPGRADE.get());
             case SLOT_BATTERY -> stack.is(com.hmc.zenkai.registry.ModItems.ENERGY_BATTERY.get());
@@ -153,14 +153,25 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
         };
     }
 
-    /** Ranura de tolerancia de un tipo, o -1 si no la necesita (Base viene de serie). */
-    public static int toleranceSlot(KiEnergyType type) {
-        return switch (type) {
-            case SUPER -> SLOT_TOL_SUPER;
-            case DIVINE -> SLOT_TOL_DIVINE;
-            case LEGENDARY -> SLOT_TOL_LEGENDARY;
-            default -> -1;
-        };
+    /** Nivel que tolera una mejora de tolerancia, o null si el ítem no es una. */
+    @Nullable
+    public static KiEnergyType toleranceLevel(ItemStack stack) {
+        if (stack.isEmpty()) return null;
+        if (stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_SUPER.get())) return KiEnergyType.SUPER;
+        if (stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get())) return KiEnergyType.DIVINE;
+        if (stack.is(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_LEGENDARY.get())) return KiEnergyType.LEGENDARY;
+        return null;
+    }
+
+    /**
+     * ¿Con esta mejora en la ranura de tolerancia se tolera ese tipo? Normal (BASE) siempre, de serie. El resto, si la
+     * mejora es de ese nivel o de uno superior: Legendaria tolera Divino, Súper y Normal; Divina, Divino, Súper y Normal;
+     * Súper, Súper y Normal. La comparten las tres máquinas y sus menús (en cliente se lee la ranura sincronizada).
+     */
+    public static boolean tolerates(ItemStack toleranceStack, KiEnergyType type) {
+        if (type == KiEnergyType.BASE) return true;
+        KiEnergyType lvl = toleranceLevel(toleranceStack);
+        return lvl != null && lvl.ordinal() >= type.ordinal();
     }
 
 
@@ -173,11 +184,9 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
 
     private final ChamberEnergy energy = new ChamberEnergy();
 
-    private final ItemStackHandler upgrades = new ItemStackHandler(UPGRADE_SLOTS) {
-        @Override protected void onContentsChanged(int slot) { markDirty(); }
-        @Override public boolean isItemValid(int slot, @NotNull ItemStack stack) { return validFor(slot, stack); }
-        @Override public int getSlotLimit(int slot) { return slotLimit(slot); }
-    };
+    private final MachineItemHandler upgrades = new MachineItemHandler(UPGRADE_SLOTS,
+            KiContainmentChamberBlockEntity::validFor, KiContainmentChamberBlockEntity::validFor,
+            KiContainmentChamberBlockEntity::slotLimit, this::markDirty);
 
     // ── Sesión (no se guarda) ────────────────────────────────────────────────
     /** Quién está sujeto dentro (jugador o mob); null = vacía. */
@@ -266,8 +275,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
 
     /** ¿La máquina tolera este tipo de Ki? Base siempre; los demás, con su mejora puesta. */
     public boolean tolerates(KiEnergyType type) {
-        int slot = toleranceSlot(type);
-        return slot < 0 || !upgrades.getStackInSlot(slot).isEmpty();
+        return tolerates(upgrades.getStackInSlot(SLOT_TOLERANCE), type);
     }
 
     /** Tope de FE por tick con las mejoras de velocidad puestas. */
@@ -587,6 +595,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
 
     public static void serverTick(Level level, BlockPos pos, BlockState state,
                                   KiContainmentChamberBlockEntity be) {
+        be.upgrades.dropSpill(level, pos);   // lo que no encajó al cargar una cámara con la distribución vieja
         be.applyUpgradeLimits();
 
         ServerPlayer sp = null;
@@ -846,6 +855,7 @@ public class KiContainmentChamberBlockEntity extends BlockEntity implements Menu
     /** Suelta mejoras y batería al romper el bloque. Vacía las ranuras además de soltar. */
     public void dropContents() {
         if (level == null) return;
+        upgrades.dropSpill(level, worldPosition);
         for (int i = 0; i < UPGRADE_SLOTS; i++) {
             ItemStack stack = upgrades.getStackInSlot(i);
             if (!stack.isEmpty()) {

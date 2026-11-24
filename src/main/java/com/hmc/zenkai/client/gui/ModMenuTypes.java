@@ -47,6 +47,14 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu>> ARMOR_FABRICATOR =
             MENUS.register("armor_fabricator",
                     () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu::new));
+    /** Triturador (0.7.0, Fase 5d). */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.CrusherMenu>> CRUSHER =
+            MENUS.register("crusher",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.CrusherMenu::new));
+    /** Estación de imbuido (0.7.0, separada de la fabricadora el 2026-11-23). */
+    public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.ImbuingStationMenu>> IMBUING_STATION =
+            MENUS.register("imbuing_station",
+                    () -> IMenuTypeExtension.create(com.hmc.zenkai.client.gui.menu.ImbuingStationMenu::new));
 
     /** Infusora de Ki (0.7.0, Fase 5c). */
     public static final DeferredHolder<MenuType<?>, MenuType<com.hmc.zenkai.client.gui.menu.KiInfuserMenu>> KI_INFUSER =

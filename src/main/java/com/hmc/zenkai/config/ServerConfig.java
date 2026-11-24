@@ -263,6 +263,16 @@ public class ServerConfig {
             BUILDER.comment("Imbuing: how many points past the threshold it takes for the logarithmic term to grow (bigger = gentler curve).")
                     .defineInRange("imbue.cost_scale", 100.0D, 1.0D, 1.0E9D);
 
+    // Tope de puntos imbuidos por pieza (rework del 2026-11-23): PUNTOS TOTALES (STR+CON+DEX+WIL+SPI) por nivel de
+    // infusión. Una sola lista y no cinco claves (regla de pocas opciones). Cifras provisionales que fija el usuario jugando.
+    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> IMBUE_PIECE_CAPS_RAW =
+            BUILDER.comment("Imbuing: max TOTAL imbued points (STR+CON+DEX+WIL+SPI) on one armor piece, by its infusion level:",
+                            "[not infused, Normal, Super, Divine, Legendary]. The level used is the LOWER of the piece's infusion and",
+                            "its own tier (armor + toughness vs vanilla), except pieces in the item tag zenkai:infusion_uncapped.",
+                            "Missing entries repeat the last one.")
+                    .defineList("imbue.piece_caps", List.of(25, 50, 100, 200, 400), () -> 0,
+                            o -> o instanceof Integer i && i >= 0);
+
     private static final ModConfigSpec.DoubleValue AURA_REFERENCE_TP_RAW =
             BUILDER.comment("Aura presence scale: total TP an endgame player is expected to have invested. The ONLY reference number AuraCeiling needs to normalize the log10 presence scale - it does NOT change when a form/Kaioken step is added, the ceiling recomputes from the whole registry on its own. Raise it if TP income outpaces this and auras start looking maxed out too early; lower it if the top of the scale never gets reached.")
                     .defineInRange("aura.reference_tp", 5_000_000D, 1.0D, 1.0E12D);
@@ -1338,6 +1348,15 @@ public class ServerConfig {
             BUILDER.comment("Multiplies the passive per-second regeneration of Body, Stamina and Ki together (the base values stay 1.5 / 3.0 / 1.0 percent per second). 1.0 = default.")
                     .defineInRange("regen.multiplier", 1.0D, 0.0D, 100.0D);
 
+    // ── Cápsulas Hoi-Poi (Fase 6 de la 0.7.0, §3.5 y P11 de pendientes-0.7.0.md) ──
+    public static final ModConfigSpec.ConfigValue<List<? extends Number>> CAPSULE_RADII =
+            BUILDER.comment("Hoi-Poi capsules: capture radius of each tier IN THIS ORDER: [copper, iron, gold, diamond, katchin, netherite]. The zone is a cube of side 2r+1, centered on the capsule and starting at the block it stands on. Air does not count; each mob takes its rounded-up hitbox volume.")
+                    .defineList("capsules.radii", List.of(2, 3, 5, 7, 9, 11), () -> 2,
+                            o -> o instanceof Number n && n.intValue() >= 1 && n.intValue() <= 20);
+    public static final ModConfigSpec.IntValue CAPSULE_PASTE_BLOCKS_PER_TICK =
+            BUILDER.comment("Hoi-Poi capsules: blocks placed per server tick when a capsule is released. Big capsules are spread over several ticks so the server does not stall.")
+                    .defineInRange("capsules.paste_blocks_per_tick", 512, 16, 100000);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── API de toggles ──────────────────────────────────────────────────────────
@@ -1891,6 +1910,9 @@ public class ServerConfig {
      */
     public static boolean isBanned(ItemStack stack) {
         if (isBanned(stack.getItem())) return true;
+        // Cápsula Hoi-Poi LLENA (Fase 6): duplicarla copiaría su id, no su contenido; se veta igual para no prometer un
+        // duplicado que al soltarse quedaría vacío. Vacía sí se puede pedir.
+        if (com.hmc.zenkai.content.item.CapsuleItem.isFull(stack)) return true;
         if (stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ITEM) != null) return true;
         var container = stack.get(net.minecraft.core.component.DataComponents.CONTAINER);
         if (container != null && container.nonEmptyStream().findAny().isPresent()) return true;
@@ -1905,6 +1927,27 @@ public class ServerConfig {
     /** Whitelist: vacía => permitido (salvo blacklist). Con ítems => solo esos. */
     public static boolean isAllowedByWhitelist(ResourceLocation id) {
         return WHITELIST_ITEMS.isEmpty() || WHITELIST_ITEMS.contains(id);
+    }
+
+    /** Radio de captura del rango {@code tierIndex} (orden de CapsuleTier). Fuera de la lista, el último valor. */
+    public static int capsuleRadius(int tierIndex) {
+        int[] fallback = {2, 3, 5, 7, 9, 11};
+        try {
+            List<? extends Number> l = CAPSULE_RADII.get();
+            if (tierIndex < l.size()) return Math.max(1, Math.min(20, l.get(tierIndex).intValue()));
+            if (!l.isEmpty() && tierIndex >= fallback.length) return Math.max(1, Math.min(20, l.get(l.size() - 1).intValue()));
+        } catch (IllegalStateException e) {
+            // Config aún sin cargar (arranque, gametests muy tempranos): el valor por defecto.
+        }
+        return fallback[Math.max(0, Math.min(fallback.length - 1, tierIndex))];
+    }
+
+    public static int capsulePasteBlocksPerTick() {
+        try {
+            return CAPSULE_PASTE_BLOCKS_PER_TICK.get();
+        } catch (IllegalStateException e) {
+            return 512;
+        }
     }
 
     // ── Helpers de balance ──────────────────────────────────────────────────────
@@ -1937,6 +1980,12 @@ public class ServerConfig {
     public static double imbueCostBase()   { return IMBUE_COST_BASE_RAW.get(); }
     public static int imbueCostThreshold() { return IMBUE_COST_THRESHOLD_RAW.get(); }
     public static double imbueCostScale()  { return IMBUE_COST_SCALE_RAW.get(); }
+    /** Tope de puntos totales imbuidos por pieza para el escalón {@code tier} (0 = sin infundir … 4 = Legendario). */
+    public static int imbuePieceCap(int tier) {
+        List<? extends Integer> caps = IMBUE_PIECE_CAPS_RAW.get();
+        if (caps.isEmpty()) return Integer.MAX_VALUE;
+        return caps.get(Math.max(0, Math.min(tier, caps.size() - 1)));
+    }
     /** TP total de referencia para el techo de presencia del aura. Ver AuraCeiling. */
     public static double auraReferenceTp() { return AURA_REFERENCE_TP; }
     public static double attributeBaseCost() { return ATTRIBUTE_BASE_COST; }

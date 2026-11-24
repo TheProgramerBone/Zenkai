@@ -3,7 +3,7 @@
   "pattern": "zenkai:saiyan_armor",
   "piece": "leggings",
   "material": {
-    "item": "zenkai:katchin_ingot"
+    "tag": "zenkai:katchin_ingots"
   },
   "count": 7,
   "energy": 35000,

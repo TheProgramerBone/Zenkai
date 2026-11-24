@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:blaze_powder"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "zenkai:spirit_blood",
+      "chance": 0.05
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:ores/gold"
+  },
+  "time": 200,
+  "energy": 4000,
+  "results": [
+    {
+      "id": "minecraft:raw_gold",
+      "count": 2
+    },
+    {
+      "id": "minecraft:raw_gold",
+      "chance": 0.25
+    },
+    {
+      "id": "minecraft:cobblestone",
+      "chance": 0.125
+    }
+  ]
+}

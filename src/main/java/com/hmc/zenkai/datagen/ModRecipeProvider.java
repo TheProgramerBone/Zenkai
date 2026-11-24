@@ -123,14 +123,24 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('C', ModItems.ADVANCED_CIRCUIT)
                 .define('E', ModItems.ENERGY_CRYSTAL)
                 .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+        // Tolerancias SECUENCIALES (2026-11-24): la Divina se fabrica a partir de la Súper y la Legendaria de la Divina.
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KI_TOLERANCE_DIVINE.get(), 1)
-                .pattern(" D ").pattern("DCD").pattern(" E ")
+                .pattern(" D ").pattern("DTD").pattern("ECE")
                 .define('D', Tags.Items.GEMS_DIAMOND)
+                .define('T', ModItems.KI_TOLERANCE_SUPER)
                 .define('C', ModItems.ADVANCED_CIRCUIT)
                 .define('E', ModItems.ENERGY_CRYSTAL)
-                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+                .unlockedBy("has_tolerance_super", has(ModItems.KI_TOLERANCE_SUPER)).save(recipeOutput);
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KI_TOLERANCE_LEGENDARY.get(), 1)
-                .pattern(" K ").pattern("KCK").pattern(" E ")
+                .pattern(" K ").pattern("KTK").pattern("ECE")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('T', ModItems.KI_TOLERANCE_DIVINE)
+                .define('C', ModItems.ELITE_CIRCUIT)
+                .define('E', ModItems.ENERGY_CRYSTAL)
+                .unlockedBy("has_tolerance_divine", has(ModItems.KI_TOLERANCE_DIVINE)).save(recipeOutput);
+        // Eficiencia de fluido: a propósito cara (katchin + circuito de élite + cristales), pedido del usuario 2026-11-24.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MACHINE_EFFICIENCY_UPGRADE.get(), 1)
+                .pattern(" K ").pattern("ECE").pattern(" K ")
                 .define('K', ModItems.KATCHIN_INGOT)
                 .define('C', ModItems.ELITE_CIRCUIT)
                 .define('E', ModItems.ENERGY_CRYSTAL)
@@ -154,6 +164,20 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('E', ModItems.ENERGY_CRYSTAL)
                 .define('R', Tags.Items.DUSTS_REDSTONE)
                 .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL)).save(recipeOutput);
+
+        // Cápsulas Hoi-Poi (Fase 6): cuatro lingotes de su rango + perla de ender + cristal de energía, por tags c: para
+        // que valga el material de cualquier mod. La de COBRE va sin cristal (decisión del usuario 2026-11-24, P12): el
+        // cristal solo sale en Namek, y la cápsula de cobre tiene que ser temprana de verdad.
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.CAPSULE_COPPER.get(), 1)
+                .pattern(" I ").pattern("IPI").pattern(" I ")
+                .define('I', Tags.Items.INGOTS_COPPER)
+                .define('P', Tags.Items.ENDER_PEARLS)
+                .unlockedBy("has_ender_pearl", has(Tags.Items.ENDER_PEARLS)).save(recipeOutput);
+        capsuleRecipe(recipeOutput, ModItems.CAPSULE_IRON.get(), Tags.Items.INGOTS_IRON);
+        capsuleRecipe(recipeOutput, ModItems.CAPSULE_GOLD.get(), Tags.Items.INGOTS_GOLD);
+        capsuleRecipe(recipeOutput, ModItems.CAPSULE_DIAMOND.get(), Tags.Items.GEMS_DIAMOND);
+        capsuleRecipe(recipeOutput, ModItems.CAPSULE_KATCHIN.get(), itemtag("c:ingots/katchin"));
+        capsuleRecipe(recipeOutput, ModItems.CAPSULE_NETHERITE.get(), Tags.Items.INGOTS_NETHERITE);
 
         // Transporte (provisional, como el resto de la 0.7.0): cables y tuberías salen de seis en seis.
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ENERGY_CABLE.get(), 6)
@@ -197,6 +221,35 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('A', ModItems.ADVANCED_CIRCUIT)
                 .define('I', Tags.Items.INGOTS_IRON)
                 .define('T', net.minecraft.world.item.Items.CRAFTING_TABLE)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
+        // Triturador (Fase 5d). Receta PROVISIONAL: como la fabricadora con una piedra de afilar (el molino de Create es
+        // de piedra) en vez de la mesa.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.CRUSHER.get(), 1)
+                .pattern("KAK").pattern("IGI").pattern("KRK")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('A', ModItems.ADVANCED_CIRCUIT)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G', net.minecraft.world.item.Items.GRINDSTONE)
+                .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
+                .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+        // Polvo de katchin → lingote (horno y alto horno), como el polvo de Mekanism.
+        net.minecraft.data.recipes.SimpleCookingRecipeBuilder.smelting(net.minecraft.world.item.crafting.Ingredient.of(ModItems.KATCHIN_DUST.get()), RecipeCategory.MISC,
+                ModItems.KATCHIN_INGOT.get(), 0.7f, 200)
+                .unlockedBy("has_katchin_dust", has(ModItems.KATCHIN_DUST)).save(recipeOutput, "zenkai:katchin_ingot_from_dust_smelting");
+        net.minecraft.data.recipes.SimpleCookingRecipeBuilder.blasting(net.minecraft.world.item.crafting.Ingredient.of(ModItems.KATCHIN_DUST.get()), RecipeCategory.MISC,
+                ModItems.KATCHIN_INGOT.get(), 0.7f, 100)
+                .unlockedBy("has_katchin_dust", has(ModItems.KATCHIN_DUST)).save(recipeOutput, "zenkai:katchin_ingot_from_dust_blasting");
+
+        // Estación de imbuido (separada de la fabricadora el 2026-11-23). Receta PROVISIONAL: como la fabricadora con un
+        // soporte para pociones en vez de la mesa (imbuir con sangre es «alquimia» de la armadura).
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.IMBUING_STATION.get(), 1)
+                .pattern("KAK").pattern("IBI").pattern("KRK")
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('A', ModItems.ADVANCED_CIRCUIT)
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('B', net.minecraft.world.item.Items.BREWING_STAND)
                 .define('R', Tags.Items.STORAGE_BLOCKS_REDSTONE)
                 .unlockedBy("has_katchin", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
 
@@ -341,29 +394,47 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_advanced",has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
 
         // ── Katchin ──────────────────────────────────────────────────────────
-        // Fase 5c: lingotes INFUNDIDOS no hacen bloque (el bloque colocado perdería la infusión sin avisar).
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.KATCHIN_BLOCK.get(), 1)
                 .pattern("KK").pattern("KK")
                 .define('K', ModItems.KATCHIN_INGOT.get())
                 .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT))
-                .save(infused(recipeOutput, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode.REJECT));
+                .save(recipeOutput);
 
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_INGOT.get(), 4)
                 .requires(ModBlocks.KATCHIN_BLOCK)
                 .unlockedBy("has_katchin_block", has(ModBlocks.KATCHIN_BLOCK))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "katchin_ingot_from_block"));
 
-        // Hilo y tela de katchin (Fase 5a, decisión 2026-11-22): mesa de crafteo, sin máquina. Fase 5c: heredan la
-        // infusión de Ki del lingote/hilo (zenkai:infused_crafting en modo inherit).
-        RecipeOutput inherit = infused(recipeOutput, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode.INHERIT);
+        // Hilo y tela de katchin (Fase 5a, decisión 2026-11-22): mesa de crafteo, sin máquina.
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_THREAD.get(), 4)
                 .requires(ModItems.KATCHIN_INGOT)
-                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(inherit);
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.KATCHIN_CLOTH.get(), 1)
                 .pattern("TT").pattern("TT")
                 .define('T', ModItems.KATCHIN_THREAD.get())
-                .unlockedBy("has_katchin_thread", has(ModItems.KATCHIN_THREAD)).save(inherit);
+                .unlockedBy("has_katchin_thread", has(ModItems.KATCHIN_THREAD)).save(recipeOutput);
+
+        // Katchin infundido (rework del 2026-11-23): las mismas cuatro recetas por nivel, sin mezcla (cada una pide
+        // el ítem de SU nivel). El lingote infundido solo sale de la infusora.
+        for (var t : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
+            Item ingot = ModItems.INFUSED_KATCHIN_INGOTS.get(t).get();
+            Item thread = ModItems.INFUSED_KATCHIN_THREADS.get(t).get();
+            Item cloth = ModItems.INFUSED_KATCHIN_CLOTHS.get(t).get();
+            Block block = ModBlocks.INFUSED_KATCHIN_BLOCKS.get(t).get();
+            String n = t.fluidName() + "_katchin";
+            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, block, 1)
+                    .pattern("KK").pattern("KK").define('K', ingot)
+                    .unlockedBy("has_" + n + "_ingot", has(ingot)).save(recipeOutput);
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ingot, 4).requires(block)
+                    .unlockedBy("has_" + n + "_block", has(block))
+                    .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, n + "_ingot_from_block"));
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, thread, 4).requires(ingot)
+                    .unlockedBy("has_" + n + "_ingot", has(ingot)).save(recipeOutput);
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, cloth, 1)
+                    .pattern("TT").pattern("TT").define('T', thread)
+                    .unlockedBy("has_" + n + "_thread", has(thread)).save(recipeOutput);
+        }
 
         // Infusora de Ki (Fase 5c). Receta PROVISIONAL como las de la 2b: katchin, circuito avanzado, cristal de
         // energía (la ventana de ki) y un caldero (el baño donde se infunde).
@@ -647,7 +718,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
     protected static <T extends AbstractCookingRecipe> void oreCooking(@NotNull RecipeOutput recipeOutput, RecipeSerializer<T> pCookingSerializer, AbstractCookingRecipe.@NotNull Factory<T> factory,
                                                                        List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult, float pExperience, int pCookingTime, @NotNull String pGroup, String pRecipeName) {
         for(ItemLike itemlike : pIngredients) {
-            SimpleCookingRecipeBuilder.generic(Ingredient.of(itemlike), pCategory, pResult, pExperience, pCookingTime, pCookingSerializer, factory).group(pGroup).unlockedBy(getHasName(itemlike), has(itemlike))
+            net.minecraft.data.recipes.SimpleCookingRecipeBuilder.generic(Ingredient.of(itemlike), pCategory, pResult, pExperience, pCookingTime, pCookingSerializer, factory).group(pGroup).unlockedBy(getHasName(itemlike), has(itemlike))
                     .save(recipeOutput, Zenkai.MOD_ID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
         }
     }
@@ -781,21 +852,15 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                         BuiltInRegistries.ITEM.getKey(template).getPath() + "_duplication"));
     }
 
-    /**
-     * Salida que envuelve cada receta de mesa en {@code zenkai:infused_crafting} (Fase 5c) con ese modo: así los
-     * builders vanilla generan la receta que respeta la infusión de Ki sin escribir el JSON a mano.
-     */
-    private static RecipeOutput infused(RecipeOutput out, com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Mode mode) {
-        return new RecipeOutput() {
-            @Override
-            public void accept(@NotNull ResourceLocation id, @NotNull Recipe<?> recipe,
-                               @org.jetbrains.annotations.Nullable net.minecraft.advancements.AdvancementHolder adv,
-                               net.neoforged.neoforge.common.conditions.ICondition @NotNull ... conditions) {
-                out.accept(id, new com.hmc.zenkai.feature.armor.InfusedCraftingRecipe((CraftingRecipe) recipe, mode), adv, conditions);
-            }
 
-            @Override
-            public net.minecraft.advancements.Advancement.@NotNull Builder advancement() { return out.advancement(); }
-        };
+    /** Cápsula de hierro en adelante: «ICI» / «IPI» (4 lingotes, cristal de energía y perla). */
+    private static void capsuleRecipe(RecipeOutput out, net.minecraft.world.item.Item capsule,
+                                      net.minecraft.tags.TagKey<net.minecraft.world.item.Item> ingot) {
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, capsule, 1)
+                .pattern("ICI").pattern("IPI")
+                .define('I', ingot)
+                .define('C', itemtag("c:gems/energy_crystal"))
+                .define('P', Tags.Items.ENDER_PEARLS)
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL.get())).save(out);
     }
 }

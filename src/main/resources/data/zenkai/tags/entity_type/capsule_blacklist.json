@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "#zenkai:bosses",
+    { "id": "#c:bosses", "required": false },
+    "zenkai:kami",
+    "zenkai:kaio",
+    "zenkai:korin",
+    "zenkai:toribot",
+    "zenkai:yemma",
+    "zenkai:uranai_baba",
+    "zenkai:shenlong",
+    "zenkai:player_body",
+    "zenkai:shadow_clone",
+    "zenkai:training_drone",
+    "zenkai:angel"
+  ]
+}

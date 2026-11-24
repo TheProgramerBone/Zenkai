@@ -1,16 +1,13 @@
 {
-  "type": "zenkai:infused_crafting",
-  "base": {
-    "type": "minecraft:crafting_shapeless",
-    "category": "misc",
-    "ingredients": [
-      {
-        "item": "zenkai:katchin_ingot"
-      }
-    ],
-    "result": {
-      "count": 4,
-      "id": "zenkai:katchin_thread"
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zenkai:katchin_ingot"
     }
+  ],
+  "result": {
+    "count": 4,
+    "id": "zenkai:katchin_thread"
   }
 }

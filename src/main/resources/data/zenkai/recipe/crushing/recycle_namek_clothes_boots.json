@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:namek_clothes_boots"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_thread",
+      "count": 6
+    },
+    {
+      "id": "zenkai:katchin_thread",
+      "chance": 0.4
+    }
+  ],
+  "infusion_aware": true
+}

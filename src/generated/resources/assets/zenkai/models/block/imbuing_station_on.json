@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "zenkai:block/imbuing_station_front_on",
+    "side": "zenkai:block/armor_fabricator_side",
+    "top": "zenkai:block/imbuing_station_top"
+  }
+}

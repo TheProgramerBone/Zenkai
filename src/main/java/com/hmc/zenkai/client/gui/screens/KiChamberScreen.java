@@ -26,7 +26,7 @@ import java.util.List;
  *   barra de FE (el búfer del conversor) y, pegado, el TANQUE DE KI con su fluido;
  *   tres botones: puerta (abrir, cerrar o liberar a quien esté dentro), el ajuste Forzar y el
  *   conversor a FE (la carga arranca sola al entrar alguien: no hay botón de cargar), y debajo las seis
- *   ranuras: tolerancias arriba; velocidad, almacenamiento y batería abajo;
+ *   ranuras (2x2): tolerancia y velocidad arriba; almacenamiento y batería abajo;
  *   panel de lectura: tipo de energía y ki de QUIEN MIRA la pantalla (ya no hace falta estar
  *   dentro para abrirla), producción, FE y estado.
  *
@@ -46,8 +46,6 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/ki_chamber.png");
 
     // ── Layout (coordenadas del PNG) ─────────────────────────────────────────
-    private static final int TITLE_X = 12, TITLE_Y = 7;
-    private static final int LED_X = 144, LED_Y = 2;
 
     /** == BAR_X/BAR_Y y TANK_X/TANK_Y de gen_ki_chamber_screen.py. */
     private static final int BAR_X = 18, BAR_Y = 32, BAR_W = 16, BAR_H = 104;
@@ -70,9 +68,7 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
 
     /** Clave de lang de cada ranura de máquina, en el orden de KiContainmentChamberBlockEntity.SLOT_*. */
     private static final String[] SLOT_KEYS = {
-            "screen.zenkai.ki_chamber.slot.tolerance_super",
-            "screen.zenkai.ki_chamber.slot.tolerance_divine",
-            "screen.zenkai.ki_chamber.slot.tolerance_legendary",
+            "screen.zenkai.ki_chamber.slot.tolerance",
             "screen.zenkai.ki_chamber.slot.speed",
             "screen.zenkai.ki_chamber.slot.storage",
             "screen.zenkai.ki_chamber.slot.battery",
@@ -89,6 +85,16 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
 
     @Override
     protected ResourceLocation background() { return BG; }
+
+    /** Siluetas (estilo de los iconos de ranura de Curios) de las cuatro mejoras de la cámara (== SLOT_TOLERANCE..SLOT_BATTERY). */
+    private static final ResourceLocation[] UPGRADE_GHOSTS = {
+            ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_upgrade_tolerance.png"), ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_upgrade_speed.png"),
+            ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_upgrade_storage.png"), ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_upgrade_battery.png") };
+
+    @Override
+    protected @org.jetbrains.annotations.Nullable ResourceLocation slotGhost(int handlerIndex) {
+        return handlerIndex >= 0 && handlerIndex < UPGRADE_GHOSTS.length ? UPGRADE_GHOSTS[handlerIndex] : null;
+    }
 
     @Override
     protected void init() {
@@ -162,8 +168,7 @@ public class KiChamberScreen extends TechPanelScreen<KiChamberMenu> {
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics g, int mouseX, int mouseY) {
-        drawTitle(g, TITLE_X, TITLE_Y);
-        drawLed(g, LED_X, LED_Y, menu.isCharging());
+        drawHeader(g, menu.isCharging());
         drawInventoryLabel(g, INV_LABEL_X, INV_LABEL_Y);
 
         drawVBar(g, BAR_X, BAR_Y, BAR_W, BAR_H, menu.energyFraction(),

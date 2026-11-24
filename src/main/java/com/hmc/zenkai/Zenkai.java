@@ -245,6 +245,18 @@ public class Zenkai {
                 ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.energyHandler());
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
                 ModBlockEntities.ARMOR_FABRICATOR.get(), (be, side) -> be.fluidHandler());
+        // Triturador (Fase 5d): FE, fluido de Ki (turbo) e ítems (entra por la entrada, sale por las salidas).
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.CRUSHER.get(), (be, side) -> be.energyHandler());
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.CRUSHER.get(), (be, side) -> be.fluidHandler());
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.CRUSHER.get(), (be, side) -> be.automationHandler());
+        // Estación de imbuido (separada de la fabricadora el 2026-11-23): igual, FE y fluido por cualquier cara.
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.IMBUING_STATION.get(), (be, side) -> be.energyHandler());
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.IMBUING_STATION.get(), (be, side) -> be.fluidHandler());
 
         // Infusora de Ki (Fase 5c): FE, fluido de Ki e ítems (entra por la entrada, sale por la salida) por cualquier cara.
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,
@@ -269,6 +281,8 @@ public class Zenkai {
             event.register(ModMenuTypes.TANK.get(), com.hmc.zenkai.client.gui.screens.TankScreen::new);
             event.register(ModMenuTypes.GRAVITY_CHAMBER.get(), com.hmc.zenkai.client.gui.screens.GravityChamberScreen::new);
             event.register(ModMenuTypes.ARMOR_FABRICATOR.get(), com.hmc.zenkai.client.gui.screens.ArmorFabricatorScreen::new);
+            event.register(ModMenuTypes.IMBUING_STATION.get(), com.hmc.zenkai.client.gui.screens.ImbuingStationScreen::new);
+            event.register(ModMenuTypes.CRUSHER.get(), com.hmc.zenkai.client.gui.screens.CrusherScreen::new);
             event.register(ModMenuTypes.KI_INFUSER.get(), com.hmc.zenkai.client.gui.screens.KiInfuserScreen::new);
         }
 
@@ -305,6 +319,13 @@ public class Zenkai {
                     ResourceLocation.fromNamespaceAndPath(MOD_ID, "wear"),
                     (stack, lvl, ent, seed) -> com.hmc.zenkai.content.item.TrainingDroneItem.wearStage(stack));
 
+            // Cápsulas Hoi-Poi: 0 vacía, 1 llena (botón encendido en el icono).
+            for (var tier : com.hmc.zenkai.feature.capsule.CapsuleTier.values()) {
+                ItemProperties.register(ModItems.capsule(tier),
+                        ResourceLocation.fromNamespaceAndPath(MOD_ID, "full"),
+                        (stack, lvl, ent, seed) -> com.hmc.zenkai.content.item.CapsuleItem.isFull(stack) ? 1.0F : 0.0F);
+            }
+
             // Block entities
             BlockEntityRenderers.register(
                     ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(),
@@ -329,6 +350,9 @@ public class Zenkai {
 
             // Entidades
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
+            // Cápsula Hoi-Poi lanzada (Fase 6): se ve como el propio ítem, igual que una bola de nieve.
+            EntityRenderers.register(ModEntities.THROWN_CAPSULE.get(),
+                    net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
             EntityRenderers.register(ModEntities.TRAINING_DRONE.get(),
                     com.hmc.zenkai.client.render_and_model_entities.entity.TrainingDroneRenderer::new);
 

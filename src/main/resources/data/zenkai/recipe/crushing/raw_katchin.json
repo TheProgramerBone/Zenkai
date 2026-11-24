@@ -1,0 +1,15 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:raw_materials/katchin"
+  },
+  "count": 3,
+  "time": 200,
+  "energy": 4000,
+  "results": [
+    {
+      "id": "zenkai:katchin_dust",
+      "count": 4
+    }
+  ]
+}

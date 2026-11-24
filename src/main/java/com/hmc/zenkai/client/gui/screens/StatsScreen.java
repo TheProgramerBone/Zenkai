@@ -931,7 +931,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private void renderTpFieldTooltip(GuiGraphics g, int mouseX, int mouseY) {
         if (mouseX < tpFieldX || mouseX >= tpFieldX + tpFieldW
                 || mouseY < tpFieldY || mouseY >= tpFieldY + this.font.lineHeight) return;
-        g.renderTooltip(this.font, Component.translatable(
+        com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.translatable(
                 "screen.zenkai.stats_screen.exact_tp", ZenkaiNumbers.exact((long) att.getTP())), mouseX, mouseY);
     }
 
@@ -948,7 +948,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private void renderTpStepTooltip(GuiGraphics g, int mouseX, int mouseY) {
         if (mouseX >= tpcLabelX + 20 && mouseX < tpcLabelX + tpcLabelW &&
                 mouseY >= tpcLabelY && mouseY < tpcLabelY + tpcLabelH) {
-            g.renderTooltip(this.font, Component.translatable("screen.zenkai.stats_screen.tp_des"),
+            com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.translatable("screen.zenkai.stats_screen.tp_des"),
                     mouseX, mouseY);
         }
     }

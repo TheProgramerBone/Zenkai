@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-22T23:03:49.1513709	Loot Tables
+// 1.21.1	2026-11-24T01:26:44.9482545	Loot Tables
 ce23c9d992d0b026612247c98fab09e9a4c77d13 data/zenkai/loot_table/blocks/ajisa_button.json
 1c902309ab65853161114f52ae7b2f3a4f2a0bde data/zenkai/loot_table/blocks/ajisa_door.json
 71d1a278b29aa52b81445b0040480b6679e0148b data/zenkai/loot_table/blocks/ajisa_fence.json
@@ -15,6 +15,8 @@ f6ad36a09d04331236b03d5873a91fbea5fb67d6 data/zenkai/loot_table/blocks/ajisa_lea
 c9e63e1b6863ce9111db981ecd8ce33738af8cd5 data/zenkai/loot_table/blocks/ajisa_wood.json
 4fa0c2882e3f65831249b582ce656ad3bb10ff40 data/zenkai/loot_table/blocks/all_dragon_balls.json
 9fa7771190dadf99254d65d1970e85c2c6fe357f data/zenkai/loot_table/blocks/armor_fabricator.json
+859fc12a2230f8cbefe23ea580b7948974b8565f data/zenkai/loot_table/blocks/capsule.json
+80a0177fdb39dedf45e66cddc81cd4e489f97778 data/zenkai/loot_table/blocks/crusher.json
 7233c7a9c0e83f06b2da6fe12cb9dd69a1673690 data/zenkai/loot_table/blocks/cut_hfil_cinder_sandstone.json
 96294edffbed58f148d2b78a88026ed7e2b37940 data/zenkai/loot_table/blocks/cut_hfil_cinder_sandstone_slab.json
 6f6cb7399e4c04ba29f50ede6e564e5705bde381 data/zenkai/loot_table/blocks/cut_hfil_cinder_sandstone_stairs.json
@@ -99,11 +101,16 @@ d7e5a87265fc2d15d5a4ee5fe1ea99bbf9f4c939 data/zenkai/loot_table/blocks/hfil_void
 1907494551878cb680c10d42480ba953bcb4025a data/zenkai/loot_table/blocks/hfil_void_stone_brick_slab.json
 156b229f64ea807e5d8aeaa7c96d99140e6aad73 data/zenkai/loot_table/blocks/hfil_void_stone_brick_stairs.json
 a170e3a094396c40425509ba69f879e23a62c474 data/zenkai/loot_table/blocks/hfil_void_stone_brick_wall.json
+29721480ba652a5fe173973869eb13ece0166048 data/zenkai/loot_table/blocks/imbuing_station.json
 0172500224a82631d77dfe2ad347db6cef3918af data/zenkai/loot_table/blocks/katchin_block.json
 e88ca1078419e500c7e9d486de1c41b753457a7b data/zenkai/loot_table/blocks/katchin_ore.json
 de55618210d7bb73a3fb1d67a1de2482ba3763fb data/zenkai/loot_table/blocks/katchin_pillar.json
+3d8888ce6155b6e32ab11e4f933ce478aac51dc4 data/zenkai/loot_table/blocks/ki_base_katchin_block.json
 8dff30ef0f72d1e970832159d2864789de181877 data/zenkai/loot_table/blocks/ki_containment_chamber.json
+8695073ce8e07432607673739031fcbe806d9bd1 data/zenkai/loot_table/blocks/ki_divine_katchin_block.json
 d2eb6d49b77d295ad9121b3308ff0be6007059dd data/zenkai/loot_table/blocks/ki_infuser.json
+61fa1e2ac7dd205afcbc4b8c463215a1eb4c873f data/zenkai/loot_table/blocks/ki_legendary_katchin_block.json
+6f23d820bdb7babda6ea6e7cc444ef8325a0aec7 data/zenkai/loot_table/blocks/ki_super_katchin_block.json
 15032c14c6a29939eb02cbbe50eb13b097658af5 data/zenkai/loot_table/blocks/namekian_coal_ore.json
 aeee3e5d99b74bb6aacb33fed073898b4ee6acab data/zenkai/loot_table/blocks/namekian_cobblestone.json
 56888dc58350f47307fbc69533ad9041c2b0a234 data/zenkai/loot_table/blocks/namekian_copper_ore.json

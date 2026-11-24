@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:ender_pearl"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "zenkai:willpower_blood",
+      "chance": 0.05
+    }
+  ]
+}

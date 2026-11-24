@@ -1,0 +1,22 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:golden_boots"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "minecraft:gold_ingot"
+    },
+    {
+      "id": "minecraft:gold_ingot",
+      "chance": 0.6
+    },
+    {
+      "id": "minecraft:gold_nugget",
+      "count": 4,
+      "chance": 0.25
+    }
+  ]
+}

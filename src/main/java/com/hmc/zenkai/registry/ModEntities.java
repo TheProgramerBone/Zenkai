@@ -202,6 +202,16 @@ public class ModEntities {
                     .updateInterval(20)
                     .build("player_body"));
 
+    /** Cápsula Hoi-Poi llena lanzada (Fase 6): suelta lo guardado donde cae. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.misc.ThrownCapsuleEntity>> THROWN_CAPSULE =
+            ENTITY_TYPES.register("thrown_capsule", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.misc.ThrownCapsuleEntity>of(
+                            com.hmc.zenkai.content.entity.misc.ThrownCapsuleEntity::new, MobCategory.MISC)
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(4)
+                    .updateInterval(10)
+                    .build("thrown_capsule"));
+
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
     }

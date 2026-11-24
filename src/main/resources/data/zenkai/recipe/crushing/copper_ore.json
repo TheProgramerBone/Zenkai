@@ -1,0 +1,22 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:ores/copper"
+  },
+  "time": 200,
+  "energy": 4000,
+  "results": [
+    {
+      "id": "minecraft:raw_copper",
+      "count": 5
+    },
+    {
+      "id": "minecraft:raw_copper",
+      "chance": 0.25
+    },
+    {
+      "id": "minecraft:cobblestone",
+      "chance": 0.125
+    }
+  ]
+}

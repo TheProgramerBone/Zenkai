@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:rotten_flesh"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "zenkai:strength_blood",
+      "chance": 0.05
+    }
+  ]
+}

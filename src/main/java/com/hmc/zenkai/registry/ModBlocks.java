@@ -198,7 +198,28 @@ public class ModBlocks {
     public static final DeferredBlock<Block> KATCHIN_BLOCK = registerBlock("katchin_block",
             ()-> new Block(katchinProps().strength(50f, 3600000f)));
 
-    public static final DeferredBlock<Block> CUT_KATCHIN = registerBlock("cut_katchin",
+    /**
+     * Bloque de katchin infundido, uno por nivel (rework del 2026-11-23): 4 lingotes del mismo nivel en 2×2 ↔ 4 lingotes,
+     * como el normal. Al ser bloques propios la infusión ya no se pierde al colocarlos (antes la receta se rechazaba).
+     * Textura animada: vetas que pulsan en el color del fluido del nivel (tools/gen_infused_katchin_textures.py).
+     */
+    public static final java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredBlock<Block>> INFUSED_KATCHIN_BLOCKS =
+            infusedKatchinBlocks();
+
+    private static java.util.Map<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredBlock<Block>> infusedKatchinBlocks() {
+        var map = new java.util.EnumMap<com.hmc.zenkai.feature.kichamber.KiEnergyType, DeferredBlock<Block>>(
+                com.hmc.zenkai.feature.kichamber.KiEnergyType.class);
+        for (var t : com.hmc.zenkai.feature.kichamber.KiEnergyType.values()) {
+            // Luz propia por nivel (pedido del usuario 2026-11-23, al pasar a un solo sprite: la caja translúcida que brillaba
+            // se quitó): 7 Normal, 9 Súper, 11 Divino, 13 Legendario. Más tenue que una antorcha (14) salvo el Legendario.
+            int light = 7 + 2 * t.ordinal();
+            map.put(t, registerBlock(t.fluidName() + "_katchin_block",
+                    () -> new Block(katchinProps().strength(50f, 3600000f).lightLevel(s -> light))));
+        }
+        return java.util.Collections.unmodifiableMap(map);
+    }
+
+    public static final DeferredBlock<Block> CUT_KATCHIN =registerBlock("cut_katchin",
             ()-> new Block(katchinProps()));
     public static final DeferredBlock<Block> CUT_KATCHIN_STAIRS = registerBlock("cut_katchin_stairs",
             ()-> new StairBlock(CUT_KATCHIN.get().defaultBlockState(), katchinProps()));
@@ -590,7 +611,7 @@ public class ModBlocks {
                     .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.ACTIVE) ? 10 : 0)),
             b -> new com.hmc.zenkai.content.item.KiChamberBlockItem(b.get(), new Item.Properties()));
 
-    /** Máquina de fabricación de armaduras (0.7.0, Fase 5b): pestañas Fabricar y Atributos. */
+    /** Fabricadora de armaduras (0.7.0, Fase 5b): fabrica piezas y duplica plantillas. */
     public static final DeferredBlock<Block> ARMOR_FABRICATOR = registerBlock("armor_fabricator",
             () -> new com.hmc.zenkai.content.block.ArmorFabricatorBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
@@ -598,6 +619,24 @@ public class ModBlocks {
                     .strength(3.5f, 6f)
                     .requiresCorrectToolForDrops()
                     .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? 10 : 0)));
+
+    /** Triturador (0.7.0, Fase 5d): menas, reciclaje de armaduras, polvos y sangre de materiales de mob. */
+    public static final DeferredBlock<Block> CRUSHER = registerBlock("crusher",
+            () -> new com.hmc.zenkai.content.block.CrusherBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.CrusherBlock.LIT) ? 10 : 0)));
+
+    /** Estación de imbuido (0.7.0, 2026-11-23): pestañas Atributos e Infundir, separadas de la fabricadora. */
+    public static final DeferredBlock<Block> IMBUING_STATION = registerBlock("imbuing_station",
+            () -> new com.hmc.zenkai.content.block.ImbuingStationBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .lightLevel(s -> s.getValue(com.hmc.zenkai.content.block.ImbuingStationBlock.LIT) ? 10 : 0)));
 
     /** Infusora de Ki (0.7.0, Fase 5c): infunde lingotes de katchin con el fluido de Ki del tanque. */
     public static final DeferredBlock<Block> KI_INFUSER = registerBlock("ki_infuser",
@@ -634,6 +673,19 @@ public class ModBlocks {
                     .sound(SoundType.METAL)
                     .strength(3.5f, 6f)
                     .requiresCorrectToolForDrops()));
+
+    /**
+     * Cápsula Hoi-Poi colocada (Fase 6). SIN ítem propio: la coloca CapsuleItem y suelta su stack al romperse. Se rompe de un
+     * golpe, sin colisión y sin bloquear la luz, como una antorcha.
+     */
+    public static final DeferredBlock<com.hmc.zenkai.content.block.CapsuleBlock> CAPSULE = MOD_BLOCKS.register("capsule",
+            () -> new com.hmc.zenkai.content.block.CapsuleBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .instabreak()
+                    .noOcclusion()
+                    .noCollission()
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY)));
 
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()

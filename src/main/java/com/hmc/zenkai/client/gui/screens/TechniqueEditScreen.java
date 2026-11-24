@@ -654,7 +654,7 @@ public class TechniqueEditScreen extends Screen {
 
         for (InfoTip t : infoTips) {
             if (mouseX >= t.x() && mouseX < t.x() + t.w() && mouseY >= t.y() && mouseY < t.y() + this.font.lineHeight) {
-                g.renderTooltip(this.font, Component.translatable("screen.zenkai.technique.tip_exact_value", t.exact()),
+                com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.translatable("screen.zenkai.technique.tip_exact_value", t.exact()),
                         mouseX, mouseY);
             }
         }

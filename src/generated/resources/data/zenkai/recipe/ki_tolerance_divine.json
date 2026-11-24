@@ -10,12 +10,15 @@
     },
     "E": {
       "item": "zenkai:energy_crystal"
+    },
+    "T": {
+      "item": "zenkai:ki_tolerance_super"
     }
   },
   "pattern": [
     " D ",
-    "DCD",
-    " E "
+    "DTD",
+    "ECE"
   ],
   "result": {
     "count": 1,

@@ -1015,10 +1015,10 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         }
 
         // Los tooltips van FUERA del scissor o se recortarían con la lista.
-        if (headerTip != null) g.renderTooltip(this.font, Component.literal(headerTip), mouseX, mouseY);
+        if (headerTip != null) com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, Component.literal(headerTip), mouseX, mouseY);
         Component barTip = (bindBar != null) ? bindBar.tooltipAt(att, mouseX, mouseY) : null;
         if (barTip != null) {
-            g.renderTooltip(this.font, barTip, mouseX, mouseY);
+            com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, barTip, mouseX, mouseY);
         } else if (!drawHoverTips(g, mouseX, mouseY)) {
             if (rowTooltip != null) g.renderComponentTooltip(this.font, rowTooltip, mouseX, mouseY);
             else if (hovered != null) g.renderTooltip(this.font, hovered, mouseX, mouseY);

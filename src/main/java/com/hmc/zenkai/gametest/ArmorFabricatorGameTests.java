@@ -2,6 +2,7 @@ package com.hmc.zenkai.gametest;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
+import com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity;
 import com.hmc.zenkai.content.item.BloodItem;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.armor.ArmorSets;
@@ -34,6 +35,12 @@ public final class ArmorFabricatorGameTests {
 
     private static final BlockPos POS = new BlockPos(1, 1, 1);
 
+    /** Estación de imbuido (separada de la fabricadora el 2026-11-23): imbuir, plantillas e infundir viven ahí. */
+    private static ImbuingStationBlockEntity station(GameTestHelper helper) {
+        helper.setBlock(POS, ModBlocks.IMBUING_STATION.get());
+        return (ImbuingStationBlockEntity) helper.getBlockEntity(POS);
+    }
+
     private static ArmorFabricatorBlockEntity place(GameTestHelper helper) {
         helper.setBlock(POS, ModBlocks.ARMOR_FABRICATOR.get());
         return (ArmorFabricatorBlockEntity) helper.getBlockEntity(POS);
@@ -65,22 +72,22 @@ public final class ArmorFabricatorGameTests {
 
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void imbueSpendsBloodEnergyAndFluid(GameTestHelper helper) {
-        ArmorFabricatorBlockEntity be = place(helper);
+        ImbuingStationBlockEntity be = station(helper);
         be.fillEnergyForTests(100_000);
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR, new ItemStack(Items.IRON_CHESTPLATE));
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 2, 1));
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR, new ItemStack(Items.IRON_CHESTPLATE));
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 2, 1));
 
-        helper.assertTrue(be.imbue() == ArmorFabricatorBlockEntity.ImbueResult.NO_FLUID, "Sin fluido de Ki no debe imbuir");
+        helper.assertTrue(be.imbue() == ImbuingStationBlockEntity.ImbueResult.NO_FLUID, "Sin fluido de Ki no debe imbuir");
         be.tank().fill(new FluidStack(KiEnergyType.BASE.fluid().source().get(), 1000), IFluidHandler.FluidAction.EXECUTE);
 
-        helper.assertTrue(be.imbue() == ArmorFabricatorBlockEntity.ImbueResult.OK, "Con FE, fluido y sangre debe imbuir");
-        ItemStack piece = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR);
+        helper.assertTrue(be.imbue() == ImbuingStationBlockEntity.ImbueResult.OK, "Con FE, fluido y sangre debe imbuir");
+        ItemStack piece = be.items().getStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR);
         int str = piece.getOrDefault(ModDataComponents.IMBUED.get(), ImbuedAttributes.NONE).get(ZenkaiAttributes.STRENGTH);
         helper.assertTrue(str == 2, "Sangre Saiyan concentrada = +2 STR, da " + str);
-        helper.assertTrue(be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_BLOOD).isEmpty(), "La sangre se gasta");
+        helper.assertTrue(be.items().getStackInSlot(ImbuingStationBlockEntity.SLOT_BLOOD).isEmpty(), "La sangre se gasta");
         helper.assertTrue(be.energyStored() == 98_000, "2 puntos bajo el umbral = 2 000 FE; quedan " + be.energyStored());
         helper.assertTrue(be.tank().getFluidAmount() == 800, "2 puntos = 200 mB; quedan " + be.tank().getFluidAmount());
-        helper.assertTrue(be.imbue() == ArmorFabricatorBlockEntity.ImbueResult.NO_INPUT, "Sin sangre no debe imbuir");
+        helper.assertTrue(be.imbue() == ImbuingStationBlockEntity.ImbueResult.NO_INPUT, "Sin sangre no debe imbuir");
         helper.succeed();
     }
 
@@ -90,21 +97,21 @@ public final class ArmorFabricatorGameTests {
      */
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void imbueRequiresKiTypeAndHigherCostsHalf(GameTestHelper helper) {
-        ArmorFabricatorBlockEntity be = place(helper);
+        ImbuingStationBlockEntity be = station(helper);
         be.fillEnergyForTests(100_000);
         ItemStack diamond = new ItemStack(Items.DIAMOND_CHESTPLATE);
-        helper.assertTrue(ArmorFabricatorBlockEntity.requiredKiType(helper.getLevel(), diamond) == KiEnergyType.SUPER,
+        helper.assertTrue(ImbuingStationBlockEntity.requiredKiType(helper.getLevel(), diamond) == KiEnergyType.SUPER,
                 "El peto de diamante debería pedir Ki Súper (tipo automático: armadura + dureza)");
-        helper.assertTrue(ArmorFabricatorBlockEntity.requiredKiType(helper.getLevel(), new ItemStack(Items.IRON_CHESTPLATE))
+        helper.assertTrue(ImbuingStationBlockEntity.requiredKiType(helper.getLevel(), new ItemStack(Items.IRON_CHESTPLATE))
                 == KiEnergyType.BASE, "Una pieza sin receta pide Ki Base");
 
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR, diamond);
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 2, 2));
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR, diamond);
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 2, 2));
         be.tank().fill(new FluidStack(KiEnergyType.BASE.fluid().source().get(), 1000), IFluidHandler.FluidAction.EXECUTE);
-        helper.assertTrue(be.imbue() == ArmorFabricatorBlockEntity.ImbueResult.NO_FLUID, "Ki Base no vale si pide Súper");
+        helper.assertTrue(be.imbue() == ImbuingStationBlockEntity.ImbueResult.NO_FLUID, "Ki Base no vale si pide Súper");
 
         be.tank().setFluid(new FluidStack(KiEnergyType.DIVINE.fluid().source().get(), 1000));
-        helper.assertTrue(be.imbue() == ArmorFabricatorBlockEntity.ImbueResult.OK, "Ki Divino (superior) debe valer");
+        helper.assertTrue(be.imbue() == ImbuingStationBlockEntity.ImbueResult.OK, "Ki Divino (superior) debe valer");
         helper.assertTrue(be.tank().getFluidAmount() == 900, "2 puntos = 200 mB de Súper = 100 mB de Divino; quedan "
                 + be.tank().getFluidAmount());
         helper.succeed();
@@ -113,27 +120,27 @@ public final class ArmorFabricatorGameTests {
     /** Carga de imbuir (2026-11-22): no imbuye al pulsar, sino tras IMBUE_TICKS; quitar la sangre a mitad cancela sin gastar. */
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void imbueChargesBeforeApplying(GameTestHelper helper) {
-        ArmorFabricatorBlockEntity be = place(helper);
+        ImbuingStationBlockEntity be = station(helper);
         be.fillEnergyForTests(100_000);
         be.tank().fill(new FluidStack(KiEnergyType.BASE.fluid().source().get(), 1000), IFluidHandler.FluidAction.EXECUTE);
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR, new ItemStack(Items.IRON_CHESTPLATE));
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 1, 2));
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR, new ItemStack(Items.IRON_CHESTPLATE));
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_BLOOD, BloodItem.of(ModItems.STRENGTH_BLOOD.get(), 1, 2));
         BlockPos abs = helper.absolutePos(POS);
-        Runnable tick = () -> ArmorFabricatorBlockEntity.serverTick(helper.getLevel(), abs, helper.getLevel().getBlockState(abs), be);
+        Runnable tick = () -> ImbuingStationBlockEntity.serverTick(helper.getLevel(), abs, helper.getLevel().getBlockState(abs), be);
 
-        helper.assertTrue(be.startImbue() == ArmorFabricatorBlockEntity.ImbueResult.OK, "Debe arrancar la carga");
-        for (int i = 0; i < ArmorFabricatorBlockEntity.IMBUE_TICKS - 2; i++) tick.run();
-        ItemStack piece = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR);
+        helper.assertTrue(be.startImbue() == ImbuingStationBlockEntity.ImbueResult.OK, "Debe arrancar la carga");
+        for (int i = 0; i < ImbuingStationBlockEntity.IMBUE_TICKS - 2; i++) tick.run();
+        ItemStack piece = be.items().getStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR);
         helper.assertTrue(piece.getOrDefault(ModDataComponents.IMBUED.get(), ImbuedAttributes.NONE).get(ZenkaiAttributes.STRENGTH) == 0,
                 "Antes de acabar la carga no debe imbuir");
         for (int i = 0; i < 3; i++) tick.run();
-        piece = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_ARMOR);
+        piece = be.items().getStackInSlot(ImbuingStationBlockEntity.SLOT_ARMOR);
         helper.assertTrue(piece.getOrDefault(ModDataComponents.IMBUED.get(), ImbuedAttributes.NONE).get(ZenkaiAttributes.STRENGTH) == 1,
                 "Al acabar la carga debe dar +1 STR");
 
         be.startImbue();
         tick.run();
-        be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_BLOOD, ItemStack.EMPTY);
+        be.items().setStackInSlot(ImbuingStationBlockEntity.SLOT_BLOOD, ItemStack.EMPTY);
         tick.run();
         helper.assertTrue(!be.imbuing(), "Quitar la sangre a mitad cancela la carga");
         helper.assertTrue(be.tank().getFluidAmount() == 900, "La carga cancelada no gasta fluido; quedan " + be.tank().getFluidAmount());
@@ -152,7 +159,7 @@ public final class ArmorFabricatorGameTests {
                 new Case(ModItems.SAIYAN_ARMOR_CHESTPLATE.get(), KiEnergyType.SUPER),
                 new Case(ModItems.NAMEK_CLOTHES_CHESTPLATE.get(), KiEnergyType.BASE),   // receta: la tela baja a Base
                 new Case(ModItems.TRAINING_GI_HELMET.get(), KiEnergyType.BASE)}) {
-            KiEnergyType got = ArmorFabricatorBlockEntity.requiredKiType(level, new ItemStack(c.item()));
+            KiEnergyType got = ImbuingStationBlockEntity.requiredKiType(level, new ItemStack(c.item()));
             helper.assertTrue(got == c.want(), c.item() + " debería pedir " + c.want() + ", pide " + got);
         }
         helper.succeed();
@@ -212,6 +219,31 @@ public final class ArmorFabricatorGameTests {
         var ogre = com.hmc.zenkai.registry.ModEntities.RED_OGRE.get().builtInRegistryHolder()
                 .getData(ModDataMaps.BLOOD_SOURCES);
         helper.assertTrue(ogre != null && ogre.stream().allMatch(s -> s.quality() == 2), "El ogro debería soltar sangre +2");
+        helper.succeed();
+    }
+
+    /**
+     * Separación del 2026-11-23: una fabricadora guardada con la distribución vieja (21 ranuras, pieza en la 15 de
+     * Atributos) carga con 15 y SUELTA la pieza al mundo en su primer tick, sin perderla ni meterla en otra ranura.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void oldFabricatorSpillsImbueSlots(GameTestHelper helper) {
+        ArmorFabricatorBlockEntity be = place(helper);
+        var reg = helper.getLevel().registryAccess();
+        net.neoforged.neoforge.items.ItemStackHandler old = new net.neoforged.neoforge.items.ItemStackHandler(21);
+        old.setStackInSlot(15, new ItemStack(Items.IRON_CHESTPLATE));
+        // Antes de la mejora de eficiencia (2026-11-24) el patrón estaba en la 4; al cargar sin «UpgradeLayout» se corre a la nueva.
+        old.setStackInSlot(4, ArmorSets.pattern(ArmorSets.SAIYAN_ARMOR));
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        tag.put("Items", old.serializeNBT(reg));
+        be.loadWithComponents(tag, reg);
+        helper.assertTrue(be.items().getSlots() == ArmorFabricatorBlockEntity.SLOTS, "Debe cargar con las ranuras nuevas");
+        helper.assertTrue(!be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_PATTERN).isEmpty(), "El patrón se queda");
+        BlockPos abs = helper.absolutePos(POS);
+        ArmorFabricatorBlockEntity.serverTick(helper.getLevel(), abs, helper.getLevel().getBlockState(abs), be);
+        helper.assertTrue(!helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(abs).inflate(2), e -> e.getItem().is(Items.IRON_CHESTPLATE)).isEmpty(),
+                "La pieza de la pestaña vieja debe caer al mundo");
         helper.succeed();
     }
 }

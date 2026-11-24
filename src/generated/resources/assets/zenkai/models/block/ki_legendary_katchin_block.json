@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "zenkai:block/ki_legendary_katchin_block"
+  }
+}

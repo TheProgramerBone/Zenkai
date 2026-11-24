@@ -1,0 +1,22 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:ores/katchin"
+  },
+  "time": 200,
+  "energy": 4000,
+  "results": [
+    {
+      "id": "zenkai:katchin_dust",
+      "count": 2
+    },
+    {
+      "id": "zenkai:katchin_dust",
+      "chance": 0.25
+    },
+    {
+      "id": "minecraft:cobblestone",
+      "chance": 0.125
+    }
+  ]
+}

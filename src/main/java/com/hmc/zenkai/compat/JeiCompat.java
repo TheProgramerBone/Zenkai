@@ -1,12 +1,10 @@
 package com.hmc.zenkai.compat;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu;
 import com.hmc.zenkai.client.gui.screens.ArmorFabricatorScreen;
 import com.hmc.zenkai.compat.jei.ArmorFabricationCategory;
 import com.hmc.zenkai.compat.jei.ArmorImbuingCategory;
 import com.hmc.zenkai.compat.jei.BloodDropsCategory;
-import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
 import com.hmc.zenkai.content.item.BloodItem;
 import com.hmc.zenkai.feature.armor.ArmorImbuingRecipe;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
@@ -107,7 +105,8 @@ public class JeiCompat implements IModPlugin {
         var gui = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(new ArmorFabricationCategory(gui), new ArmorImbuingCategory(gui),
                 new BloodDropsCategory(gui), new com.hmc.zenkai.compat.jei.KiInfusionCategory(gui),
-                new com.hmc.zenkai.compat.jei.TemplateDuplicationCategory(gui));
+                new com.hmc.zenkai.compat.jei.TemplateDuplicationCategory(gui),
+                new com.hmc.zenkai.compat.jei.CrushingCategory(gui));
     }
 
     @Override
@@ -129,7 +128,7 @@ public class JeiCompat implements IModPlugin {
         java.util.Map<KiEnergyType, List<ItemStack>> auto = new java.util.EnumMap<>(KiEnergyType.class);
         for (var item : BuiltInRegistries.ITEM) {
             ItemStack s = new ItemStack(item);
-            if (!ArmorFabricatorBlockEntity.isArmorPiece(s) || ArmorImbuingRecipe.explicitFor(level, s) != null) continue;
+            if (!com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.isArmorPiece(s) || ArmorImbuingRecipe.explicitFor(level, s) != null) continue;
             auto.computeIfAbsent(ArmorImbuingRecipe.autoTier(s), k -> new ArrayList<>()).add(s);
         }
         for (KiEnergyType t : KiEnergyType.values()) {
@@ -146,17 +145,14 @@ public class JeiCompat implements IModPlugin {
                 : BuiltInRegistries.ENTITY_TYPE.getKey(a.entity()).compareTo(BuiltInRegistries.ENTITY_TYPE.getKey(b.entity())));
         registration.addRecipes(BloodDropsCategory.TYPE, drops);
 
-        // Fase 5c: infusora (una entrada por tipo de Ki, con lo que diga el tag zenkai:ki_infusable) y duplicado.
-        List<ItemStack> infusable = new ArrayList<>();
-        BuiltInRegistries.ITEM.getTagOrEmpty(com.hmc.zenkai.feature.armor.KiInfusion.INFUSABLE)
-                .forEach(h -> infusable.add(new ItemStack(h.value())));
-        if (!infusable.isEmpty()) {
-            List<com.hmc.zenkai.compat.jei.KiInfusionCategory.Display> inf = new ArrayList<>();
-            for (KiEnergyType t : KiEnergyType.values()) inf.add(new com.hmc.zenkai.compat.jei.KiInfusionCategory.Display(infusable, t));
-            registration.addRecipes(com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE, inf);
-        }
+        // Infusora (Fase 5c): recetas zenkai:ki_infusion por datapack desde el 2026-11-23.
+        registration.addRecipes(com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE,
+                new ArrayList<>(recipes.getAllRecipesFor(ModRecipes.KI_INFUSION.get())));
         registration.addRecipes(com.hmc.zenkai.compat.jei.TemplateDuplicationCategory.TYPE,
                 new ArrayList<>(recipes.getAllRecipesFor(ModRecipes.TEMPLATE_DUPLICATION.get())));
+        // Triturador (Fase 5d).
+        registration.addRecipes(com.hmc.zenkai.compat.jei.CrushingCategory.TYPE,
+                new ArrayList<>(recipes.getAllRecipesFor(ModRecipes.CRUSHING.get())));
     }
 
     @Override
@@ -171,21 +167,44 @@ public class JeiCompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(@NotNull IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(ModBlocks.ARMOR_FABRICATOR.get(), ArmorFabricationCategory.TYPE, ArmorImbuingCategory.TYPE,
+        registration.addRecipeCatalyst(ModBlocks.ARMOR_FABRICATOR.get(), ArmorFabricationCategory.TYPE,
                 com.hmc.zenkai.compat.jei.TemplateDuplicationCategory.TYPE);
+        registration.addRecipeCatalyst(ModBlocks.IMBUING_STATION.get(), ArmorImbuingCategory.TYPE);
         registration.addRecipeCatalyst(ModBlocks.KI_INFUSER.get(), com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE);
+        registration.addRecipeCatalyst(ModBlocks.CRUSHER.get(), com.hmc.zenkai.compat.jei.CrushingCategory.TYPE);
+    }
+
+    /** Zona clicable sobre una barra de progreso (coordenadas de la pantalla): abre las recetas de su categoría. */
+    private static <S extends net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>> void progressArea(
+            IGuiHandlerRegistration registration, Class<S> screen, int x, int y, int w, int h,
+            mezz.jei.api.recipe.RecipeType<?> type, java.util.function.Predicate<S> active) {
+        registration.addGuiContainerHandler(screen, new IGuiContainerHandler<S>() {
+            @Override
+            public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(@NotNull S s, double mouseX, double mouseY) {
+                return active.test(s) ? List.of(IGuiClickableArea.createBasic(x, y - 3, w, h + 6, type)) : List.of();
+            }
+        });
     }
 
     @Override
     public void registerGuiHandlers(@NotNull IGuiHandlerRegistration registration) {
+        // Triturador, Infusora y Estación de imbuido (barra de carga, solo en la pestaña Atributos): como la Fabricadora.
+        progressArea(registration, com.hmc.zenkai.client.gui.screens.CrusherScreen.class,
+                com.hmc.zenkai.client.gui.screens.CrusherScreen.PROG_X, 57, 36, 6,
+                com.hmc.zenkai.compat.jei.CrushingCategory.TYPE, s -> true);
+        progressArea(registration, com.hmc.zenkai.client.gui.screens.KiInfuserScreen.class,
+                com.hmc.zenkai.client.gui.screens.KiInfuserScreen.PROG_X, 57, 32, 6,
+                com.hmc.zenkai.compat.jei.KiInfusionCategory.TYPE, s -> true);
+        progressArea(registration, com.hmc.zenkai.client.gui.screens.ImbuingStationScreen.class,
+                com.hmc.zenkai.client.gui.screens.ImbuingStationScreen.CHARGE_X, 56, 16, 4,
+                ArmorImbuingCategory.TYPE,
+                s -> s.getMenu().tab() == com.hmc.zenkai.client.gui.menu.ImbuingStationMenu.TAB_ATTR);
         registration.addGuiContainerHandler(ArmorFabricatorScreen.class, new IGuiContainerHandler<>() {
             @Override
             public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(@NotNull ArmorFabricatorScreen screen,
                                                                                double mouseX, double mouseY) {
-                return screen.getMenu().tab() == ArmorFabricatorMenu.TAB_CRAFT
-                        ? List.of(IGuiClickableArea.createBasic(ArmorFabricatorScreen.PROG_X, ArmorFabricatorScreen.PROG_Y - 3,
-                                ArmorFabricatorScreen.PROG_W, ArmorFabricatorScreen.PROG_H + 6, ArmorFabricationCategory.TYPE))
-                        : List.of();
+                return List.of(IGuiClickableArea.createBasic(ArmorFabricatorScreen.PROG_X, ArmorFabricatorScreen.PROG_Y - 3,
+                        ArmorFabricatorScreen.PROG_W, ArmorFabricatorScreen.PROG_H + 6, ArmorFabricationCategory.TYPE));
             }
         });
     }

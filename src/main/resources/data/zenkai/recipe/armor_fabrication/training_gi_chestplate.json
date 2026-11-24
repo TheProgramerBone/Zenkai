@@ -3,7 +3,7 @@
   "pattern": "zenkai:training_gi",
   "piece": "chestplate",
   "material": {
-    "item": "zenkai:katchin_cloth"
+    "tag": "zenkai:katchin_cloths"
   },
   "count": 8,
   "energy": 40000,

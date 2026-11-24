@@ -39,8 +39,6 @@ public class EnergyGeneratorScreen extends TechPanelScreen<EnergyGeneratorMenu> 
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/energy_generator.png");
 
     // ── Layout (coordenadas del PNG) ─────────────────────────────────────────
-    private static final int TITLE_X = 12, TITLE_Y = 7;
-    private static final int LED_X = 144, LED_Y = 2;
 
     /** Barra vertical de FE. El marco ya está pintado; esto es el interior. */
     private static final int BAR_X = 18, BAR_Y = 32, BAR_W = 16, BAR_H = 104;
@@ -63,8 +61,7 @@ public class EnergyGeneratorScreen extends TechPanelScreen<EnergyGeneratorMenu> 
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics g, int mouseX, int mouseY) {
-        drawTitle(g, TITLE_X, TITLE_Y);
-        drawLed(g, LED_X, LED_Y, menu.isBurning());
+        drawHeader(g, menu.isBurning());
         drawInventoryLabel(g, INV_LABEL_X, INV_LABEL_Y);
 
         // Depósito de FE. Verde cuando arde y cian en reposo: el color dice de un vistazo si

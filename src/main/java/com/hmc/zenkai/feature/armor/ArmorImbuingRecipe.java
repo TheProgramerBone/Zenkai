@@ -32,7 +32,7 @@ import java.util.Locale;
  *
  * Tipo superior al pedido (orden Base &lt; Super &lt; Divino &lt; Legendario, el del enum): vale, y gasta la MITAD de
  * fluido por cada tipo de más ({@link #scaledMb}); uno inferior no vale. La FE y la sangre no cambian.
- * Solo dice el tipo: la cantidad sale de {@link ImbueCost} en ArmorFabricatorBlockEntity.preview.
+ * Solo dice el tipo: la cantidad sale de {@link ImbueCost} en ImbuingStationBlockEntity.preview.
  * Una pieza INFUNDIDA (Fase 5c, {@link KiInfusion}) pide el tipo de su infusión y eso manda sobre receta y automático
  * (decisión del usuario 2026-11-22). Consecuencia buscada: una armadura Saiyan infundida en Base pide Ki Base aunque sin
  * infundir pediría Súper.

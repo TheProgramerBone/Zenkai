@@ -1,27 +1,27 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_elite_circuit": {
-      "conditions": {
-        "items": [
-          {
-            "items": "zenkai:elite_circuit"
-          }
-        ]
-      },
-      "trigger": "minecraft:inventory_changed"
-    },
     "has_the_recipe": {
       "conditions": {
         "recipe": "zenkai:ki_tolerance_legendary"
       },
       "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_tolerance_divine": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:ki_tolerance_divine"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_elite_circuit"
+      "has_tolerance_divine"
     ]
   ],
   "rewards": {

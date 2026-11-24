@@ -512,7 +512,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             if (area.index() == actionRow()) return;
             if (!(entries.get(area.index()) instanceof ClientConfig.EnumEntry<?>)) return;
             Component full = Component.translatable(enumNameKey((Enum<?>) staged.get(area.index())));
-            if (this.font.width(full) > labelW - 2) g.renderTooltip(this.font, full, mx, my);
+            if (this.font.width(full) > labelW - 2) com.hmc.zenkai.client.gui.TooltipText.render(g, this.font, full, mx, my);
             return;
         }
     }

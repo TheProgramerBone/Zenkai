@@ -30,6 +30,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.KATCHIN_ORE);
         blockWithItem(ModBlocks.DEEPSLATE_KATCHIN_ORE);
         blockWithItem(ModBlocks.KATCHIN_BLOCK);
+        // Katchin infundido (2026-11-23): cubo normal con la llama animada PINTADA en el sprite y tileable en las seis caras
+        // (tools/gen_infused_katchin_textures.py). Sustituye al modelo de dos cajas con aura translúcida por encima, a
+        // petición del usuario («que sea parte del sprite y no una capa superior»).
+        ModBlocks.INFUSED_KATCHIN_BLOCKS.values().forEach(this::blockWithItem);
         blockWithItem(ModBlocks.CUT_KATCHIN);
         stairsBlock((StairBlock) ModBlocks.CUT_KATCHIN_STAIRS.get(), modLoc("block/cut_katchin"));
         slabBlock((SlabBlock) ModBlocks.CUT_KATCHIN_SLAB.get(), modLoc("block/cut_katchin"), modLoc("block/cut_katchin"));
@@ -206,6 +210,23 @@ public class ModBlockStateProvider extends BlockStateProvider {
         horizontalBlock(ModBlocks.ARMOR_FABRICATOR.get(),
                 state -> state.getValue(com.hmc.zenkai.content.block.ArmorFabricatorBlock.LIT) ? fabOn : fabOff);
         simpleBlockItem(ModBlocks.ARMOR_FABRICATOR.get(), fabOff);
+        // Estación de imbuido (2026-11-23): mismo cuerpo que la fabricadora, frente y tapa propios (arte provisional,
+        // tools/gen_imbuing_station_textures.py).
+        ModelFile stOff = models().orientable("imbuing_station", modLoc("block/armor_fabricator_side"),
+                modLoc("block/imbuing_station_front"), modLoc("block/imbuing_station_top"));
+        ModelFile stOn = models().orientable("imbuing_station_on", modLoc("block/armor_fabricator_side"),
+                modLoc("block/imbuing_station_front_on"), modLoc("block/imbuing_station_top"));
+        horizontalBlock(ModBlocks.IMBUING_STATION.get(),
+                state -> state.getValue(com.hmc.zenkai.content.block.ImbuingStationBlock.LIT) ? stOn : stOff);
+        simpleBlockItem(ModBlocks.IMBUING_STATION.get(), stOff);
+        // Triturador (Fase 5d): mismo cuerpo, frente con rodillos (provisional, tools/gen_crusher_textures.py).
+        ModelFile crOff = models().orientable("crusher", modLoc("block/armor_fabricator_side"),
+                modLoc("block/crusher_front"), modLoc("block/crusher_top"));
+        ModelFile crOn = models().orientable("crusher_on", modLoc("block/armor_fabricator_side"),
+                modLoc("block/crusher_front_on"), modLoc("block/crusher_top"));
+        horizontalBlock(ModBlocks.CRUSHER.get(),
+                state -> state.getValue(com.hmc.zenkai.content.block.CrusherBlock.LIT) ? crOn : crOff);
+        simpleBlockItem(ModBlocks.CRUSHER.get(), crOff);
 
         // Infusora de Ki (Fase 5c): igual que la de fabricación, con su cara de cristal.
         ModelFile infOff = models().orientable("ki_infuser", modLoc("block/ki_infuser_side"),

@@ -56,9 +56,6 @@ public class KiMotorScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/ki_motor.png");
-    /** == TechPanelScreen.LED (atlas 32x16, apagado/encendido). */
-    private static final ResourceLocation LED =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/tech_led.png");
     /** == TechPanelScreen.TANK_GLASS. */
     private static final ResourceLocation TANK_GLASS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/tech_tank.png");
@@ -67,8 +64,6 @@ public class KiMotorScreen extends Screen {
     private static final int PANEL_W = 256, PANEL_H = 256;
 
     // ── Layout (coordenadas LOCALES del PNG) ─────────────────────────────────
-    private static final int TITLE_X = 12, TITLE_Y = 7;
-    private static final int LED_X = 144, LED_Y = 2;
 
     /** == pozos de ki_chamber.png (gen_ki_chamber_screen.py), heredados por gen_ki_motor_screen.py. */
     private static final int BAR_X = 18, BAR_Y = 32, BAR_W = 16, BAR_H = 104;
@@ -217,10 +212,7 @@ public class KiMotorScreen extends Screen {
         boolean motorMode = m.mode() == KiMotorControl.Mode.MOTOR;
         boolean running = motorMode ? m.active() : m.feRateX10() > 0;
 
-        Component title = Component.literal(this.title.getString().toUpperCase(Locale.ROOT))
-                .withStyle(ChatFormatting.BOLD);
-        PanelText.onDark(g, font, title, TITLE_X, TITLE_Y, ZenkaiTechPalette.TITLE);
-        drawLed(g, LED_X, LED_Y, running);
+        com.hmc.zenkai.client.gui.TechHeader.draw(g, font, this.title, running);   // placa al título + LED (2026-11-23)
 
         drawVBar(g, BAR_X, BAR_Y, BAR_W, BAR_H, fraction(m.fe(), m.feCapacity()),
                 running ? ZenkaiTechPalette.LED_GREEN_MID : ZenkaiTechPalette.BAR_FILL);
@@ -307,12 +299,6 @@ public class KiMotorScreen extends Screen {
     }
 
     // ── Piezas de la familia (== TechPanelScreen, que no se puede heredar sin menú) ──
-
-    private void drawLed(GuiGraphics g, int x, int y, boolean on) {
-        RenderSystem.enableBlend();
-        g.setColor(1f, 1f, 1f, 1f);
-        g.blit(LED, x, y, on ? 16 : 0, 0, 16, 16, 32, 16);
-    }
 
     private void drawVBar(GuiGraphics g, int x, int y, int w, int h, float fraction, int fill) {
         g.fill(x - 1, y - 1, x + w + 1, y + h + 1, ZenkaiTechPalette.BAR_FRAME);

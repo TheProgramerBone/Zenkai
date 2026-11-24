@@ -1,4 +1,7 @@
-// 1.21.1	2026-11-22T23:03:49.1503687	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-11-23T14:44:43.2978072	Tags for minecraft:item mod id zenkai
+6e61aa80667ff185bfdbf13e9a6f50a5d047a030 data/c/tags/item/dusts.json
+94ed4157fe76b0bf0e1c6d0004ad67b6909ea553 data/c/tags/item/dusts/energy_crystal.json
+32cebea10c170d859c7c63eb98de18caa0674710 data/c/tags/item/dusts/katchin.json
 fe588a35d47219c3f97563e3eb732b9225fd3212 data/c/tags/item/ores/coal.json
 c3a2c9d4ecdc046cab4c9113b70a7c6537df9627 data/c/tags/item/ores/copper.json
 403711dce9705a591c90e8b9092daa0210c8fd66 data/c/tags/item/ores/diamond.json
@@ -39,9 +42,11 @@ f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoo
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/zenkai/tags/item/covers_ear.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
+4550c4853c7e3aeb202a9f40ee8db3cabe017b03 data/zenkai/tags/item/infusion_uncapped.json
+5bd23d25cb5af0845405e8411bc3caf1f810615c data/zenkai/tags/item/katchin_cloths.json
+14009fc14baaf2ee57b509add5974685dc44493b data/zenkai/tags/item/katchin_ingots.json
+f60c62fefe7fbe198353b6562777193f8656fa7a data/zenkai/tags/item/katchin_threads.json
 f4ce9b97293afd265cb345f962858f4c7525bffa data/zenkai/tags/item/keeps_hair.json
-31487255827c3aa4ba0d32124e4fe34023cb8b81 data/zenkai/tags/item/ki_infusable.json
-82cdbd6e2d0bbe504a1ed13e920ab707c23d2148 data/zenkai/tags/item/ki_infusion_carriers.json
 a59997ea70b29f62b497e9cb8f9f35ed31c0df7e data/zenkai/tags/item/no_armor_swap.json
 4ba39d954c2755d85b1a4c5b975c5a2079e9a12d data/zenkai/tags/item/wish_banned.json
 e3cf37fbd4109eb5b7e8ea41ea0216697f3e4bc8 data/zenkai/tags/item/worldgen_debris.json

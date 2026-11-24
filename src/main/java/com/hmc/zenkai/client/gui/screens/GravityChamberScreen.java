@@ -37,8 +37,6 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/gravity_chamber.png");
 
-    private static final int TITLE_X = 12, TITLE_Y = 7;
-    private static final int LED_X = 144, LED_Y = 2;
     private static final int BAR_X = 18, BAR_Y = 32, BAR_W = 16, BAR_H = 104;
 
     // Columna de control (x 42..117). Rejilla 2x2 de botones de g de 36 px: con 18 px «-10»/«+10» no
@@ -165,6 +163,14 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
                 ? "screen.zenkai.gravity_chamber.power_on" : "screen.zenkai.gravity_chamber.power_off"));
     }
 
+    /** Ranura 0 del menú = mejora de gravedad; las siguientes, los drones (solo si la vista de drones está activa). */
+    @Override
+    protected @org.jetbrains.annotations.Nullable ResourceLocation slotGhost(net.minecraft.world.inventory.Slot slot) {
+        int i = menu.slots.indexOf(slot);
+        if (i == 0) return ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_upgrade_gravity.png");
+        return i > 0 && i <= com.hmc.zenkai.feature.gravity.GravityDroneRound.MAX_DRONES ? ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "textures/slot/empty_drone.png") : null;
+    }
+
     @Override
     protected void renderBg(@NotNull GuiGraphics g, float partialTick, int mouseX, int mouseY) {
         super.renderBg(g, partialTick, mouseX, mouseY);
@@ -173,12 +179,13 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
             var slot = menu.slots.get(i);
             g.blit(BG, leftPos + slot.x - 1, topPos + slot.y - 1, WELL_U, WELL_V, 18, 18, PANEL_W, PANEL_H);
         }
+        // Los pozos de los drones se pintan aquí, DESPUÉS de las siluetas del padre, y las taparían: se repintan encima.
+        drawSlotGhosts(g);
     }
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics g, int mouseX, int mouseY) {
-        drawTitle(g, TITLE_X, TITLE_Y);
-        drawLed(g, LED_X, LED_Y, menu.status() == GravityChamberBlockEntity.STATUS_ACTIVE);
+        drawHeader(g, menu.status() == GravityChamberBlockEntity.STATUS_ACTIVE);
         drawInventoryLabel(g, INV_LABEL_X, INV_LABEL_Y);
         drawVBar(g, BAR_X, BAR_Y, BAR_W, BAR_H, menu.energyFraction(),
                 menu.status() == GravityChamberBlockEntity.STATUS_ACTIVE ? ZenkaiTechPalette.LED_GREEN_MID : ZenkaiTechPalette.BAR_FILL);

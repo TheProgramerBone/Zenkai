@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "tag": "c:gems/energy_crystal"
+    },
+    "I": {
+      "tag": "c:ingots/katchin"
+    },
+    "P": {
+      "tag": "c:ender_pearls"
+    }
+  },
+  "pattern": [
+    "ICI",
+    "IPI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:capsule_katchin"
+  }
+}

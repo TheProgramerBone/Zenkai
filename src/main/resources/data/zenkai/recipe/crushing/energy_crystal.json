@@ -1,0 +1,13 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "tag": "c:gems/energy_crystal"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "zenkai:energy_crystal_dust"
+    }
+  ]
+}

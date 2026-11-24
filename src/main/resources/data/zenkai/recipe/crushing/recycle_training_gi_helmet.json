@@ -1,0 +1,15 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:training_gi_helmet"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_thread",
+      "count": 8
+    }
+  ],
+  "infusion_aware": true
+}

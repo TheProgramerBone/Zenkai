@@ -15,12 +15,14 @@ public final class JeiDev {
 
     @Nullable public static IJeiRuntime runtime;
 
-    /** 0 = fabricación, 1 = imbuir, 2 = sangre. Devuelve false si JEI aún no está listo. */
+    /** 0 = fabricación, 1 = imbuir, 2 = sangre, 3 = infusión de Ki, 4 = triturador. Devuelve false si JEI aún no está listo. */
     public static boolean show(int category) {
         if (runtime == null) return false;
         RecipeType<?> type = switch (category) {
             case 0 -> ArmorFabricationCategory.TYPE;
             case 1 -> ArmorImbuingCategory.TYPE;
+            case 3 -> KiInfusionCategory.TYPE;
+            case 4 -> CrushingCategory.TYPE;
             default -> BloodDropsCategory.TYPE;
         };
         runtime.getRecipesGui().showTypes(List.of(type));

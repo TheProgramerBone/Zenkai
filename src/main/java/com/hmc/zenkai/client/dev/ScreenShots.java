@@ -271,13 +271,9 @@ public final class ScreenShots {
                             com.hmc.zenkai.registry.ModFluids.KI_BASE.source().get(), 8000),
                             net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
                     be.toggleConvert();     // apagado: el tanque se queda a medias para la captura
-                    // Ranuras de la Fase 2b: Divina y Legendaria toleradas (Súper NO, para la captura de
-                    // sobrecarga), dos de velocidad, una de almacenamiento y una batería.
+                    // Ranuras: SIN tolerancia (una sola ranura desde el 2026-11-23 y cualquier mejora ya tolera
+                    // Súper: vacía para la captura de sobrecarga), dos de velocidad, una de almacenamiento y una batería.
                     var up = be.upgradeHandler();
-                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOL_DIVINE,
-                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get()));
-                    up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOL_LEGENDARY,
-                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_LEGENDARY.get()));
                     up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_SPEED,
                             new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.MACHINE_SPEED_UPGRADE.get(), 2));
                     up.setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_STORAGE,
@@ -949,12 +945,18 @@ public final class ScreenShots {
      */
     private static void fabricatorPlan(Minecraft mc) {
         PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
-        final BlockPos[] at = new BlockPos[1];
+        final BlockPos[] at = new BlockPos[4];   // 0 = fabricadora, 1 = estación de imbuido, 2 = infusora, 3 = triturador
         final String originalLang = mc.options.languageCode;
         PLAN.add(() -> onServer(mc, sp -> {
             BlockPos pos = sp.blockPosition().offset(2, 0, 0);
             at[0] = pos;
             sp.serverLevel().setBlock(pos, com.hmc.zenkai.registry.ModBlocks.ARMOR_FABRICATOR.get().defaultBlockState(), 3);
+            at[1] = pos.offset(0, 0, -2);
+            sp.serverLevel().setBlock(at[1], com.hmc.zenkai.registry.ModBlocks.IMBUING_STATION.get().defaultBlockState(), 3);
+            at[2] = pos.offset(0, 0, -4);
+            sp.serverLevel().setBlock(at[2], com.hmc.zenkai.registry.ModBlocks.KI_INFUSER.get().defaultBlockState(), 3);
+            at[3] = pos.offset(0, 0, 4);
+            sp.serverLevel().setBlock(at[3], com.hmc.zenkai.registry.ModBlocks.CRUSHER.get().defaultBlockState(), 3);
         }));
         PLAN.add(() -> wait = 10);
         for (String lang : new String[]{"", "es_mx"}) {
@@ -980,17 +982,19 @@ public final class ScreenShots {
                         net.minecraft.world.item.ItemStack.EMPTY);
                 be.selectPiece(1);
                 if (be.craftEnabled()) be.toggleCraft();
-                be.setLastTab(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu.TAB_CRAFT);
             });
             fabricatorStep(mc, at, "F1_craft_working" + sfx, be -> { if (!be.craftEnabled()) be.toggleCraft(); });
-            fabricatorStep(mc, at, "F2_attr_empty" + sfx, be -> {
-                be.setLastTab(com.hmc.zenkai.client.gui.menu.ArmorFabricatorMenu.TAB_ATTR);
-                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR,
+            stationStep(mc, at, "F2_attr_empty" + sfx, be -> {
+                be.setLastTab(com.hmc.zenkai.client.gui.menu.ImbuingStationMenu.TAB_ATTR);
+                be.fillEnergyForTests(60_000);
+                be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+                        com.hmc.zenkai.feature.kichamber.KiEnergyType.BASE.fluid().source().get(), 4000));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_ARMOR,
                         net.minecraft.world.item.ItemStack.EMPTY);
-                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_BLOOD,
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_BLOOD,
                         net.minecraft.world.item.ItemStack.EMPTY);
             });
-            fabricatorStep(mc, at, "F3_attr_base" + sfx, be -> {
+            stationStep(mc, at, "F3_attr_base" + sfx, be -> {
                 var piece = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE);
                 piece.set(com.hmc.zenkai.registry.ModDataComponents.IMBUED.get(), com.hmc.zenkai.feature.armor.ImbuedAttributes.NONE
                         .plus(com.hmc.zenkai.feature.ZenkaiAttributes.STRENGTH, 5)
@@ -998,24 +1002,79 @@ public final class ScreenShots {
                         .plus(com.hmc.zenkai.feature.ZenkaiAttributes.DEXTERITY, 12)
                         .plus(com.hmc.zenkai.feature.ZenkaiAttributes.WILLPOWER, 1)
                         .plus(com.hmc.zenkai.feature.ZenkaiAttributes.SPIRIT, 40));
-                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR, piece);
-                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_BLOOD,
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_ARMOR, piece);
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_BLOOD,
                         com.hmc.zenkai.content.item.BloodItem.of(com.hmc.zenkai.registry.ModItems.STRENGTH_BLOOD.get(), 5, 64));
             });
             // Carga de imbuir a medias: se arranca con la pantalla ya abierta y se captura a los ~12 ticks.
             PLAN.add(() -> {
                 onServer(mc, sp -> {
-                    if (sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity be)
+                    if (sp.serverLevel().getBlockEntity(at[1]) instanceof com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity be)
                         be.startImbue();
                 });
                 wait = 12;
             });
             PLAN.add(() -> { capture(mc, "F3b_attr_charging" + sfx); wait = 30; });
-            fabricatorStep(mc, at, "F4_attr_super_missing" + sfx, be -> be.items().setStackInSlot(
-                    com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity.SLOT_ARMOR,
+            stationStep(mc, at, "F4_attr_super_missing" + sfx, be -> be.items().setStackInSlot(
+                    com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_ARMOR,
                     new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE)));
-            fabricatorStep(mc, at, "F5_attr_divine_half" + sfx, be -> be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+            stationStep(mc, at, "F5_attr_divine_half" + sfx, be -> be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
                     com.hmc.zenkai.feature.kichamber.KiEnergyType.DIVINE.fluid().source().get(), 4000)));
+            // Pieza sin infundir al tope (25): barra llena y aviso de tope en vez del coste (rework 2026-11-23).
+            stationStep(mc, at, "F5b_attr_over_cap" + sfx, be -> {
+                var piece = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_CHESTPLATE);
+                piece.set(com.hmc.zenkai.registry.ModDataComponents.IMBUED.get(), com.hmc.zenkai.feature.armor.ImbuedAttributes.NONE
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.STRENGTH, 20)
+                        .plus(com.hmc.zenkai.feature.ZenkaiAttributes.DEXTERITY, 3));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_ARMOR, piece);
+            });
+            // Pestaña Infundir: peto de diamante + 8 lingotes Súper con Ki Súper y tolerancia Divina (absorbe a la Súper).
+            stationStep(mc, at, "F5c_infuse_ready" + sfx, be -> {
+                be.setLastTab(com.hmc.zenkai.client.gui.menu.ImbuingStationMenu.TAB_INFUSE);
+                be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+                        com.hmc.zenkai.feature.kichamber.KiEnergyType.SUPER.fluid().source().get(), 4000));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOLERANCE,
+                        new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get()));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_INFUSE_PIECE,
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE));
+                be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_INFUSE_INGOTS,
+                        new net.minecraft.world.item.ItemStack(com.hmc.zenkai.feature.armor.KiInfusion.ingot(
+                                com.hmc.zenkai.feature.kichamber.KiEnergyType.SUPER), 8));
+            });
+            stationStep(mc, at, "F5d_infuse_not_enough" + sfx, be -> be.items().setStackInSlot(
+                    com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity.SLOT_INFUSE_INGOTS,
+                    new net.minecraft.world.item.ItemStack(com.hmc.zenkai.feature.armor.KiInfusion.ingot(
+                            com.hmc.zenkai.feature.kichamber.KiEnergyType.LEGENDARY), 3)));
+            // Infusora (base común KiMachine* desde el 2026-11-23): lingote normal, Ki Súper y tolerancia Divina.
+            PLAN.add(() -> {
+                mc.setScreen(null);
+                onServer(mc, sp -> {
+                    if (!(sp.serverLevel().getBlockEntity(at[2]) instanceof com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity be)) return;
+                    be.fillEnergyForTests(30_000);
+                    be.tank().setFluid(new net.neoforged.neoforge.fluids.FluidStack(
+                            com.hmc.zenkai.feature.kichamber.KiEnergyType.SUPER.fluid().source().get(), 2000));
+                    be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity.SLOT_TOLERANCE,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KI_TOLERANCE_DIVINE.get()));
+                    be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.KiInfuserBlockEntity.SLOT_INPUT,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.KATCHIN_INGOT.get(), 5));
+                    sp.openMenu(be, buf -> buf.writeBlockPos(at[2]));
+                });
+                wait = 40;
+            });
+            PLAN.add(() -> { capture(mc, "F5e_infuser" + sfx); wait = 3; });
+            // Triturador (Fase 5d): mena de katchin con FE, sin fluido; tooltip del panel con las probabilidades.
+            PLAN.add(() -> {
+                mc.setScreen(null);
+                onServer(mc, sp -> {
+                    if (!(sp.serverLevel().getBlockEntity(at[3]) instanceof com.hmc.zenkai.content.blockentity.CrusherBlockEntity be)) return;
+                    be.fillEnergyForTests(50_000);
+                    be.items().setStackInSlot(com.hmc.zenkai.content.blockentity.CrusherBlockEntity.SLOT_INPUT,
+                            new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModBlocks.KATCHIN_ORE.get(), 8));
+                    sp.openMenu(be, buf -> buf.writeBlockPos(at[3]));
+                });
+                wait = 60;
+            });
+            PLAN.add(() -> { capture(mc, "F5f_crusher" + sfx); wait = 3; });
             if (net.neoforged.fml.ModList.get().isLoaded("jei")) {
                 for (int c = 0; c < 3; c++) {
                     final int cat = c;
@@ -1046,7 +1105,228 @@ public final class ScreenShots {
         });
     }
 
-    /** Cambia la máquina en el servidor, la (re)abre con su pestaña guardada y captura. */
+    /**
+     * Pantallas de TODAS las máquinas (modo «machines», con mundo «new:»; 2026-11-23, para revisar el piloto y la placa
+     * del título de la cabecera de una tanda): cada una se coloca, se carga un poco y se abre por clic real. Con Create,
+     * también el Motor de Ki; con JEI, las categorías de infusión y triturador. Prefijo M.
+     */
+    private static void machinesPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        var B = new Object() {
+            void shot(String name, net.minecraft.world.level.block.state.BlockState state,
+                      java.util.function.Consumer<net.minecraft.world.level.block.entity.BlockEntity> fill) {
+                PLAN.add(() -> {
+                    mc.setScreen(null);
+                    onServer(mc, sp -> {
+                        var level = sp.serverLevel();
+                        // Siempre en el mismo sitio, a 2 bloques: en fila desde z-12 las primeras quedaban a más de 8 y
+                        // stillValid cerraba el menú al momento (salía el cielo en la captura).
+                        BlockPos pos = sp.blockPosition().offset(2, 0, 0);
+                        level.setBlock(pos.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+                        level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+                        level.setBlock(pos, state, 3);
+                        if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF)) {
+                            level.setBlock(pos.above(), state.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF,
+                                    net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 3);
+                        }
+                        var be = level.getBlockEntity(pos);
+                        if (be != null && fill != null) fill.accept(be);
+                        // La cámara de contención abre la pantalla agachado (clic normal = puerta): directo.
+                        if (be instanceof com.hmc.zenkai.content.blockentity.KiContainmentChamberBlockEntity ch) { ch.openMenuFor(sp); return; }
+                        level.getBlockState(pos).useWithoutItem(level, sp, new net.minecraft.world.phys.BlockHitResult(
+                                pos.getCenter(), net.minecraft.core.Direction.WEST, pos, false));
+                    });
+                    wait = 40;
+                });
+                PLAN.add(() -> { capture(mc, name); if (mc.player != null) mc.player.closeContainer(); mc.setScreen(null); wait = 10; });
+            }
+        };
+        java.util.function.Consumer<net.minecraft.world.level.block.entity.BlockEntity> ki = be -> {
+            if (be instanceof com.hmc.zenkai.content.blockentity.KiMachineBlockEntity m) {
+                m.fillEnergyForTests(20_000);
+                m.tank().fill(new net.neoforged.neoforge.fluids.FluidStack(
+                        com.hmc.zenkai.feature.kichamber.KiEnergyType.SUPER.fluid().source().get(), 2000),
+                        net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+            }
+        };
+        B.shot("M0_generator", com.hmc.zenkai.registry.ModBlocks.ENERGY_GENERATOR.get().defaultBlockState(), null);
+        B.shot("M1_scouter_bench", com.hmc.zenkai.registry.ModBlocks.SCOUTER_BENCH.get().defaultBlockState(), null);
+        B.shot("M2_ki_chamber", com.hmc.zenkai.registry.ModBlocks.KI_CONTAINMENT_CHAMBER.get().defaultBlockState()
+                .setValue(com.hmc.zenkai.content.block.KiContainmentChamberBlock.FACING, net.minecraft.core.Direction.WEST), null);
+        B.shot("M3_fabricator", com.hmc.zenkai.registry.ModBlocks.ARMOR_FABRICATOR.get().defaultBlockState(), ki);
+        B.shot("M4_imbuing_station", com.hmc.zenkai.registry.ModBlocks.IMBUING_STATION.get().defaultBlockState(), ki);
+        B.shot("M5_ki_infuser", com.hmc.zenkai.registry.ModBlocks.KI_INFUSER.get().defaultBlockState(), ki);
+        B.shot("M6_crusher", com.hmc.zenkai.registry.ModBlocks.CRUSHER.get().defaultBlockState(), ki);
+        B.shot("M7_gravity_console", com.hmc.zenkai.registry.ModBlocks.GRAVITY_CHAMBER.get().defaultBlockState(), null);
+        B.shot("M8_energy_tank", com.hmc.zenkai.registry.ModBlocks.ENERGY_TANK.get().defaultBlockState(), null);
+        B.shot("M9_fluid_tank", com.hmc.zenkai.registry.ModBlocks.FLUID_TANK.get().defaultBlockState(), null);
+        if (net.neoforged.fml.ModList.get().isLoaded("create")) {
+            final BlockPos[] motor = new BlockPos[1];
+            PLAN.add(() -> onServer(mc, sp -> {
+                motor[0] = sp.blockPosition().offset(-3, 0, 0);
+                sp.serverLevel().setBlock(motor[0], com.hmc.zenkai.registry.ModBlocks.KI_MOTOR.get().defaultBlockState(), 3);
+            }));
+            PLAN.add(() -> { mc.setScreen(new com.hmc.zenkai.client.gui.screens.KiMotorScreen(motor[0])); wait = 30; });
+            PLAN.add(() -> { capture(mc, "MA_ki_motor"); mc.setScreen(null); wait = 5; });
+        }
+        if (net.neoforged.fml.ModList.get().isLoaded("jei")) {
+            for (int c = 3; c <= 4; c++) {
+                final int cat = c;
+                PLAN.add(() -> { mc.setScreen(null); com.hmc.zenkai.compat.jei.JeiDev.show(cat); wait = 30; });
+                PLAN.add(() -> { capture(mc, "MJ" + cat + "_jei"); mc.setScreen(null); wait = 5; });
+            }
+        }
+    }
+
+    /**
+     * Cápsulas Hoi-Poi (modo «capsule», con mundo «new:»; 2026-11-24, arte de pie y pantalla tecnológica con visor 3D).
+     * K0: las seis cápsulas colocadas de pie en fila (una llena) con los seis ítems en la barra. K1–K3: pantalla de una
+     * cápsula de oro en medio de una casita (cofre, puerta, cama, antorcha y una vaca) abierta por el flujo REAL
+     * (onUse dos veces: contorno y pantalla): girando sola, girada arrastrando y con zoom. Prefijo K.
+     */
+    private static void capsulePlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        final BlockPos[] at = new BlockPos[2];
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos base = sp.blockPosition().offset(-12, 0, 0);
+            com.hmc.zenkai.feature.capsule.CapsuleTier[] tiers = com.hmc.zenkai.feature.capsule.CapsuleTier.values();
+            for (int i = 0; i < tiers.length; i++) {
+                BlockPos p = base.offset(i, 0, 0);
+                level.setBlock(p, com.hmc.zenkai.registry.ModBlocks.CAPSULE.get().defaultBlockState()
+                        .setValue(com.hmc.zenkai.content.block.CapsuleBlock.TIER, tiers[i])
+                        .setValue(com.hmc.zenkai.content.block.CapsuleBlock.FULL, i == 3)
+                        .setValue(com.hmc.zenkai.content.block.CapsuleBlock.FACING, net.minecraft.core.Direction.SOUTH), 3);
+                sp.getInventory().setItem(i, new net.minecraft.world.item.ItemStack(
+                        com.hmc.zenkai.registry.ModItems.capsule(tiers[i])));
+            }
+            sp.getInventory().selected = 8;
+            at[0] = base;
+            lookAt(sp, base.offset(2, 0, 0), 0.5, -0.6, 2.6);
+        }));
+        PLAN.add(() -> { wait = 40; });
+        PLAN.add(() -> { capture(mc, "K0_capsules_placed"); wait = 5; });
+
+        // Casita con la cápsula de oro en el centro (radio 5: la zona de 11 abarca casa, suelo y un poco de césped).
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            BlockPos c = at[0].offset(24, 0, 0);
+            var planks = net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+            var cobble = net.minecraft.world.level.block.Blocks.COBBLESTONE.defaultBlockState();
+            for (int dx = -3; dx <= 3; dx++) {
+                for (int dz = -3; dz <= 3; dz++) {
+                    level.setBlock(c.offset(dx, -1, dz), planks, 3);
+                    boolean wall = Math.abs(dx) == 3 || Math.abs(dz) == 3;
+                    for (int dy = 0; dy < 3; dy++) {
+                        level.setBlock(c.offset(dx, dy, dz), wall ? cobble : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+                    }
+                    level.setBlock(c.offset(dx, 3, dz), net.minecraft.world.level.block.Blocks.OAK_SLAB.defaultBlockState(), 3);
+                }
+            }
+            level.setBlock(c.offset(3, 0, 0), net.minecraft.world.level.block.Blocks.OAK_DOOR.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.DoorBlock.FACING, net.minecraft.core.Direction.EAST), 3);
+            level.setBlock(c.offset(3, 1, 0), net.minecraft.world.level.block.Blocks.OAK_DOOR.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.DoorBlock.FACING, net.minecraft.core.Direction.EAST)
+                    .setValue(net.minecraft.world.level.block.DoorBlock.HALF, net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER), 3);
+            level.setBlock(c.offset(-2, 0, -2), net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
+            level.setBlock(c.offset(-2, 0, 2), net.minecraft.world.level.block.Blocks.CRAFTING_TABLE.defaultBlockState(), 3);
+            level.setBlock(c.offset(0, 1, -3), net.minecraft.world.level.block.Blocks.GLASS_PANE.defaultBlockState(), 3);
+            level.setBlock(c.offset(2, 1, -2), net.minecraft.world.level.block.Blocks.WALL_TORCH.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.WallTorchBlock.FACING, net.minecraft.core.Direction.SOUTH), 3);
+            level.setBlock(c.offset(4, 0, 2), net.minecraft.world.level.block.Blocks.ROSE_BUSH.defaultBlockState(), 3);
+            var cow = net.minecraft.world.entity.EntityType.COW.create(level);
+            if (cow != null) {
+                cow.moveTo(c.getX() - 0.5, c.getY(), c.getZ() + 1.5, 30f, 0f);
+                cow.setNoAi(true);
+                level.addFreshEntity(cow);
+            }
+            level.setBlock(c, com.hmc.zenkai.registry.ModBlocks.CAPSULE.get().defaultBlockState()
+                    .setValue(com.hmc.zenkai.content.block.CapsuleBlock.TIER, com.hmc.zenkai.feature.capsule.CapsuleTier.GOLD), 3);
+            if (level.getBlockEntity(c) instanceof com.hmc.zenkai.content.blockentity.CapsuleBlockEntity be) {
+                be.setCapsule(new net.minecraft.world.item.ItemStack(com.hmc.zenkai.registry.ModItems.CAPSULE_GOLD.get()));
+            }
+            at[1] = c;
+            // Fuera de la zona (radio 5) y a menos de 8 bloques, que es lo que aguanta la pantalla abierta.
+            lookAt(sp, c, 7, 0, 0);
+        }));
+        PLAN.add(() -> { wait = 20; });
+        PLAN.add(() -> onServer(mc, sp -> {
+            if (sp.serverLevel().getBlockEntity(at[1]) instanceof com.hmc.zenkai.content.blockentity.CapsuleBlockEntity be) {
+                be.onUse(sp);   // IDLE → contorno
+                be.onUse(sp);   // contorno → pantalla (OpenCapsuleScreenPayload)
+            }
+        }));
+        PLAN.add(() -> { wait = 50; });
+        PLAN.add(() -> { capture(mc, "K1_screen_spin"); wait = 2; });
+        PLAN.add(() -> {
+            if (mc.screen != null) {
+                double cx = mc.screen.width / 2.0, cy = mc.screen.height / 2.0 - 46;
+                mc.screen.mouseClicked(cx, cy, 0);
+                mc.screen.mouseDragged(cx + 70, cy + 20, 0, 70, 20);
+                mc.screen.mouseReleased(cx + 70, cy + 20, 0);
+            }
+            wait = 5;
+        });
+        PLAN.add(() -> { capture(mc, "K2_screen_dragged"); wait = 2; });
+        PLAN.add(() -> {
+            if (mc.screen != null) {
+                double cx = mc.screen.width / 2.0, cy = mc.screen.height / 2.0 - 46;
+                for (int i = 0; i < 5; i++) mc.screen.mouseScrolled(cx, cy, 0, 1);
+            }
+            wait = 5;
+        });
+        PLAN.add(() -> { capture(mc, "K3_screen_zoom"); wait = 2; });
+        // K4: el ojo pulsado (vista previa oculta). Centro del ojo == CapsuleScreen.EYE_X/EYE_Y + 8 (EYE_X = 246 - 3 - 16).
+        PLAN.add(() -> {
+            if (mc.screen != null) {
+                double ex = (mc.screen.width - 256) / 2.0 + 235, ey = (mc.screen.height - 256) / 2.0 + 128;
+                mc.screen.mouseClicked(ex, ey, 0);
+                mc.screen.mouseMoved(ex, ey);
+            }
+            wait = 5;
+        });
+        PLAN.add(() -> { capture(mc, "K4_screen_hidden"); });
+        PLAN.add(() -> {   // vuelve a mostrarla para no dejar la elección de sesión en «oculta»
+            if (mc.screen != null) {
+                mc.screen.mouseClicked((mc.screen.width - 256) / 2.0 + 235, (mc.screen.height - 256) / 2.0 + 128, 0);
+            }
+            mc.setScreen(null);
+            wait = 5;
+        });
+
+        // K5/K6: holograma de una cápsula LLENA. Se guarda la casa de verdad (arm; el jugador está fuera de la zona), se
+        // recoge el ítem lleno que cae y se coloca lleno en otro sitio con un pilar de piedra que estorba (debe salir rojo).
+        final BlockPos[] anchor = new BlockPos[1];
+        PLAN.add(() -> onServer(mc, sp -> {
+            if (sp.serverLevel().getBlockEntity(at[1]) instanceof com.hmc.zenkai.content.blockentity.CapsuleBlockEntity be) be.arm(sp);
+        }));
+        PLAN.add(() -> { wait = 40; });
+        PLAN.add(() -> onServer(mc, sp -> {
+            var level = sp.serverLevel();
+            net.minecraft.world.item.ItemStack full = net.minecraft.world.item.ItemStack.EMPTY;
+            for (var ie : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                    new net.minecraft.world.phys.AABB(at[1]).inflate(3))) {
+                if (com.hmc.zenkai.content.item.CapsuleItem.isFull(ie.getItem())) { full = ie.getItem().copy(); ie.discard(); }
+            }
+            if (full.isEmpty()) { com.hmc.zenkai.Zenkai.LOGGER.warn("ScreenShots: la captura de la casa no soltó cápsula llena"); return; }
+            BlockPos a = at[1].offset(0, 0, 22);
+            level.setBlock(a.offset(2, 0, 2), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+            level.setBlock(a.offset(2, 1, 2), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+            level.setBlock(a, com.hmc.zenkai.registry.ModBlocks.CAPSULE.get().defaultBlockState()
+                    .setValue(com.hmc.zenkai.content.block.CapsuleBlock.TIER, com.hmc.zenkai.feature.capsule.CapsuleTier.GOLD)
+                    .setValue(com.hmc.zenkai.content.block.CapsuleBlock.FULL, true), 3);
+            if (level.getBlockEntity(a) instanceof com.hmc.zenkai.content.blockentity.CapsuleBlockEntity be) be.setCapsule(full);
+            anchor[0] = a;
+            lookAt(sp, a, 9, 3, 9);
+        }));
+        PLAN.add(() -> { wait = 40; });
+        PLAN.add(() -> { capture(mc, "K5_hologram"); wait = 2; });
+        PLAN.add(() -> onServer(mc, sp -> { if (anchor[0] != null) lookAt(sp, anchor[0], 3, 0, 7); }));
+        PLAN.add(() -> { wait = 20; });
+        PLAN.add(() -> { capture(mc, "K6_hologram_low"); wait = 5; });
+    }
+
+    /** Cambia la fabricadora en el servidor, la (re)abre y captura. */
     private static void fabricatorStep(Minecraft mc, BlockPos[] at, String name,
                                        java.util.function.Consumer<com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity> change) {
         PLAN.add(() -> {
@@ -1054,7 +1334,22 @@ public final class ScreenShots {
             onServer(mc, sp -> {
                 if (!(sp.serverLevel().getBlockEntity(at[0]) instanceof com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity be)) return;
                 change.accept(be);
-                sp.openMenu(be, buf -> { buf.writeBlockPos(at[0]); buf.writeVarInt(be.lastTab()); });
+                sp.openMenu(be, buf -> buf.writeBlockPos(at[0]));
+            });
+            wait = 30;
+        });
+        PLAN.add(() -> { capture(mc, name); wait = 3; });
+    }
+
+    /** Cambia la estación de imbuido en el servidor, la (re)abre con su pestaña guardada y captura. */
+    private static void stationStep(Minecraft mc, BlockPos[] at, String name,
+                                    java.util.function.Consumer<com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity> change) {
+        PLAN.add(() -> {
+            mc.setScreen(null);
+            onServer(mc, sp -> {
+                if (!(sp.serverLevel().getBlockEntity(at[1]) instanceof com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity be)) return;
+                change.accept(be);
+                sp.openMenu(be, buf -> { buf.writeBlockPos(at[1]); buf.writeVarInt(be.lastTab()); });
             });
             wait = 30;
         });
@@ -1072,6 +1367,8 @@ public final class ScreenShots {
             else if ("wrench".equals(mode)) wrenchPlan(mc);
             else if ("ponder".equals(mode)) ponderPlan(mc);
             else if ("fabricator".equals(mode)) fabricatorPlan(mc);
+            else if ("machines".equals(mode)) machinesPlan(mc);
+            else if ("capsule".equals(mode)) capsulePlan(mc);
             else containersPlan(mc);
             return;
         }

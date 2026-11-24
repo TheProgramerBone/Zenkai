@@ -3,7 +3,7 @@
   "pattern": "zenkai:namek_clothes",
   "piece": "helmet",
   "material": {
-    "item": "zenkai:katchin_cloth"
+    "tag": "zenkai:katchin_cloths"
   },
   "count": 5,
   "energy": 25000,

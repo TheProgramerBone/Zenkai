@@ -54,6 +54,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.SCOUTER_BENCH.get());
         add(ModBlocks.ALL_DRAGON_BALLS.get(), noDrop());
         add(ModBlocks.NAMEK_ALL_DRAGON_BALLS.get(), noDrop());
+        // Cápsula Hoi-Poi colocada: su stack (con rango y contenido) lo suelta CapsuleBlock.onRemove, no la tabla.
+        add(ModBlocks.CAPSULE.get(), noDrop());
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
@@ -113,7 +115,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get());
         dropSelf(ModBlocks.KATCHIN_BLOCK.get());
+        ModBlocks.INFUSED_KATCHIN_BLOCKS.values().forEach(b -> dropSelf(b.get()));
         dropSelf(ModBlocks.ARMOR_FABRICATOR.get());
+        dropSelf(ModBlocks.IMBUING_STATION.get());
+        dropSelf(ModBlocks.CRUSHER.get());
         dropSelf(ModBlocks.KI_INFUSER.get());
         dropSelf(ModBlocks.CUT_KATCHIN.get());
         dropSelf(ModBlocks.CUT_KATCHIN_STAIRS.get());

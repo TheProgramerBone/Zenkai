@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.armor;
 
 import com.hmc.zenkai.config.ServerConfig;
-import com.hmc.zenkai.content.blockentity.ArmorFabricatorBlockEntity;
+import com.hmc.zenkai.content.blockentity.ImbuingStationBlockEntity;
 import com.hmc.zenkai.content.item.AttributeTemplateItem;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.kichamber.KiEnergyType;
@@ -29,6 +29,10 @@ import java.util.Locale;
  *       {@code caps.armor_attribute} lo sigue aplicando la suma del jugador (ArmorAttributeBonus).</li>
  * </ul>
  * Exigir destino SIN imbuir en copiar/transferir evita pisar por error lo que ya tenía (para vaciarlo está reiniciar).
+ *
+ * TOPE POR PIEZA (rework del 2026-11-23, KiInfusion.pieceCap): copiar y transferir se RECHAZAN si lo imbuido del origen
+ * no cabe en el tope del destino, y aumentar si el +1 pasaría el tope de la pieza. No se recorta nada: el jugador ve el
+ * motivo y decide (infundir el destino para subirle el tope, o elegir otra pieza).
  */
 public final class AttributeTemplates {
     private AttributeTemplates() {}
@@ -42,7 +46,7 @@ public final class AttributeTemplates {
 
     /** Por qué no se puede aplicar (clave de lang {@code screen.zenkai.armor_fabricator.template.<id>}). */
     public enum Problem {
-        NONE, NO_PIECE, NOTHING_IMBUED, NO_TARGET, WRONG_PIECE_TYPE, TARGET_NOT_EMPTY;
+        NONE, NO_PIECE, NOTHING_IMBUED, NO_TARGET, WRONG_PIECE_TYPE, TARGET_NOT_EMPTY, OVER_CAP;
         public String langKey() { return "screen.zenkai.armor_fabricator.template." + name().toLowerCase(Locale.ROOT); }
     }
 
@@ -72,13 +76,17 @@ public final class AttributeTemplates {
     public static Plan plan(@Nullable Level level, ItemStack template, ItemStack piece, ItemStack target) {
         Kind kind = kindOf(template);
         if (kind == null) return null;
-        if (!ArmorFabricatorBlockEntity.isArmorPiece(piece)) return new Plan(kind, Problem.NO_PIECE, 0, 0, null);
+        if (!ImbuingStationBlockEntity.isArmorPiece(piece)) return new Plan(kind, Problem.NO_PIECE, 0, 0, null);
         ImbuedAttributes src = imbued(piece);
         if (src.isEmpty()) return new Plan(kind, Problem.NOTHING_IMBUED, 0, 0, null);
         if (kind.needsTarget()) {
-            if (!ArmorFabricatorBlockEntity.isArmorPiece(target)) return new Plan(kind, Problem.NO_TARGET, 0, 0, null);
+            if (!ImbuingStationBlockEntity.isArmorPiece(target)) return new Plan(kind, Problem.NO_TARGET, 0, 0, null);
             if (!sameSlot(piece, target)) return new Plan(kind, Problem.WRONG_PIECE_TYPE, 0, 0, null);
             if (!imbued(target).isEmpty()) return new Plan(kind, Problem.TARGET_NOT_EMPTY, 0, 0, null);
+            if (KiInfusion.total(src) > KiInfusion.pieceCap(target)) return new Plan(kind, Problem.OVER_CAP, 0, 0, null);
+        }
+        if (kind == Kind.AUGMENT && KiInfusion.total(src) + augmentedCount(src) > KiInfusion.pieceCap(piece)) {
+            return new Plan(kind, Problem.OVER_CAP, 0, 0, null);
         }
         return switch (kind) {
             case RESET, TRANSFER -> new Plan(kind, Problem.NONE, 0, 0, null);
@@ -100,11 +108,18 @@ public final class AttributeTemplates {
             if (v <= 0) continue;
             int from = augment ? v : 0, n = augment ? 1 : v;
             fe += ImbueCost.totalCost(from, n);
-            mb += ImbueCost.totalCost(from, n, ArmorFabricatorBlockEntity.IMBUE_MB_PER_POINT, thr, scale);
+            mb += ImbueCost.totalCost(from, n, ImbuingStationBlockEntity.IMBUE_MB_PER_POINT, thr, scale);
         }
         KiEnergyType inf = KiInfusion.of(payer);
         return new Plan(kind, Problem.NONE, KiInfusion.discounted(fe, inf), KiInfusion.discounted(mb, inf),
                 ArmorImbuingRecipe.requiredFor(level, payer));
+    }
+
+    /** Cuántos atributos sube aumentar (los que ya tienen algo imbuido: +1 a cada uno). */
+    private static int augmentedCount(ImbuedAttributes a) {
+        int n = 0;
+        for (ZenkaiAttributes at : ImbuedAttributes.IMBUABLE) if (a.get(at) > 0) n++;
+        return n;
     }
 
     /** Resultado de aplicar un plan válido: las dos piezas nuevas (el destino vacío si la plantilla no lo usa). */

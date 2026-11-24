@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ki_divine_katchin_thread": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:ki_divine_katchin_thread"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:ki_divine_katchin_cloth"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ki_divine_katchin_thread"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:ki_divine_katchin_cloth"
+    ]
+  }
+}

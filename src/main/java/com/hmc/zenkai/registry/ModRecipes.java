@@ -33,9 +33,8 @@ public final class ModRecipes {
     public static final Supplier<RecipeSerializer<ArmorImbuingRecipe>> ARMOR_IMBUING_SERIALIZER =
             SERIALIZERS.register("armor_imbuing", ArmorImbuingRecipe.Serializer::new);
 
-    /** Receta de mesa que respeta la infusión de Ki del katchin (Fase 5c): hereda el tipo o rechaza lo infundido. */
-    public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.armor.InfusedCraftingRecipe>> INFUSED_CRAFTING_SERIALIZER =
-            SERIALIZERS.register("infused_crafting", com.hmc.zenkai.feature.armor.InfusedCraftingRecipe.Serializer::new);
+    // zenkai:infused_crafting (Fase 5c) se quitó el 2026-11-23: el katchin infundido son ítems propios y sus recetas son
+    // de mesa normales.
 
     /** Duplicado de plantillas de atributos en la máquina de fabricación (Fase 5c). */
     public static final Supplier<RecipeType<com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe>> TEMPLATE_DUPLICATION =
@@ -43,6 +42,20 @@ public final class ModRecipes {
                     net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "template_duplication")));
     public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe>> TEMPLATE_DUPLICATION_SERIALIZER =
             SERIALIZERS.register("template_duplication", com.hmc.zenkai.feature.armor.TemplateDuplicationRecipe.Serializer::new);
+
+    /** Triturador (Fase 5d de la 0.7.0): recetas con probabilidad al estilo de Create. */
+    public static final Supplier<RecipeType<com.hmc.zenkai.feature.crusher.CrushingRecipe>> CRUSHING =
+            TYPES.register("crushing", () -> RecipeType.simple(
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "crushing")));
+    public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.crusher.CrushingRecipe>> CRUSHING_SERIALIZER =
+            SERIALIZERS.register("crushing", com.hmc.zenkai.feature.crusher.CrushingRecipe.Serializer::new);
+
+    /** Infusora de Ki (Fase 5d de la 0.7.0): ítem + fluido de Ki → ítem, al estilo del metallurgic_infusing de Mekanism. */
+    public static final Supplier<RecipeType<com.hmc.zenkai.feature.armor.KiInfusionRecipe>> KI_INFUSION =
+            TYPES.register("ki_infusion", () -> RecipeType.simple(
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_infusion")));
+    public static final Supplier<RecipeSerializer<com.hmc.zenkai.feature.armor.KiInfusionRecipe>> KI_INFUSION_SERIALIZER =
+            SERIALIZERS.register("ki_infusion", com.hmc.zenkai.feature.armor.KiInfusionRecipe.Serializer::new);
 
     public static void register(IEventBus bus) {
         TYPES.register(bus);

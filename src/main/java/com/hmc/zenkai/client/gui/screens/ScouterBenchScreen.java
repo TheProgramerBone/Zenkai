@@ -60,8 +60,6 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_tint.png");
 
     // ── Layout (coordenadas del PNG) ─────────────────────────────────────────
-    private static final int TITLE_X = 12, TITLE_Y = 7;
-    private static final int LED_X = 140, LED_Y = 4;
 
     /** Fila superior. Esquina del ÍTEM; el pozo de la textura va en (x-1, y-1). */
     private static final int BENCH_SLOT_X = 4, BENCH_SLOT_Y = 32;
@@ -274,9 +272,8 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
 
     @Override
     protected void renderLabels(@NotNull GuiGraphics g, int mouseX, int mouseY) {
-        drawTitle(g, TITLE_X, TITLE_Y);
+        drawHeader(g, menu.isWorking());   // cabecera común desde el 2026-11-23 (antes, placa y pocillo propios)
         drawInventoryLabel(g, INV_LABEL_X, INV_LABEL_Y);
-        drawLed(g, LED_X, LED_Y, menu.isWorking());
 
         drawSummary(g);
         drawBar(g, BAR_X, BAR_Y, BAR_W, BAR_H, menu.progressFraction());
@@ -314,7 +311,7 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
             drawTooltip(g, mouseX, mouseY, upgradeTip(u));
             return;
         }
-        if (inside(lmx, lmy, LED_X, LED_Y, LED_SIZE, LED_SIZE)
+        if (com.hmc.zenkai.client.gui.TechHeader.overLed(font, title, lmx, lmy)
                 || inside(lmx, lmy, BAR_X - 1, BAR_Y - 1, BAR_W + 2, BAR_H + 2)
                 || inside(lmx, lmy, EN_X - 1, EN_Y - 1, EN_W + 2, EN_H + 2)) {
             drawTooltip(g, mouseX, mouseY, statusTip());

@@ -1,0 +1,27 @@
+{
+  "replace": false,
+  "values": [
+    "#zenkai:dragon_balls_block",
+    "zenkai:dragon_ball_stone",
+    "zenkai:gravity_chamber",
+    "zenkai:gravity_chamber_port",
+    "zenkai:scouter_bench",
+    "zenkai:energy_generator",
+    { "id": "zenkai:htc_portal", "required": false },
+    "minecraft:bedrock",
+    "minecraft:spawner",
+    "minecraft:trial_spawner",
+    "minecraft:vault",
+    "minecraft:end_portal",
+    "minecraft:end_portal_frame",
+    "minecraft:end_gateway",
+    "minecraft:nether_portal",
+    "minecraft:command_block",
+    "minecraft:chain_command_block",
+    "minecraft:repeating_command_block",
+    "minecraft:structure_block",
+    "minecraft:jigsaw",
+    "minecraft:barrier",
+    "minecraft:reinforced_deepslate"
+  ]
+}

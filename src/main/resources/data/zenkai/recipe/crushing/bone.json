@@ -1,0 +1,18 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "minecraft:bone"
+  },
+  "time": 100,
+  "energy": 1500,
+  "results": [
+    {
+      "id": "minecraft:bone_meal",
+      "count": 3
+    },
+    {
+      "id": "zenkai:constitution_blood",
+      "chance": 0.05
+    }
+  ]
+}

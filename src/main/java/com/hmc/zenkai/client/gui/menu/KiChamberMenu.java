@@ -25,10 +25,10 @@ import java.util.Objects;
 
 /**
  * Menú de la cámara de contención de ki. DOS ZONAS dentro de this.slots:
- *   0..5    ranuras de la máquina: tolerancia Súper, Divina y Legendaria (fila de arriba) y
- *           velocidad, almacenamiento y batería (fila de abajo). El orden es el de las
- *           constantes SLOT_* de KiContainmentChamberBlockEntity.
- *   6..41   inventario y hotbar del jugador
+ *   0..3    ranuras de la máquina en rejilla 2x2: tolerancia y velocidad (fila de arriba),
+ *           almacenamiento y batería (fila de abajo). El orden es el de las constantes SLOT_*
+ *           de KiContainmentChamberBlockEntity (una sola tolerancia desde el 2026-11-23).
+ *   4..39   inventario y hotbar del jugador
  * LAS COORDENADAS DE LAS RANURAS SON PARTE DEL ASSET: cada una tiene su pozo pintado en
  * ki_chamber.png (tools/gen_ki_chamber_screen.py), en (x-1, y-1) y de 18x18.
  *
@@ -66,11 +66,11 @@ public class KiChamberMenu extends AbstractContainerMenu {
     public static final int INV_FIRST = MACHINE_SLOTS, INV_END = MACHINE_SLOTS + 36;
 
     // ── Layout (debe coincidir con ki_chamber.png, que hereda la bandeja del generador) ──
-    /** == SLOT_X / SLOT_Y de gen_ki_chamber_screen.py: tres columnas, dos filas. */
-    public static final int SLOT_X = 64, SLOT_STEP = 18, SLOT_Y_TOP = 99, SLOT_Y_BOTTOM = 118;
+    /** == SLOT_X / SLOT_Y de gen_ki_chamber_screen.py: dos columnas, dos filas, centradas bajo los botones. */
+    public static final int SLOT_X = 72, SLOT_STEP = 18, SLOT_Y_TOP = 99, SLOT_Y_BOTTOM = 118;
 
-    public static int slotX(int slot) { return SLOT_X + (slot % 3) * SLOT_STEP; }
-    public static int slotY(int slot) { return slot < 3 ? SLOT_Y_TOP : SLOT_Y_BOTTOM; }
+    public static int slotX(int slot) { return SLOT_X + (slot % 2) * SLOT_STEP; }
+    public static int slotY(int slot) { return slot < 2 ? SLOT_Y_TOP : SLOT_Y_BOTTOM; }
     private static final int INV_X = 47, INV_Y = 170, HOTBAR_Y = 229;
 
     private final ContainerData data;
@@ -161,10 +161,10 @@ public class KiChamberMenu extends AbstractContainerMenu {
     /** Calor de sobrecarga, 0..100. */
     public int heat() { return data.get(D_HEAT); }
 
-    /** ¿La máquina tolera este tipo? Se lee de las ranuras, que ya se sincronizan solas. */
+    /** ¿La máquina tolera este tipo? Se lee de la ranura de tolerancia, que ya se sincroniza sola. */
     public boolean tolerates(KiEnergyType type) {
-        int slot = KiContainmentChamberBlockEntity.toleranceSlot(type);
-        return slot < 0 || this.slots.get(slot).hasItem();
+        return KiContainmentChamberBlockEntity.tolerates(
+                this.slots.get(KiContainmentChamberBlockEntity.SLOT_TOLERANCE).getItem(), type);
     }
 
     public float tankFraction()   { return Math.min(1f, tankAmount() / (float) tankCapacity()); }

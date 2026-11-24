@@ -1,21 +1,17 @@
 {
-  "type": "zenkai:infused_crafting",
-  "base": {
-    "type": "minecraft:crafting_shaped",
-    "category": "building",
-    "key": {
-      "K": {
-        "item": "zenkai:katchin_ingot"
-      }
-    },
-    "pattern": [
-      "KK",
-      "KK"
-    ],
-    "result": {
-      "count": 1,
-      "id": "zenkai:katchin_block"
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "K": {
+      "item": "zenkai:katchin_ingot"
     }
   },
-  "mode": "reject"
+  "pattern": [
+    "KK",
+    "KK"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:katchin_block"
+  }
 }
