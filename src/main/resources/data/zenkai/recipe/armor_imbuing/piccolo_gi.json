@@ -1,0 +1,15 @@
+{
+  "type": "zenkai:armor_imbuing",
+  "piece": [
+    {
+      "item": "zenkai:piccolo_gi_chestplate"
+    },
+    {
+      "item": "zenkai:piccolo_gi_leggings"
+    },
+    {
+      "item": "zenkai:piccolo_gi_boots"
+    }
+  ],
+  "ki": "base"
+}

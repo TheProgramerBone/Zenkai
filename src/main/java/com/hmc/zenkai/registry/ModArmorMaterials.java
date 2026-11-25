@@ -35,20 +35,33 @@ public class ModArmorMaterials {
                 attribute.put(ArmorItem.Type.BODY, 0);
             }), 0, 0, 0, ModItems.SENZU_BEAN);
 
-    // ── Armaduras de Dragon Ball (Fase 5b de la 0.7.0) ───────────────────────
-    // Solo salen de la máquina de fabricación con su patrón. Primera tanda (P14): armadura Saiyan (metálica,
-    // de lingote, a la altura del diamante), ropa Namek y gi de entrenamiento (de tela, entre el hierro y el
-    // cuero). Cifras de partida; la infusión de la 5c sube la durabilidad sin cambiar el aspecto.
-    // Textura del modelo: textures/models/armor/<nombre>_layer_1/_layer_2.png (tools/gen_dragonball_armor.py).
-    public static final Holder<ArmorMaterial> SAIYAN_ARMOR = register("saiyan_armor",
+    // ── Armaduras de Dragon Ball (Fase 5b de la 0.7.0; dos clases desde el 2026-11-25) ──
+    // Solo salen de la máquina de fabricación con su patrón. Una pareja de materiales por clase (ArmorSets.Clase): el de 4
+    // piezas y el de 3 (sets sin casco, decisión del usuario 2026-11-25: los puntos del casco se REPARTEN entre peto,
+    // pantalón y botas para que el set completo sume lo mismo). Batalla = diamante (20 en total, dureza 2); ropa = hierro
+    // (15 en total). La infusión de la 5c sube la durabilidad sin cambiar el aspecto. El modelo lo pinta GeckoLib
+    // (ZenkaiArmorItem): la capa vanilla del material no se usa.
+    public static final Holder<ArmorMaterial> BATTLE_ARMOR = register("battle_armor",
             protection(3, 8, 6, 3), 15, 2.0f, 0.0f, ModItems.KATCHIN_INGOT, SoundEvents.ARMOR_EQUIP_NETHERITE);
-    public static final Holder<ArmorMaterial> NAMEK_CLOTHES = register("namek_clothes",
-            protection(2, 6, 5, 2), 18, 1.0f, 0.0f, ModItems.KATCHIN_CLOTH, SoundEvents.ARMOR_EQUIP_LEATHER);
-    public static final Holder<ArmorMaterial> TRAINING_GI = register("training_gi",
-            protection(2, 5, 4, 1), 20, 0.5f, 0.0f, ModItems.KATCHIN_CLOTH, SoundEvents.ARMOR_EQUIP_LEATHER);
+    public static final Holder<ArmorMaterial> BATTLE_ARMOR_NO_HELMET = register("battle_armor_no_helmet",
+            protection(0, 9, 7, 4), 15, 2.0f, 0.0f, ModItems.KATCHIN_INGOT, SoundEvents.ARMOR_EQUIP_NETHERITE);
+    public static final Holder<ArmorMaterial> CLOTHING = register("clothing",
+            protection(2, 6, 5, 2), 20, 0.5f, 0.0f, ModItems.KATCHIN_CLOTH, SoundEvents.ARMOR_EQUIP_LEATHER);
+    public static final Holder<ArmorMaterial> CLOTHING_NO_HELMET = register("clothing_no_helmet",
+            protection(0, 7, 5, 3), 20, 0.5f, 0.0f, ModItems.KATCHIN_CLOTH, SoundEvents.ARMOR_EQUIP_LEATHER);
 
-    /** Durabilidad (multiplicador de ArmorItem.Type.getDurability) de cada set: diamante 33, hierro 15. */
-    public static final int SAIYAN_ARMOR_DURABILITY = 33, NAMEK_CLOTHES_DURABILITY = 20, TRAINING_GI_DURABILITY = 15;
+    /** Durabilidad (multiplicador de ArmorItem.Type.getDurability) por clase: diamante 33, hierro 15. */
+    public static final int BATTLE_ARMOR_DURABILITY = 33, CLOTHING_DURABILITY = 18;
+
+    public static Holder<ArmorMaterial> materialFor(com.hmc.zenkai.feature.armor.ArmorSets.Def set) {
+        boolean batalla = set.clase() == com.hmc.zenkai.feature.armor.ArmorSets.Clase.BATALLA;
+        if (set.tieneCasco()) return batalla ? BATTLE_ARMOR : CLOTHING;
+        return batalla ? BATTLE_ARMOR_NO_HELMET : CLOTHING_NO_HELMET;
+    }
+
+    public static int durabilityFor(com.hmc.zenkai.feature.armor.ArmorSets.Def set) {
+        return set.clase() == com.hmc.zenkai.feature.armor.ArmorSets.Clase.BATALLA ? BATTLE_ARMOR_DURABILITY : CLOTHING_DURABILITY;
+    }
 
     private static EnumMap<ArmorItem.Type, Integer> protection(int helmet, int chest, int legs, int boots) {
         EnumMap<ArmorItem.Type, Integer> m = new EnumMap<>(ArmorItem.Type.class);

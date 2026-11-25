@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-23T23:34:02.8764186	Item Models: zenkai
+// 1.21.1	2026-11-25T12:54:03.7342138	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -157,15 +157,14 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/namekian_race
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/namekian_race_leggings_colorable.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_warrior_spawn_egg.json
-153478c9c692e46e1655af43ba1daabc5ae36bad assets/zenkai/models/item/namek_clothes_boots.json
-56bc44b7f4932e20d71a2926c7db459d333b3496 assets/zenkai/models/item/namek_clothes_chestplate.json
-144e2c3c3978bd0c9d7c647d6d11776795b883e4 assets/zenkai/models/item/namek_clothes_helmet.json
-2046901cae72baeb46dff382559f248d97973800 assets/zenkai/models/item/namek_clothes_leggings.json
 5a63dbd9692fed9a90b4c6604d7ffcfebe3555cc assets/zenkai/models/item/namek_crystal.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/namek_orange_boots.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/namek_orange_chestplate.json
 f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/namek_orange_helmet.json
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/namek_orange_leggings.json
+efb8bc41ece016a2678cde5188d35c01512f8070 assets/zenkai/models/item/piccolo_gi_boots.json
+4df2e4313c7abde8d4d95d70ccbe45b98f7061f3 assets/zenkai/models/item/piccolo_gi_chestplate.json
+9edb225556132ebcf984c2df27c5a21eb92fbb1b assets/zenkai/models/item/piccolo_gi_leggings.json
 8719619985a41abc7713eabe38a56fdc2d7844a4 assets/zenkai/models/item/piece_connector.json
 92a4d9b797cab3ae9c68dc6fc309a92edb489d0e assets/zenkai/models/item/polished_hfil_corrupted_flesh_slab.json
 9e7fc346d6157f298ff12f17d2858a345552ddfc assets/zenkai/models/item/polished_hfil_corrupted_flesh_stairs.json
@@ -198,7 +197,6 @@ cbc58156863501ef3999d1f3f7a691697efd9c13 assets/zenkai/models/item/sacred_stone_
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/saibaman_spawn_egg.json
 ecee9b8f922d08bb9072c4ee2baeb4f122167b45 assets/zenkai/models/item/saiyan_armor_boots.json
 53c925998c5eb42282d2ae9bb81e9de638db3593 assets/zenkai/models/item/saiyan_armor_chestplate.json
-08824b0220e0096ca480d7580762ef7d43580248 assets/zenkai/models/item/saiyan_armor_helmet.json
 ed364ec6787b1480694292d375bddd2ceb04a447 assets/zenkai/models/item/saiyan_armor_leggings.json
 7b3ae15c1394fe8b61b59c0038904d6ac666ac6d assets/zenkai/models/item/scissors.json
 8a2c41f065a7df96ee3642e71ebc4ae4056347ea assets/zenkai/models/item/scouter_radar_upgrade.json
@@ -265,10 +263,6 @@ d7981ec156b0d8cacad4e2c051686b1841ce4bda assets/zenkai/models/item/structural_co
 a367e6abbb7ef46c639a944b3edad7aa35c1af96 assets/zenkai/models/item/structural_concrete_yellow_wall.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/tail_loose.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/toribot_spawn_egg.json
-8628a285a7756f3e73028b8127a06572436d6ffc assets/zenkai/models/item/training_gi_boots.json
-214e28f3fe1cf55552a9467db71087caadd6158b assets/zenkai/models/item/training_gi_chestplate.json
-70a5b027e9b9fb42072a7d1aa020743c61da9b12 assets/zenkai/models/item/training_gi_helmet.json
-5e2f627cfcce6196792eeee0128a1119026ca753 assets/zenkai/models/item/training_gi_leggings.json
 09bdd95be4e9c09d78d8c5ed2ecbe116d0b6a54c assets/zenkai/models/item/transfer_template.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/uranai_baba_spawn_egg.json
 d284292c52c8736c016fb678cd9a930dbfd03bab assets/zenkai/models/item/willpower_blood.json

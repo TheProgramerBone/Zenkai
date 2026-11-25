@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-15T22:17:56.153784	Advancements
+// 1.21.1	2026-11-25T12:54:03.7432166	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -55,6 +55,6 @@ cc036db5917930a88443cc8e87db6a6ac71ff60c data/zenkai/advancement/scouter.json
 7629a939cea9c9268c58248b7f730d35b79e1cab data/zenkai/advancement/space_pod_travel.json
 fcb64d4a81a861c206822e248f31b9fe35b83f26 data/zenkai/advancement/target_practice.json
 f7def62e3cd1b16fcdeaf21a479e3e6b862505c9 data/zenkai/advancement/training_all.json
-bf898751ad4557dbafe4dabd718bf687c59042b9 data/zenkai/advancement/transformation.json
+495a60ede77049bb89c77efadfc7a73232d68ac6 data/zenkai/advancement/transformation.json
 32e4d84f397f1043f6beb48844b3ff6515d92cac data/zenkai/advancement/weights.json
 30682735c4b278140550cd7f5d5407197e3938bf data/zenkai/advancement/wheel_menu.json

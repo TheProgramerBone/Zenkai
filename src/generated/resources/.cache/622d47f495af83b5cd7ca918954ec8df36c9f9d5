@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-23T14:44:43.2978072	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-11-25T12:54:03.7412134	Tags for minecraft:item mod id zenkai
 6e61aa80667ff185bfdbf13e9a6f50a5d047a030 data/c/tags/item/dusts.json
 94ed4157fe76b0bf0e1c6d0004ad67b6909ea553 data/c/tags/item/dusts/energy_crystal.json
 32cebea10c170d859c7c63eb98de18caa0674710 data/c/tags/item/dusts/katchin.json
@@ -42,7 +42,7 @@ f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoo
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/zenkai/tags/item/covers_ear.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
-4550c4853c7e3aeb202a9f40ee8db3cabe017b03 data/zenkai/tags/item/infusion_uncapped.json
+6e68a6d1f2f43cb276cdcdabf49721ac1ad3a554 data/zenkai/tags/item/infusion_uncapped.json
 5bd23d25cb5af0845405e8411bc3caf1f810615c data/zenkai/tags/item/katchin_cloths.json
 14009fc14baaf2ee57b509add5974685dc44493b data/zenkai/tags/item/katchin_ingots.json
 f60c62fefe7fbe198353b6562777193f8656fa7a data/zenkai/tags/item/katchin_threads.json

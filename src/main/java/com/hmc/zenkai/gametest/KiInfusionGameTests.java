@@ -160,7 +160,7 @@ public final class KiInfusionGameTests {
         be.items().setStackInSlot(ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST, ingot(KiEnergyType.DIVINE, 8));
         run(helper, be, 250);
         ItemStack out = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_OUTPUT);
-        int base = new ItemStack(ModItems.SAIYAN_ARMOR_CHESTPLATE.get()).getMaxDamage();
+        int base = new ItemStack(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE)).getMaxDamage();
         helper.assertTrue(KiInfusion.of(out) == KiEnergyType.DIVINE, "El peto debe salir Divino, sale " + out);
         helper.assertTrue(out.getMaxDamage() == base * 2, "Durabilidad ×2: " + base + " → " + out.getMaxDamage());
         helper.assertTrue(be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST + 1).getCount() == 3,
@@ -176,7 +176,7 @@ public final class KiInfusionGameTests {
         helper.assertTrue(KiInfusion.pieceCap(KiInfusion.applyToArmor(iron, KiEnergyType.LEGENDARY)) == ServerConfig.imbuePieceCap(1),
                 "Hierro Legendario: manda su nivel propio (Normal)");
         // Set de Zenkai (tag sin techo): manda solo la infusión.
-        ItemStack gi = new ItemStack(ModItems.TRAINING_GI_CHESTPLATE.get());
+        ItemStack gi = new ItemStack(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.PICCOLO_GI, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE));
         helper.assertTrue(KiInfusion.pieceCap(KiInfusion.applyToArmor(gi, KiEnergyType.LEGENDARY)) == ServerConfig.imbuePieceCap(4),
                 "Gi Legendario: tope Legendario");
 

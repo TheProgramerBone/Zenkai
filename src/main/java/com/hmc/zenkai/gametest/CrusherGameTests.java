@@ -66,7 +66,7 @@ public final class CrusherGameTests {
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void infusedArmorReturnsItsLevel(GameTestHelper helper) {
         CrusherBlockEntity be = place(helper);
-        ItemStack chest = KiInfusion.applyToArmor(new ItemStack(ModItems.SAIYAN_ARMOR_CHESTPLATE.get()), KiEnergyType.DIVINE);
+        ItemStack chest = KiInfusion.applyToArmor(new ItemStack(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE)), KiEnergyType.DIVINE);
         be.items().setStackInSlot(CrusherBlockEntity.SLOT_INPUT, chest);
         helper.assertTrue(be.crushNowForTests(), "El peto Saiyan se recicla");
         int divine = countOut(be, KiInfusion.ingot(KiEnergyType.DIVINE));

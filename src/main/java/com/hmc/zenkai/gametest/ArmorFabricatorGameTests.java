@@ -60,7 +60,7 @@ public final class ArmorFabricatorGameTests {
             ArmorFabricatorBlockEntity.serverTick(helper.getLevel(), abs, helper.getLevel().getBlockState(abs), be);
         }
         ItemStack out = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_OUTPUT);
-        helper.assertTrue(out.is(ModItems.SAIYAN_ARMOR_CHESTPLATE.get()), "Debería salir el peto Saiyan, sale " + out);
+        helper.assertTrue(out.is(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE)), "Debería salir el peto Saiyan, sale " + out);
         int left = be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST).getCount()
                 + be.items().getStackInSlot(ArmorFabricatorBlockEntity.SLOT_MATERIAL_FIRST + 4).getCount();
         helper.assertTrue(left == 2, "De 10 lingotes deberían quedar 2, quedan " + left);
@@ -156,9 +156,9 @@ public final class ArmorFabricatorGameTests {
                 new Case(Items.LEATHER_HELMET, KiEnergyType.BASE), new Case(Items.IRON_CHESTPLATE, KiEnergyType.BASE),
                 new Case(Items.GOLDEN_LEGGINGS, KiEnergyType.BASE), new Case(Items.DIAMOND_BOOTS, KiEnergyType.SUPER),
                 new Case(Items.DIAMOND_CHESTPLATE, KiEnergyType.SUPER), new Case(Items.NETHERITE_HELMET, KiEnergyType.DIVINE),
-                new Case(ModItems.SAIYAN_ARMOR_CHESTPLATE.get(), KiEnergyType.SUPER),
-                new Case(ModItems.NAMEK_CLOTHES_CHESTPLATE.get(), KiEnergyType.BASE),   // receta: la tela baja a Base
-                new Case(ModItems.TRAINING_GI_HELMET.get(), KiEnergyType.BASE)}) {
+                new Case(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE), KiEnergyType.SUPER),
+                new Case(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.PICCOLO_GI, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE), KiEnergyType.BASE),   // receta: la ropa baja a Base
+                new Case(ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.PICCOLO_GI, net.minecraft.world.item.ArmorItem.Type.LEGGINGS), KiEnergyType.BASE)}) {
             KiEnergyType got = ImbuingStationBlockEntity.requiredKiType(level, new ItemStack(c.item()));
             helper.assertTrue(got == c.want(), c.item() + " debería pedir " + c.want() + ", pide " + got);
         }
@@ -204,7 +204,7 @@ public final class ArmorFabricatorGameTests {
                 helper.assertTrue(armor.getMaterial() != null, "Material nulo en " + holder.getId());
             }
         }
-        helper.assertTrue(ModItems.SAIYAN_ARMOR_CHESTPLATE.get().getDefense() == 8, "El peto Saiyan debería dar 8 de armadura");
+        helper.assertTrue(((net.minecraft.world.item.ArmorItem) ModItems.dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.SAIYAN_ARMOR, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE)).getDefense() == 9, "El peto Saiyan (set sin casco: reparte los 3 del casco) debería dar 9 de armadura");
         helper.succeed();
     }
 

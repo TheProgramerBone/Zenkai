@@ -56,18 +56,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         ModItems.INFUSED_KATCHIN_INGOTS.values().forEach(i -> basicItem(i.get()));
         ModItems.INFUSED_KATCHIN_THREADS.values().forEach(i -> basicItem(i.get()));
         ModItems.INFUSED_KATCHIN_CLOTHS.values().forEach(i -> basicItem(i.get()));
-        basicItem(ModItems.SAIYAN_ARMOR_HELMET.get());
-        basicItem(ModItems.SAIYAN_ARMOR_CHESTPLATE.get());
-        basicItem(ModItems.SAIYAN_ARMOR_LEGGINGS.get());
-        basicItem(ModItems.SAIYAN_ARMOR_BOOTS.get());
-        basicItem(ModItems.NAMEK_CLOTHES_HELMET.get());
-        basicItem(ModItems.NAMEK_CLOTHES_CHESTPLATE.get());
-        basicItem(ModItems.NAMEK_CLOTHES_LEGGINGS.get());
-        basicItem(ModItems.NAMEK_CLOTHES_BOOTS.get());
-        basicItem(ModItems.TRAINING_GI_HELMET.get());
-        basicItem(ModItems.TRAINING_GI_CHESTPLATE.get());
-        basicItem(ModItems.TRAINING_GI_LEGGINGS.get());
-        basicItem(ModItems.TRAINING_GI_BOOTS.get());
+        // armaduras de Zenkai: icono de tools/gen_armaduras.py (textures/item/<set>_<pieza>.png)
+        ModItems.DB_ARMOR.values().forEach(m -> m.values().forEach(i -> basicItem(i.get())));
         basicItem(ModItems.ARMOR_PATTERN.get());
         basicItem(ModItems.RESET_TEMPLATE.get());
         basicItem(ModItems.COPY_TEMPLATE.get());

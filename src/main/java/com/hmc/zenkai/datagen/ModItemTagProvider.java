@@ -66,13 +66,8 @@ public class ModItemTagProvider extends ItemTagsProvider {
         tag(dustCrystal).add(ModItems.ENERGY_CRYSTAL_DUST.get());
         tag(net.neoforged.neoforge.common.Tags.Items.DUSTS).addTags(dustKatchin, dustCrystal);
         // Sets de Zenkai: su tope de puntos sale solo de la infusión (decisión del usuario 2026-11-23).
-        tag(com.hmc.zenkai.feature.armor.KiInfusion.UNCAPPED).add(
-                ModItems.SAIYAN_ARMOR_HELMET.get(), ModItems.SAIYAN_ARMOR_CHESTPLATE.get(),
-                ModItems.SAIYAN_ARMOR_LEGGINGS.get(), ModItems.SAIYAN_ARMOR_BOOTS.get(),
-                ModItems.NAMEK_CLOTHES_HELMET.get(), ModItems.NAMEK_CLOTHES_CHESTPLATE.get(),
-                ModItems.NAMEK_CLOTHES_LEGGINGS.get(), ModItems.NAMEK_CLOTHES_BOOTS.get(),
-                ModItems.TRAINING_GI_HELMET.get(), ModItems.TRAINING_GI_CHESTPLATE.get(),
-                ModItems.TRAINING_GI_LEGGINGS.get(), ModItems.TRAINING_GI_BOOTS.get());
+        var uncapped = tag(com.hmc.zenkai.feature.armor.KiInfusion.UNCAPPED);
+        ModItems.DB_ARMOR.values().forEach(m -> m.values().forEach(i -> uncapped.add(i.get())));
 
         tag(ItemTags.DYEABLE).add(
                 ModItems.SCOUTER.get()

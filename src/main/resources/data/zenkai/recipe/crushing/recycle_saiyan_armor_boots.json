@@ -3,11 +3,12 @@
   "ingredient": {
     "item": "zenkai:saiyan_armor_boots"
   },
-  "time": 200,
+  "time": 100,
   "energy": 6000,
   "results": [
     {
-      "id": "zenkai:katchin_ingot"
+      "id": "zenkai:katchin_ingot",
+      "count": 1
     },
     {
       "id": "zenkai:katchin_ingot",

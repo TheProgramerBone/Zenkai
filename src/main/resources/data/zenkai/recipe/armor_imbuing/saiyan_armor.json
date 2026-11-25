@@ -2,9 +2,6 @@
   "type": "zenkai:armor_imbuing",
   "piece": [
     {
-      "item": "zenkai:saiyan_armor_helmet"
-    },
-    {
       "item": "zenkai:saiyan_armor_chestplate"
     },
     {

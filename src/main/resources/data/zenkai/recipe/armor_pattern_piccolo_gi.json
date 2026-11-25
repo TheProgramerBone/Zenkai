@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:paper"
+    },
+    {
+      "item": "minecraft:purple_dye"
+    },
+    {
+      "item": "minecraft:blue_dye"
+    }
+  ],
+  "result": {
+    "id": "zenkai:armor_pattern",
+    "count": 1,
+    "components": {
+      "zenkai:armor_pattern": "zenkai:piccolo_gi"
+    }
+  }
+}

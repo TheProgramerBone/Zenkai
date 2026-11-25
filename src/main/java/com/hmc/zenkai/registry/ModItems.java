@@ -190,41 +190,40 @@ public class ModItems {
     }
 
     // ── Armaduras de Dragon Ball (Fase 5b de la 0.7.0): solo de la máquina de fabricación ──
-    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_HELMET = dbArmor("saiyan_armor_helmet",
-            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.HELMET, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
-    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_CHESTPLATE = dbArmor("saiyan_armor_chestplate",
-            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
-    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_LEGGINGS = dbArmor("saiyan_armor_leggings",
-            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.LEGGINGS, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
-    public static final DeferredItem<ArmorItem> SAIYAN_ARMOR_BOOTS = dbArmor("saiyan_armor_boots",
-            () -> ModArmorMaterials.SAIYAN_ARMOR, ArmorItem.Type.BOOTS, ModArmorMaterials.SAIYAN_ARMOR_DURABILITY);
-    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_HELMET = dbArmor("namek_clothes_helmet",
-            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.HELMET, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
-    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_CHESTPLATE = dbArmor("namek_clothes_chestplate",
-            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
-    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_LEGGINGS = dbArmor("namek_clothes_leggings",
-            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.LEGGINGS, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
-    public static final DeferredItem<ArmorItem> NAMEK_CLOTHES_BOOTS = dbArmor("namek_clothes_boots",
-            () -> ModArmorMaterials.NAMEK_CLOTHES, ArmorItem.Type.BOOTS, ModArmorMaterials.NAMEK_CLOTHES_DURABILITY);
-    public static final DeferredItem<ArmorItem> TRAINING_GI_HELMET = dbArmor("training_gi_helmet",
-            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.HELMET, ModArmorMaterials.TRAINING_GI_DURABILITY);
-    public static final DeferredItem<ArmorItem> TRAINING_GI_CHESTPLATE = dbArmor("training_gi_chestplate",
-            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.CHESTPLATE, ModArmorMaterials.TRAINING_GI_DURABILITY);
-    public static final DeferredItem<ArmorItem> TRAINING_GI_LEGGINGS = dbArmor("training_gi_leggings",
-            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.LEGGINGS, ModArmorMaterials.TRAINING_GI_DURABILITY);
-    public static final DeferredItem<ArmorItem> TRAINING_GI_BOOTS = dbArmor("training_gi_boots",
-            () -> ModArmorMaterials.TRAINING_GI, ArmorItem.Type.BOOTS, ModArmorMaterials.TRAINING_GI_DURABILITY);
+    /**
+     * Piezas de cada set de {@link com.hmc.zenkai.feature.armor.ArmorSets#ALL}, id {@code <set>_<pieza>}. Se registran en bucle
+     * desde los datos del set: un set nuevo solo añade su {@code Def} (más geo, textura, iconos, recetas y lang).
+     */
+    public static final java.util.Map<net.minecraft.resources.ResourceLocation,
+            java.util.Map<ArmorItem.Type, DeferredItem<com.hmc.zenkai.content.item.ZenkaiArmorItem>>> DB_ARMOR = registerDbArmor();
+
+    /** Pieza de un set (o null si el set no la tiene, p. ej. el casco de un set sin tocado). */
+    public static @org.jetbrains.annotations.Nullable Item dbArmor(com.hmc.zenkai.feature.armor.ArmorSets.Def set, ArmorItem.Type type) {
+        var piezas = DB_ARMOR.get(set.id());
+        var it = piezas == null ? null : piezas.get(type);
+        return it == null ? null : it.get();
+    }
 
     /**
-     * El material llega como Supplier y se lee DENTRO del supplier del ítem, nunca al cargar la clase: ModArmorMaterials
-     * toca ModItems (ítem de reparación) en su propio static, y leer aquí sus campos en ese momento los veía aún a null
-     * (ciclo de inicialización). Las 12 piezas salían con material nulo y el creativo reventaba en isRaceArmor (2026-11-22).
+     * El material se lee DENTRO del supplier del ítem, nunca al cargar la clase: ModArmorMaterials toca ModItems (ítem de
+     * reparación) en su propio static, y leer aquí sus campos en ese momento los veía aún a null (ciclo de inicialización).
+     * Las 12 piezas de la primera tanda salían con material nulo y el creativo reventaba en isRaceArmor (2026-11-22).
      */
-    private static DeferredItem<ArmorItem> dbArmor(String id,
-                                                   java.util.function.Supplier<net.minecraft.core.Holder<net.minecraft.world.item.ArmorMaterial>> mat,
-                                                   ArmorItem.Type type, int durability) {
-        return ITEMS.register(id, () -> new ArmorItem(mat.get(), type,
-                new Item.Properties().durability(type.getDurability(durability)).rarity(Rarity.UNCOMMON)));
+    private static java.util.Map<net.minecraft.resources.ResourceLocation,
+            java.util.Map<ArmorItem.Type, DeferredItem<com.hmc.zenkai.content.item.ZenkaiArmorItem>>> registerDbArmor() {
+        var out = new java.util.LinkedHashMap<net.minecraft.resources.ResourceLocation,
+                java.util.Map<ArmorItem.Type, DeferredItem<com.hmc.zenkai.content.item.ZenkaiArmorItem>>>();
+        for (var set : com.hmc.zenkai.feature.armor.ArmorSets.ALL) {
+            var piezas = new java.util.EnumMap<ArmorItem.Type, DeferredItem<com.hmc.zenkai.content.item.ZenkaiArmorItem>>(ArmorItem.Type.class);
+            for (ArmorItem.Type type : set.piezas()) {
+                piezas.put(type, ITEMS.register(set.id().getPath() + "_" + type.getName(), () ->
+                        new com.hmc.zenkai.content.item.ZenkaiArmorItem(set.id(), ModArmorMaterials.materialFor(set), type,
+                                new Item.Properties().durability(type.getDurability(ModArmorMaterials.durabilityFor(set)))
+                                        .rarity(Rarity.UNCOMMON))));
+            }
+            out.put(set.id(), java.util.Collections.unmodifiableMap(piezas));
+        }
+        return java.util.Collections.unmodifiableMap(out);
     }
 
     /**
