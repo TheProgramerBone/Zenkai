@@ -235,7 +235,11 @@ public class MasterScreen extends Screen {
             if (masterId.equals(t.master())) techRows.add(new TechEntry(true, t, null));
         }
         for (PhysicalTechnique t : PhysicalTechnique.values()) {
-            if (masterId.equals(t.master())) techRows.add(new TechEntry(false, null, t));
+            if (masterId.equals(t.master())
+                    && com.hmc.zenkai.feature.technique.InnateTechniques.availableTo(t,
+                            com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(minecraft.player).getRace())) {
+                techRows.add(new TechEntry(false, null, t));
+            }
         }
 
         scroll = Mth.clamp(scroll, 0, maxScroll());

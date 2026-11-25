@@ -18,10 +18,12 @@ import java.util.Locale;
 public final class InnateTechniques {
     private InnateTechniques() {}
 
-    /** ¿Puede esta raza ver/usar la técnica? Sin raza dueña, cualquiera. */
+    /** ¿Puede esta raza ver/usar la técnica? Sin raza dueña ni requerida, cualquiera (la requerida solo limita, no regala). */
     public static boolean availableTo(PhysicalTechnique t, Race race) {
         String owner = t.innateRace();
-        return owner.isEmpty() || (race != null && race.name().toLowerCase(Locale.ROOT).equals(owner));
+        String required = t.requiredRace();
+        String mine = race == null ? "" : race.name().toLowerCase(Locale.ROOT);
+        return (owner.isEmpty() || mine.equals(owner)) && (required.isEmpty() || mine.equals(required));
     }
 
     public static void ensure(ServerPlayer sp, PlayerStatsAttachment att) {

@@ -415,6 +415,9 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.SWORD_WAVE.get(),
                     com.hmc.zenkai.client.render_and_model_entities.entity.SwordWaveRenderer::new);
 
+            EntityRenderers.register(ModEntities.FALSE_MOON.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.entity.FalseMoonRenderer::new);
+
             EntityRenderers.register(ModEntities.ABSORB_MASS.get(),
                     com.hmc.zenkai.client.render_and_model_entities.entity.AbsorbMassRenderer::new);
 

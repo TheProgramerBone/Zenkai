@@ -19,6 +19,8 @@ public final class PhysicalIcons {
     private PhysicalIcons() {}
 
     private static final int CELL = 20;
+    private static final ResourceLocation VANILLA_MOON =
+            ResourceLocation.withDefaultNamespace("textures/environment/moon_phases.png");
 
     private static final ResourceLocation[] LOCATIONS = new ResourceLocation[PhysicalTechnique.values().length];
     private static final boolean[] exists = new boolean[LOCATIONS.length];
@@ -39,6 +41,16 @@ public final class PhysicalIcons {
 
     public static void draw(GuiGraphics g, int x, int y, int size, PhysicalTechnique t) {
         if (size <= 0) return;
+
+        // Luna Falsa: usa la LUNA LLENA de vanilla (celda 0,0 de moon_phases.png, 4x2 celdas de 32x32) en vez de un PNG propio
+        // (decisión del usuario, 2026-11-25). No se copia el asset de Mojang: se dibuja un recorte del suyo.
+        if (t == PhysicalTechnique.FALSE_MOON) {
+            RenderSystem.enableBlend();
+            g.setColor(1f, 1f, 1f, 1f);
+            g.blit(VANILLA_MOON, x, y, size, size, 0f, 0f, 32, 32, 128, 64);
+            RenderSystem.disableBlend();
+            return;
+        }
 
         // Icono propio (TechniqueDef.icon, 0.3.0): mismo escape hatch que TechniqueIcons.
         String custom = t.icon();

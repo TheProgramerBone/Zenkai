@@ -83,6 +83,8 @@ public record PhysicalTechniquePacket(int op, int tech, int position, String mas
 
                 // Las técnicas innatas no se compran: las trae la raza (InnateTechniques).
                 if (!t.innateRace().isEmpty()) return;
+                // Una técnica de raza requerida (Luna Falsa) solo la compra esa raza; el servidor lo vuelve a validar.
+                if (!InnateTechniques.availableTo(t, att.getRace())) return;
 
                 if (att.getTP() < t.tpCost()) return;
 

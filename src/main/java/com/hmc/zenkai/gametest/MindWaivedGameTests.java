@@ -157,4 +157,16 @@ public final class MindWaivedGameTests {
         helper.assertTrue(att.skillTree().version() == com.hmc.zenkai.feature.player.PlayerSkillTree.VERSION, "Debe sellar la versión");
         helper.succeed();
     }
+
+    /** Cada forma divina declara el MIND que ocupa su nodo (`mind_req` en zenkai_skill_tree/<forma>.json), y comprarla lo pide. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void divineFormsRequireMind(GameTestHelper helper) {
+        for (String id : new String[]{"ssj_god", "ssj_blue", "ssj_rose", "ssj_blue_evolution", "ssj_rose_evolution",
+                "human_god", "namek_god", "majin_god", "arcosian_god"}) {
+            var data = com.hmc.zenkai.feature.skilltree.SkillTreeData.get(ResourceLocation.fromNamespaceAndPath("zenkai", id));
+            helper.assertTrue(data != null && data.mindReqFor(1) > 0, id + " debe declarar mind_req en su nodo");
+        }
+        helper.succeed();
+    }
 }
+

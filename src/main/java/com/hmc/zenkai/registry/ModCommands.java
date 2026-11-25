@@ -254,6 +254,7 @@ public class ModCommands {
                 // Uso: /zenkai skill give|revoke <objetivos> <id>
                 //      /zenkai skill giveall [objetivos]   → cada una al máximo
                 //      /zenkai skill list [jugador]        → consulta (un solo jugador)
+                //      /zenkai skill unlockforms [list|all|give <jugador> <forma>] → transformaciones de su raza
                 .then(Commands.literal("skill")
                         .then(Commands.literal("give")
                                 .then(Commands.argument("player", EntityArgument.players())
@@ -280,6 +281,30 @@ public class ModCommands {
                                 .executes(ctx -> SkillCommands.skillGiveAll(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.players())
                                         .executes(ctx -> forEach(ctx, targets(ctx), SkillCommands::skillGiveAll))))
+                        // Transformaciones (pruebas de admin): sin argumentos LISTA las de la raza y cuáles se pueden desbloquear;
+                        // «give» concede una concreta (con sus requisitos) y «all» todas. Sin TP ni MIND.
+                        .then(Commands.literal("unlockforms")
+                                .executes(ctx -> SkillCommands.formsList(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.literal("list")
+                                        .executes(ctx -> SkillCommands.formsList(ctx, ctx.getSource().getPlayerOrException()))
+                                        .then(Commands.argument("player", EntityArgument.player())
+                                                .executes(ctx -> SkillCommands.formsList(ctx, EntityArgument.getPlayer(ctx, "player")))))
+                                .then(Commands.literal("all")
+                                        .executes(ctx -> SkillCommands.formsUnlockAll(ctx, ctx.getSource().getPlayerOrException()))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx), SkillCommands::formsUnlockAll))))
+                                .then(Commands.literal("give")
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .then(Commands.argument("form", ResourceLocationArgument.id())
+                                                        .suggests((c, b) -> {
+                                                            var src = c.getSource();
+                                                            java.util.List<String> ids = new java.util.ArrayList<>();
+                                                            if (src.getEntity() instanceof ServerPlayer me) ids.addAll(SkillCommands.grantableFormIds(me));
+                                                            return SharedSuggestionProvider.suggest(ids, b);
+                                                        })
+                                                        .executes(ctx -> forEach(ctx, targets(ctx),
+                                                                (c, sp) -> SkillCommands.formsGive(c, sp,
+                                                                        ResourceLocationArgument.getId(c, "form"))))))))
                         // list NO admite @a a propósito: es una consulta y con varios objetivos
                         // escupiría (nº skills × nº jugadores) líneas de chat, ilegible.
                         .then(Commands.literal("list")

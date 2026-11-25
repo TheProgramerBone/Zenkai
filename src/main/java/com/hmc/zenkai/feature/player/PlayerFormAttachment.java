@@ -65,8 +65,12 @@ public class PlayerFormAttachment {
     /** Techo del Legendario de las demás razas (% a maestría 100, ya con la resonancia divina). Mismo patrón que
      *  puCeiling: lo calcula el servidor cada tick y viaja en el sync; el cliente solo lo lee. */
     private double legendCeiling = 0.0;
+    /** ¿Tiene el estado Legendario (isLegendary de los stats)? Espejo para los DEMÁS clientes: el attachment de stats no se sincroniza a quien te ve, este sí (lo usa el aura, AuraVariants). */
+    private boolean legendaryState = false;
 
     public double getLegendCeiling() { return legendCeiling; }
+
+    public boolean isLegendaryState() { return legendaryState; }
 
     // ── Contención Rota (forma Legendaria del arcosiano), ver ArcosianContainment ──
     /** Tick de juego en que se agota la tensión (0 = no hay). Total = su duración, para la HUD y el enfriamiento. */
@@ -93,9 +97,13 @@ public class PlayerFormAttachment {
     }
 
     /** Servidor: recalcula el techo. Barato (recorre como mucho 5 formas). */
-    public void refreshPotentialCeiling(Player p) {
+    public boolean refreshPotentialCeiling(Player p) {
         this.puCeiling = PotentialUnlock.referenceCeiling(p);
         this.legendCeiling = com.hmc.zenkai.feature.forms.LegendaryForms.ceiling(p);
+        boolean leg = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(p).isLegendary();
+        boolean changed = leg != this.legendaryState;
+        this.legendaryState = leg;
+        return changed;   // true = hay que sincronizarlo a quien te ve (el resto cambia solo con eventos que ya sincronizan)
     }
 
     // ── Estado ───────────────────────────────────────────────────────────────
@@ -852,6 +860,7 @@ public class PlayerFormAttachment {
         tag.putLong("strainUntil", strainUntil);
         tag.putDouble("puCeiling", puCeiling);
         tag.putDouble("legendCeiling", legendCeiling);
+        tag.putBoolean("legendaryState", legendaryState);
         tag.putDouble("willBonus", willBonus);
         tag.putLong("tensionUntil", tensionUntil);
         tag.putLong("tensionTotal", tensionTotal);
@@ -889,6 +898,7 @@ public class PlayerFormAttachment {
         this.strainUntil = tag.getLong("strainUntil");
         this.puCeiling = tag.getDouble("puCeiling");
         this.legendCeiling = tag.getDouble("legendCeiling");
+        this.legendaryState = tag.getBoolean("legendaryState");
         this.willBonus = tag.getDouble("willBonus");
         this.tensionUntil = tag.getLong("tensionUntil");
         this.tensionTotal = tag.getLong("tensionTotal");

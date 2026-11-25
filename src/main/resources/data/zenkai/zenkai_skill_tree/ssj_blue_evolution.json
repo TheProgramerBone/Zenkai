@@ -1,3 +1,6 @@
 {
-  "node": "zenkai:ssj_blue_evolution"
+  "node": "zenkai:ssj_blue_evolution",
+  "mind_req": [
+    40
+  ]
 }

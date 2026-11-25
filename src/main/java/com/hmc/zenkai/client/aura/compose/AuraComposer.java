@@ -249,7 +249,8 @@ public final class AuraComposer {
         }
 
         // ── Estilo ──
-        AuraStyle style = AuraStyleManager.get(auraType);
+        // Variante por estado (SSJ1 de un Saiyan Legendario: guiño verde). Con el tipo forzado (debug, fantasma) no se aplica.
+        AuraStyle style = AuraStyleManager.get(overridden ? auraType : AuraVariants.of(p, auraType));
         if (self && !isGhost && AuraDebug.familyOverride != null) {
             AuraFamily fam = AuraFamilies.get(AuraDebug.familyOverride);
             if (fam != null) style = AuraStyle.bare(auraType, fam);

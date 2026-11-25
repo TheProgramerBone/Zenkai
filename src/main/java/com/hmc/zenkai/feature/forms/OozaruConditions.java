@@ -45,9 +45,8 @@ public final class OozaruConditions {
      * independientemente de {@code fixed_time} (que solo afecta el render del cielo, no el
      * contador interno), así que {@link Level#getMoonPhase()} coincidía con la fase real del
      * Overworld en Namek/Otherworld — de ahí que el ritual se pudiera activar ahí sin que haya
-     * luna propia en esas dimensiones. PENDIENTE: la técnica de luna falsa de Vegeta debe poder
-     * saltarse esta condición de dimensión por completo (y el resto de {@link #satisfied}) —
-     * solo debe importar que el jugador la vea; no implementado todavía. */
+     * luna propia en esas dimensiones. PENDIENTE: la técnica de luna falsa (técnica {@link FalseMoon},
+     * Tori-Bot) se salta esta condición por completo: ver {@link #canTrigger}. */
     public static boolean satisfied(Player p) {
         PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
         if (stats.getRace() != Race.SAIYAN) return false;
@@ -58,6 +57,16 @@ public final class OozaruConditions {
         if (level.isDay()) return false;
         if (level.getMoonPhase() != 0) return false;
         return level.canSeeSky(p.blockPosition());
+    }
+
+    /**
+     * Disparador de entrada al Oozaru: la luna REAL (ambiente + mirar arriba) O una LUNA FALSA a la vista (técnica
+     * {@link FalseMoon}). La luna falsa solo pide ser Saiyan con cola y mirarla: da igual dimensión, hora, fase o cielo.
+     */
+    public static boolean canTrigger(Player p) {
+        if (satisfied(p) && lookingAtMoon(p)) return true;
+        PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
+        return stats.getRace() == Race.SAIYAN && stats.hasTail() && FalseMoon.isLookingAtFalseMoon(p);
     }
 
     /** ¿Está el jugador mirando lo bastante hacia arriba como para "ver" la luna? Solo se usa

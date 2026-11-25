@@ -238,7 +238,8 @@ public final class SilhouetteFlameRenderer {
             if (fury != null) return fury;
         }
         FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).auraDef();
-        return AuraStyleManager.silhouette(def == null ? "default" : def.auraType());
+        return AuraStyleManager.silhouette(def == null ? "default"
+                : com.hmc.zenkai.client.aura.compose.AuraVariants.of(p, def.auraType()));
     }
 
     private static boolean enabled() {

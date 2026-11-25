@@ -112,6 +112,17 @@ public class ModEntities {
                     .noSave()
                     .build("sword_wave"));
 
+    /** Esfera de la Luna Falsa (ver FalseMoonEntity): flota ~1 min y hace de luna llena para el Oozaru. Se sigue a larga distancia. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.technique.FalseMoonEntity>> FALSE_MOON =
+            ENTITY_TYPES.register("false_moon", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.technique.FalseMoonEntity>of(
+                            com.hmc.zenkai.content.entity.technique.FalseMoonEntity::new, MobCategory.MISC)
+                    .sized(2.0f, 2.0f)
+                    .clientTrackingRange(16)
+                    .updateInterval(10)
+                    .noSave()
+                    .build("false_moon"));
+
     /** Masa de la técnica ABSORB del Majin (ver AbsorbMassEntity): como la hoja de luz, la mueve el cliente por su cuenta. */
     public static final Supplier<EntityType<com.hmc.zenkai.content.entity.technique.AbsorbMassEntity>> ABSORB_MASS =
             ENTITY_TYPES.register("absorb_mass", () -> EntityType.Builder

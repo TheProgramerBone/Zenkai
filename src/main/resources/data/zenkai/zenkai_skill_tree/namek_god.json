@@ -1,4 +1,10 @@
 {
   "node": "zenkai:namek_god",
-  "acquisition": ["tp", "ritual"]
+  "acquisition": [
+    "tp",
+    "ritual"
+  ],
+  "mind_req": [
+    16
+  ]
 }

@@ -102,7 +102,7 @@ public final class AwakeningScene {
         return "roar";
     }
 
-    /** Lo llama el compositor de auras al disparar la secuencia larga. {@code rgb} es el color exterior del aura. */
+    /** Lo llama el compositor de auras al disparar la secuencia larga. {@code rgb} es el color exterior del aura EN ESE FRAME (respaldo: si se conoce la forma de destino se usa su color, ver abajo). */
     public static void start(AbstractClientPlayer p, boolean self, LongTransformState.Pending info, float[] rgb, LongTransformMode mode) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mode == LongTransformMode.OFF) return;
@@ -115,7 +115,17 @@ public final class AwakeningScene {
         s.trigger = info.trigger();
         s.first = info.first();
         s.pose = pick(info.form(), info.trigger());
-        s.rgb = new float[]{rgb[0], rgb[1], rgb[2]};
+        // El color de la escena (viñeta, destello y TÍTULO) es el de la forma de DESTINO. El que llega de fuera es el del frame del aura, que
+        // en el instante del aviso todavía es el de la forma ANTERIOR (ClientFormDelay retrasa el cambio y su aura de destino hasta el
+        // estallido): el título salía con el color de la forma previa (bug 2026-11-25). Mismo criterio que el compositor: la capa
+        // exterior de la forma si la declara, si no la interior, saturada.
+        float[] sceneRgb = rgb;
+        FormDef target = info.form() == null ? null : FormDef.get(info.form());
+        if (target != null) {
+            int c = target.auraOuterRgb() >= 0 ? target.auraOuterRgb() : target.auraRgb();
+            sceneRgb = com.hmc.zenkai.client.aura.flame.AuraFlameColors.saturated(c);
+        }
+        s.rgb = new float[]{sceneRgb[0], sceneRgb[1], sceneRgb[2]};
         s.mode = mode;
         s.start = mc.level.getGameTime();
         s.x = p.getX();

@@ -102,7 +102,9 @@ public enum TechniqueField {
      *  efecto elegido. Es lo que hace explosiva por defecto a una técnica firma de maestro, que no se edita. */
     BREAKS_BLOCKS ("breaks_blocks",  ValueType.BOOL,   false,                           Kind.KI),
     /** Raza (en minúsculas) que tiene esta técnica de nacimiento; "" = la desbloquea quien pague. Ver TechniqueDef. */
-    INNATE_RACE   ("innate_race",    ValueType.STRING, "",                              Kind.PHYSICAL);
+    INNATE_RACE   ("innate_race",    ValueType.STRING, "",                              Kind.PHYSICAL),
+    /** Raza (en minúsculas) que puede aprenderla (se compra normal); "" = cualquiera. Ver TechniqueDef. */
+    REQUIRED_RACE ("required_race",  ValueType.STRING, "",                              Kind.PHYSICAL);
 
     /** Tipo de dato del campo. Decide parseo, clamp, formato y cómo viaja a JSON/NBT. */
     public enum ValueType { INT, DOUBLE, BOOL, RGB, STRING }
@@ -312,6 +314,7 @@ public enum TechniqueField {
             case WEAPON_REQUIREMENT -> d.weaponRequirement();
             case BREAKS_BLOCKS -> d.breaksBlocks();
             case INNATE_RACE -> d.innateRace();
+            case REQUIRED_RACE -> d.requiredRace();
         };
     }
 
@@ -351,7 +354,8 @@ public enum TechniqueField {
                 d(v, PROJECTILE_SIZE_BASE), d(v, PROJECTILE_SIZE_STEP),
                 d(v, EXPLOSION_RADIUS_MULT), d(v, AOE_FACTOR), d(v, AOE_EDGE_FALLOFF),
                 b(v, CHARGE_SHOWS_REAL_SIZE), s(v, ANIM_OVERRIDE), s(v, ALLOWED_EFFECTS),
-                s(v, ICON), s(v, WEAPON_REQUIREMENT), b(v, BREAKS_BLOCKS), s(v, INNATE_RACE));
+                s(v, ICON), s(v, WEAPON_REQUIREMENT), b(v, BREAKS_BLOCKS), s(v, INNATE_RACE),
+                s(v, REQUIRED_RACE));
     }
 
     private static int i(Map<TechniqueField, Object> v, TechniqueField f) {

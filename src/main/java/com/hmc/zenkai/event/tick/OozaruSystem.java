@@ -29,8 +29,8 @@ import net.minecraft.world.entity.player.Player;
  * sol, se nuble el cielo o el jugador entre bajo techo NO lo revierte: el disfrute de la
  * forma no debería depender de mantener la vista en el cielo mientras se pelea con ella.
  *
- * PENDIENTE (fuera de alcance de esta pasada): el maestro Vegeta enseñando una técnica para
- * crear una esfera de ki que simule la luna y fuerce esto sin depender de la luna real.
+ * LUNA FALSA (técnica de Tori-Bot, feature/forms/FalseMoon): una esfera flotante que hace de luna llena; ver
+ * OozaruConditions.canTrigger.
  */
 public final class OozaruSystem {
     private OozaruSystem() {}
@@ -51,9 +51,7 @@ public final class OozaruSystem {
             return;
         }
 
-        boolean shouldEnter = FormIds.BASE.equals(current)
-                && OozaruConditions.satisfied(p)
-                && OozaruConditions.lookingAtMoon(p);
+        boolean shouldEnter = FormIds.BASE.equals(current) && OozaruConditions.canTrigger(p);
         form.setOozaruForced(shouldEnter);
     }
 }

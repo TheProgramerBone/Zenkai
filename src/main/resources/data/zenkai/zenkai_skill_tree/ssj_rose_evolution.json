@@ -1,3 +1,6 @@
 {
-  "node": "zenkai:ssj_rose_evolution"
+  "node": "zenkai:ssj_rose_evolution",
+  "mind_req": [
+    40
+  ]
 }

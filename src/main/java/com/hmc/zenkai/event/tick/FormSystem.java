@@ -32,7 +32,9 @@ public final class FormSystem {
         PlayerStatsAttachment att = c.att();
         var form = c.form();
         // Antes del multiplicador: si el techo llega tarde, el tick entero usa el de ayer.
-        form.refreshPotentialCeiling(p);
+        if (form.refreshPotentialCeiling(p) && p instanceof net.minecraft.server.level.ServerPlayer lsp) {
+            PlayerLifeCycle.syncFormToTrackersAndSelf(lsp);   // el estado Legendario cambió: que lo vean los demás (aura, AuraVariants)
+        }
         com.hmc.zenkai.feature.forms.ArcosianContainment.tick(p, att, form);
         // Bono de Voluntad colectiva para la HUD: se re-sincroniza solo cuando cambia el porcentaje mostrado.
         double will = com.hmc.zenkai.feature.forms.HumanWill.bonus(p);

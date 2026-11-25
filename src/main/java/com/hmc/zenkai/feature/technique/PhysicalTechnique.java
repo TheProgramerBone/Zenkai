@@ -35,7 +35,10 @@ public enum PhysicalTechnique {
     EVADE,
     /** Absorción del Majin (técnica INNATA de la raza, ver TechniqueDef.innateRace y MajinAbsorption): mata al objetivo
      *  debilitado que mira y suma masa. Va el ÚLTIMA: el ordinal viaja en estados de acción y NBT. */
-    ABSORB;
+    ABSORB,
+    /** Luna Falsa (Saiyan, la enseña Tori-Bot): lanza una esfera que queda flotando ~1 min y hace de luna llena para el Oozaru
+     *  (ver FalseMoon). Va ÚLTIMA: el ordinal viaja en estados de acción y NBT. */
+    FALSE_MOON;
 
     private final String id;
 
@@ -93,11 +96,14 @@ public enum PhysicalTechnique {
     /** Raza que la tiene de nacimiento ("majin"), o "" si cualquiera puede comprarla. */
     public String innateRace() { TechniqueDef d = def(); return d == null ? "" : d.innateRace(); }
 
+    /** Raza que puede aprenderla (se compra normal), o "" si cualquiera. Ver TechniqueDef.requiredRace. */
+    public String requiredRace() { TechniqueDef d = def(); return d == null ? "" : d.requiredRace(); }
+
     /**
      * Va en la categoría ESPECIAL de la pantalla de técnicas: no es un golpe — evasiva, agarre — o es propia de una
      * raza (absorción del Majin). Es la lista cerrada que decide la UI; no cambia nada del combate.
      */
-    public boolean special() { return this == EVADE || this == GRAB || !innateRace().isEmpty(); }
+    public boolean special() { return this == EVADE || this == GRAB || this == FALSE_MOON || !innateRace().isEmpty(); }
 
     /** Alcance en bloques (rayo/cono según la técnica). */
     public double range() { TechniqueDef d = def(); return d == null ? 0.0 : d.range(); }

@@ -405,7 +405,7 @@ public final class PhysicalCombatServer {
         // movimiento sale igual: la estamina ya se pagó.
         double fistBonus = 0.0;
         double raw = KiFist.rawBonus(sp, att);
-        if (raw > 0.0 && t != PhysicalTechnique.ABSORB) {
+        if (raw > 0.0 && t != PhysicalTechnique.ABSORB && t != PhysicalTechnique.FALSE_MOON) {
             double effective = raw * t.dmgMult() * MasteryEffects.techCostFactor(att, t.name());
             int kiCost = Math.min(KiInfusion.kiCost(att, effective),
                     (int) (att.getEnergyMax() * MAX_COST_PCT_OF_POOL));
@@ -425,7 +425,7 @@ public final class PhysicalCombatServer {
                 * MasteryEffects.techDamageFactor(att, t.name());
         // Orden de multiplicadores fijado en ComboTracker: combo × carga (× Black Flash, que no aplica aquí).
         // La evasiva no golpea: ni suma ni alimenta la cadena.
-        if (t != PhysicalTechnique.EVADE && t != PhysicalTechnique.ABSORB) str *= ComboTracker.registerHit(sp);
+        if (t != PhysicalTechnique.EVADE && t != PhysicalTechnique.ABSORB && t != PhysicalTechnique.FALSE_MOON) str *= ComboTracker.registerHit(sp);
         int chargeLevel = t == PhysicalTechnique.HEAVY_BLOW ? consumeChargeLevel(sp) : 0;
         if (chargeLevel > 0) {
             str *= 1.0 + chargeLevel * ServerConfig.heavyDamagePerLevel();
@@ -455,6 +455,7 @@ public final class PhysicalCombatServer {
             case GRAB -> startGrab(sp, str, t);
             case EVADE -> startEvade(sp, str, t);
             case ABSORB -> com.hmc.zenkai.feature.race.MajinAbsorption.throwMass(sp);
+            case FALSE_MOON -> com.hmc.zenkai.feature.forms.FalseMoon.cast(sp);
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
@@ -862,6 +863,9 @@ public final class PhysicalCombatServer {
                 sp.displayClientMessage(Component.translatable("hud.zenkai.grab_no_target"), true);
                 return ActionReject.NO_TARGET;
             }
+        } else if (t == PhysicalTechnique.FALSE_MOON) {
+            // Solo un Saiyan la lanza; sin serlo no se gasta estamina ni enfriamiento.
+            return com.hmc.zenkai.feature.forms.FalseMoon.canCast(sp) ? ActionReject.OK : ActionReject.NO_RESOURCE;
         } else if (t == PhysicalTechnique.ABSORB) {
             // Sin ser Majin o sin el ki que cuesta NO se gasta estamina ni enfriamiento (MajinAbsorption avisa del
             // motivo). A quién se absorbe se decide al impacto de la masa, no aquí.
@@ -1313,6 +1317,7 @@ public final class PhysicalCombatServer {
             case GRAB       -> new Vol(0.9f, 0.9f);
             case EVADE      -> new Vol(0.6f, 1.5f);
             case ABSORB     -> new Vol(0.8f, 0.6f);
+            case FALSE_MOON -> new Vol(0.5f, 1.0f);
         };
         boolean blocked = target instanceof ServerPlayer defSp
                 ? KiCombatServer.isBlocking(defSp)
@@ -1355,6 +1360,7 @@ public final class PhysicalCombatServer {
             case GRAB -> ModDamageTypes.GRAB;
             case EVADE -> ModDamageTypes.DASH_PUNCH;   // no daña: el tipo no se usa nunca
             case ABSORB -> ModDamageTypes.GRAB;        // absorber mata por MajinAbsorption, no por hit()
+            case FALSE_MOON -> ModDamageTypes.GRAB;    // no daña: el tipo no se usa nunca
         };
     }
 

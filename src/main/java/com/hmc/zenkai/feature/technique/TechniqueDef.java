@@ -55,6 +55,10 @@ import java.util.Map;
  * en minúsculas ("majin"). Esa raza la TIENE desde el principio (InnateTechniques la desbloquea sola, sin TP), las demás ni la ven
  * en la lista ni pueden desbloquearla (PhysicalTechniquePacket lo vuelve a validar). Hoy: la absorción del Majin.
  *
+ * RAZA REQUERIDA ({@code required_race}, solo físicas; "" = ninguna): como {@code innate_race} limita la técnica a una raza
+ * (las demás ni la ven ni pueden aprenderla), pero NO la regala: se compra normal (con su {@code master} si lo tiene). Es lo que
+ * usa la Luna Falsa: solo la aprende un Saiyan, y se la enseña Tori-Bot.
+ *
  * FORMA de una técnica ki (0.3.0, ver {@code .claude/pendiente/verificar-y-deuda.md} §2):
  * lo que antes eran 6 switch exhaustivos de {@link KiTechniqueType} ahora son datos aquí —
  * {@code travels}, {@code projectileSizeBase/Step}, {@code explosionRadiusMult}, {@code aoeFactor},
@@ -77,7 +81,8 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                            boolean travels, double projectileSizeBase, double projectileSizeStep,
                            double explosionRadiusMult, double aoeFactor, double aoeEdgeFalloff,
                            boolean chargeShowsRealSize, String animOverride, String allowedEffects,
-                           String icon, String weaponRequirement, boolean breaksBlocks, String innateRace) {
+                           String icon, String weaponRequirement, boolean breaksBlocks, String innateRace,
+                           String requiredRace) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -143,6 +148,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                 buf.writeUtf(d.weaponRequirement(), 64);
                 buf.writeBoolean(d.breaksBlocks());
                 buf.writeUtf(d.innateRace(), 64);
+                buf.writeUtf(d.requiredRace(), 64);
             },
             buf -> {
                 String id = buf.readUtf();
@@ -158,6 +164,6 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(),
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readUtf(64), buf.readUtf(256), buf.readUtf(256),
-                        buf.readUtf(64), buf.readBoolean(), buf.readUtf(64));
+                        buf.readUtf(64), buf.readBoolean(), buf.readUtf(64), buf.readUtf(64));
             });
 }

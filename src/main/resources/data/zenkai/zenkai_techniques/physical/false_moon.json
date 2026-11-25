@@ -1,0 +1,12 @@
+{
+  "tp_cost": 800,
+  "mind_req": 10,
+  "master": "toribot",
+  "required_race": "saiyan",
+  "weapon_requirement": "none",
+  "damage_mult": 0.0,
+  "stamina_pct": 6.0,
+  "cooldown_ticks": 1200,
+  "range": 0.0,
+  "anim_ticks": 20
+}

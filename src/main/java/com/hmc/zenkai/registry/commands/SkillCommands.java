@@ -118,6 +118,150 @@ public final class SkillCommands {
         return 1;
     }
 
+    // ── Desbloqueo de transformaciones (pruebas de admin) ────────────────────
+
+    /** Formas que el comando puede conceder: nodos de forma del árbol de la raza, sin Oozaru/Súper Oozaru (automáticas) ni Místico (es su doctrina). */
+    private static java.util.List<com.hmc.zenkai.feature.forms.FormDef> grantableForms(com.hmc.zenkai.feature.Race race) {
+        java.util.List<com.hmc.zenkai.feature.forms.FormDef> out = new java.util.ArrayList<>();
+        for (var n : com.hmc.zenkai.feature.skilltree.SkillTreeNodes.build(race)) {
+            if (n.kind() != com.hmc.zenkai.feature.skilltree.SkillTreeNodes.Kind.FORM || n.form() == null) continue;
+            if (com.hmc.zenkai.feature.forms.FormIds.OOZARU.equals(n.form())
+                    || com.hmc.zenkai.feature.forms.FormIds.SUPER_OOZARU.equals(n.form())) continue;
+            var d = com.hmc.zenkai.feature.forms.FormDef.get(n.form());
+            if (d != null) out.add(d);
+        }
+        return out;
+    }
+
+    /** Nombres de formas (ids completos) que se pueden conceder a este jugador: para el autocompletado del comando. */
+    public static java.util.List<String> grantableFormIds(ServerPlayer sp) {
+        var att = PlayerStatsAttachment.get(sp);
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        if (att.isRaceChosen() && att.getRace() != null) {
+            for (var d : grantableForms(att.getRace())) ids.add(d.id().toString());
+        }
+        return ids;
+    }
+
+    /** Qué le falta a una forma, aparte de poseer su nodo, para poder usarse (texto corto) o "" si nada. */
+    private static String extraNeed(PlayerStatsAttachment att, com.hmc.zenkai.feature.forms.FormDef d) {
+        if (com.hmc.zenkai.feature.forms.LegendaryForms.ownerOf(d.id()) != null && !att.isLegendary()) return "requiere estado Legendario";
+        return "";
+    }
+
+    /**
+     * Concede UNA forma con todo lo que necesita para poder usarse (sin TP ni MIND): sus antepasados, God Ki si es divina, el ritual
+     * si es SSJ4, el nivel de la doctrina si es de una ruta universal y la furia si es Beast. No toca el estado Legendario.
+     * Devuelve los ids que concedió de nuevo.
+     */
+    private static void grantFormWithPrereqs(PlayerStatsAttachment att, com.hmc.zenkai.feature.Race race,
+                                             com.hmc.zenkai.feature.forms.FormDef d, java.util.List<String> granted) {
+        if (d.parent() != null && !com.hmc.zenkai.feature.forms.FormIds.BASE.equals(d.parent())) {
+            var pd = com.hmc.zenkai.feature.forms.FormDef.get(d.parent());
+            if (pd != null && pd.allows(race)) grantFormWithPrereqs(att, race, pd, granted);
+        }
+        if (d.endgamePath()) {
+            if (com.hmc.zenkai.feature.forms.FormIds.ULTRA_EGO.equals(d.id())) {
+                att.skills().grantAdmin(com.hmc.zenkai.feature.skills.SkillEffects.ULTRA_EGO,
+                        com.hmc.zenkai.event.tick.OverlayMetersSystem.UE_FORM_LEVEL);
+            } else if (com.hmc.zenkai.feature.forms.FormIds.BEAST.equals(d.id())) {
+                att.setBeastFury(true);
+                att.skills().grantAdmin(com.hmc.zenkai.feature.skills.SkillEffects.POTENTIAL_UNLOCK, 1);
+            } else {
+                int lvl = com.hmc.zenkai.feature.skills.EndgamePaths.requiredUiLevel(d.id());
+                if (lvl > 0) att.skills().grantAdmin(com.hmc.zenkai.feature.skills.SkillEffects.ULTRA_INSTINCT, lvl);
+            }
+            att.skills().grantAdmin(com.hmc.zenkai.feature.skills.DivineForms.SKILL, 1);
+            granted.add(d.id().toString());
+            return;
+        }
+        if (com.hmc.zenkai.feature.forms.FormIds.POTENTIAL_UNLOCK.equals(d.id())) {
+            att.skills().grantAdmin(com.hmc.zenkai.feature.skills.SkillEffects.POTENTIAL_UNLOCK, 1);
+            granted.add(d.id().toString());
+            return;
+        }
+        if (d.divineTier()) att.skills().grantAdmin(com.hmc.zenkai.feature.skills.DivineForms.SKILL, 1);
+        if (com.hmc.zenkai.feature.forms.FormIds.SSJ4.equals(d.id())) {
+            att.setHasSsj4Ritual(true);
+            att.setReachedSuperOozaru(true);
+        }
+        if (att.skillTree().ownedLevel(d.id()) < 1) {
+            com.hmc.zenkai.feature.skilltree.SkillTree.grantNode(att, d.id(), true);
+            granted.add(d.id().toString());
+        }
+    }
+
+    /** {@code /zenkai skill unlockforms}: lista las transformaciones de la raza y cuáles se pueden desbloquear con el comando. */
+    public static int formsList(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (!att.isRaceChosen() || att.getRace() == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] " + sp.getGameProfile().getName() + " no ha elegido raza."));
+            return 0;
+        }
+        var forms = grantableForms(att.getRace());
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Transformaciones de " + sp.getGameProfile().getName() + " ("
+                + att.getRace().name() + "): ✔ ya disponible · ○ se puede desbloquear · ⚠ se puede, pero falta algo")
+                .withStyle(ChatFormatting.GOLD), false);
+        int pending = 0;
+        for (var d : forms) {
+            boolean have = com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, d.id());
+            String need = have ? "" : extraNeed(att, d);
+            if (!have) pending++;
+            ChatFormatting color = have ? ChatFormatting.GREEN : need.isEmpty() ? ChatFormatting.YELLOW : ChatFormatting.RED;
+            String mark = have ? "✔ " : need.isEmpty() ? "○ " : "⚠ ";
+            String text = mark + d.id() + (need.isEmpty() ? "" : "  (" + need + ")");
+            ctx.getSource().sendSuccess(() -> Component.literal("  ").append(Component.literal(text).withStyle(color)), false);
+        }
+        final int pend = pending;
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + pend + " pendiente(s). Una concreta: /zenkai skill unlockforms give "
+                + sp.getGameProfile().getName() + " <forma>; todas: /zenkai skill unlockforms all").withStyle(ChatFormatting.GRAY), false);
+        return forms.size();
+    }
+
+    /** {@code /zenkai skill unlockforms give <jugador> <forma>}: concede una forma concreta con sus requisitos. */
+    public static int formsGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, ResourceLocation form) {
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (!att.isRaceChosen() || att.getRace() == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] " + sp.getGameProfile().getName() + " no ha elegido raza."));
+            return 0;
+        }
+        var d = com.hmc.zenkai.feature.forms.FormDef.get(form);
+        if (d == null || !grantableForms(att.getRace()).contains(d)) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] '" + form + "' no es una transformación concedible de "
+                    + att.getRace().name() + ". Mira la lista con /zenkai skill unlockforms"));
+            return 0;
+        }
+        java.util.List<String> granted = new java.util.ArrayList<>();
+        grantFormWithPrereqs(att, att.getRace(), d, granted);
+        PlayerLifeCycle.sync(sp);
+        boolean usable = com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, d.id());
+        String need = usable ? "" : extraNeed(att, d);
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + sp.getGameProfile().getName() + ": "
+                + (granted.isEmpty() ? "ya la tenía (" + d.id() + ")" : "concedidas " + granted)
+                + (usable ? " → desbloqueada." : " → concedida, pero todavía no se puede usar" + (need.isEmpty() ? "." : ": " + need + "."))), true);
+        return 1;
+    }
+
+    /**
+     * {@code /zenkai skill unlockforms all}: desbloquea TODAS las transformaciones concedibles de la raza (cada una con sus requisitos).
+     * NO toca el estado Legendario ({@code isLegendary}): es un hecho de personaje, no una forma comprable.
+     */
+    public static int formsUnlockAll(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (!att.isRaceChosen() || att.getRace() == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] " + sp.getGameProfile().getName() + " no ha elegido raza."));
+            return 0;
+        }
+        java.util.List<String> granted = new java.util.ArrayList<>();
+        for (var d : grantableForms(att.getRace())) grantFormWithPrereqs(att, att.getRace(), d, granted);
+        PlayerLifeCycle.sync(sp);
+        long skipped = grantableForms(att.getRace()).stream()
+                .filter(d -> !com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, d.id())).count();
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Transformaciones para " + sp.getGameProfile().getName() + ": "
+                + granted.size() + " concedida(s)" + (skipped > 0 ? ", " + skipped + " sin poder usarse aún (estado Legendario): ver /zenkai skill unlockforms" : ".")), true);
+        return 1;
+    }
+
     /** Lista las habilidades del datapack con el nivel actual del jugador. */
     public static int skillList(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         var all = SkillDef.all();
