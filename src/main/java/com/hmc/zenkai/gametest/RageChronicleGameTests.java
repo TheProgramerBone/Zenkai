@@ -13,7 +13,7 @@ import com.hmc.zenkai.feature.rage.RageMigration;
 import com.hmc.zenkai.feature.rage.RageResult;
 import com.hmc.zenkai.feature.rage.RageSystem;
 import com.hmc.zenkai.feature.rage.RageTrigger;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -37,7 +37,6 @@ public final class RageChronicleGameTests {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         att.setRace(race);
         att.setInOtherworld(false);
-        att.skills().grantAdmin(SuperForms.SKILL, 1);
         return sp;
     }
 
@@ -122,7 +121,7 @@ public final class RageChronicleGameTests {
     public static void firstTransformationByAnyRouteIsRecordedOnce(GameTestHelper helper) {
         ServerPlayer sp = player(helper, Race.SAIYAN);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        att.skills().grantAdmin(SuperForms.SKILL, 2);   // SSJ1 por compra, no por Rage
+        FormAccess.grantChain(att, 1, false);   // SSJ1 por compra, no por Rage
         PlayerFormAttachment forms = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
 
         forms.setFormId(sp, FormIds.SSJ1);
@@ -142,14 +141,14 @@ public final class RageChronicleGameTests {
     public static void migrationMarksOwnedFormsWithoutGrantingAnything(GameTestHelper helper) {
         ServerPlayer sp = player(helper, Race.SAIYAN);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        att.skills().grantAdmin(SuperForms.SKILL, 2);   // posee SSJ1 de antes
+        FormAccess.grantChain(att, 1, false);   // posee SSJ1 de antes
         att.flags().setRageMigrated(false);             // partida anterior a Rage Forms
         float mastery = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormMastery(FormIds.SSJ1);
 
         helper.assertTrue(RageMigration.migrate(sp), "Migra la primera vez");
         helper.assertTrue(att.flags().hasSeenLongCinematic("zenkai:ssj1"), "SSJ1 (ya poseída) cuenta como vista");
         helper.assertTrue(!att.flags().hasSeenLongCinematic("zenkai:ssj2"), "SSJ2 (no poseída) conserva su primera secuencia larga");
-        helper.assertTrue(!SuperForms.unlocked(sp, FormIds.SSJ2), "No concede desbloqueos");
+        helper.assertTrue(!FormAccess.unlocked(sp, FormIds.SSJ2), "No concede desbloqueos");
         helper.assertTrue(sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormMastery(FormIds.SSJ1) == mastery, "Ni maestría");
         helper.assertTrue(RageChronicle.get(sp).size() == 0, "Ni deja entradas en la crónica");
         helper.assertTrue(!RageMigration.migrate(sp), "No se repite");

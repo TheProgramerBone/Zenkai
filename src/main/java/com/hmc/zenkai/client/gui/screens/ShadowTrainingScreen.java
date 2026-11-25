@@ -10,7 +10,7 @@ import com.hmc.zenkai.client.gui.widgets.TrainingWidgets;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.feature.training.ShadowPotentialRequestPacket;
 import com.hmc.zenkai.feature.training.StartShadowTrainingPacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -69,7 +69,7 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
     private Integer potential;
 
     /** Formas de la raza del jugador que ya tiene desbloqueadas (BASE primero) — ver
-     *  SuperForms.unlockedChain(). Selector "Opponent form": simula qué PL tendría la sombra si
+     *  FormAccess.unlockedChain(). Selector "Opponent form": simula qué PL tendría la sombra si
      *  el jugador llevara puesta esa forma, SIN transformarlo de verdad (pedido explícito del
      *  usuario, ver el javadoc de ShadowTrainingManager.start()). */
     private List<ResourceLocation> formOptions;
@@ -94,7 +94,7 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
         // mc.player debería estar siempre presente al abrir esta pantalla (viene de un clic en
         // TrainingHubScreen, que ya requiere att != null) — el fallback a solo BASE es defensivo,
         // mismo espíritu que el resto de la clase (ver el guard de att == null en render()).
-        formOptions = mc.player != null ? SuperForms.unlockedChain(mc.player) : List.of(FormIds.BASE);
+        formOptions = mc.player != null ? FormAccess.unlockedChain(mc.player) : List.of(FormIds.BASE);
         formIndex = 0;
         if (mc.player != null) {
             PlayerFormAttachment formAtt = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());

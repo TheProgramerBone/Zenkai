@@ -11,7 +11,7 @@ import net.minecraft.world.entity.player.Player;
  * Fachada del skill tree de transformaciones (diseño:
  * {@code .claude/pendiente/skill-tree-transformaciones.md}). Quien quiera saber si el jugador
  * POSEE un nodo (comprado) pregunta aquí; si puede USAR una forma sigue siendo
- * SuperForms.unlocked(), que además mira las condiciones (alineamiento, maestría, ritual…).
+ * FormAccess.unlocked(), que además mira las condiciones (alineamiento, maestría, ritual…).
  * Es seguro leer desde el cliente: el attachment viaja en el sync de stats.
  *
  * Escritura (solo servidor): {@link #grant} es el punto ÚNICO por el que un nodo propio se
@@ -51,6 +51,16 @@ public final class SkillTree {
         }
         if (att.skillTree().ownedLevel(node) >= level) return;
         att.skillTree().setOwned(node, level);
+    }
+
+    /**
+     * Concede un nodo PROPIO de forma (cadena mortal, rama...) sin cobrar TP. {@code waived}: tampoco ocupa MIND (despertares,
+     * maestría, deseo): el equivalente por nodo de {@code PlayerSkills.grantWaived}. Opera sobre el attachment para que lo
+     * usen también los gametests y los sitios sin ServerPlayer; no sincroniza.
+     */
+    public static void grantNode(PlayerStatsAttachment att, ResourceLocation node, boolean waived) {
+        if (att.skillTree().ownedLevel(node) < 1) att.skillTree().setOwned(node, 1);
+        if (waived) att.skillTree().setMindWaived(node, true);
     }
 
     /**

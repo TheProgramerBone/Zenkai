@@ -5,15 +5,29 @@
     {
       "type": "any_of",
       "of": [
-        { "type": "mastery", "form": "zenkai:namek_super", "min": 50 },
-        { "type": "flag", "flag": "namek_orange_hinted" }
+        {
+          "type": "mastery",
+          "form": "zenkai:namek_super",
+          "min": 50
+        },
+        {
+          "type": "flag",
+          "flag": "namek_orange_hinted"
+        }
       ]
     }
   ],
   "requirements": [
-    { "type": "mastery", "form": "zenkai:namek_super", "min": 50 }
+    {
+      "type": "mastery",
+      "form": "zenkai:namek_super",
+      "min": 50
+    }
   ],
   "acquisition": [
     "mastery"
+  ],
+  "mind_req": [
+    10
   ]
 }

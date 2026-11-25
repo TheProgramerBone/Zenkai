@@ -58,7 +58,7 @@ public final class FormIds {
     /** Oozaru / Super Oozaru: OozaruSystem las compara contra estos ids para forzar la
      *  transformación (luna llena) y para revertirla; TransformHoldPacket compara contra
      *  SUPER_OOZARU para el "ritual" que otorga SSJ4. Kind divine + parent null en su JSON:
-     *  viven FUERA de la cadena normal de super_forms (ver FormDef.wheelSelectable). */
+     *  viven FUERA de la cadena mortal normal (ver FormDef.wheelSelectable). */
     public static final ResourceLocation OOZARU       = id("oozaru");
     public static final ResourceLocation SUPER_OOZARU = id("super_oozaru");
 
@@ -87,7 +87,7 @@ public final class FormIds {
 
     /** Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
      *  {@code .claude/docs/jugador-razas-formas.md}). Igual que OOZARU/
-     *  SUPER_OOZARU: kind divine + parent null, fuera de la cadena normal de super_forms, así
+     *  SUPER_OOZARU: kind divine + parent null, fuera de la cadena mortal normal, así
      *  que {@code EndgamePaths} necesita conocer las 3 raíces a pelo para poder ofrecerlas en
      *  la rueda (no son alcanzables por FormRegistry.childrenOf desde ninguna raza). */
     public static final ResourceLocation ULTRA_EGO = id("ultra_ego");

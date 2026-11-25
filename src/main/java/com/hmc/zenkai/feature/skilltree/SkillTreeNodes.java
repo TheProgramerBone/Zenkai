@@ -12,7 +12,6 @@ import com.hmc.zenkai.feature.skills.EndgamePaths;
 import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -36,11 +35,12 @@ import java.util.Set;
  * exactamente lo que el servidor acepta, sin una segunda copia de las reglas en el cliente.
  *
  * AUTORIDAD. Dos clases de nodo comprable:
- *  - «Siguiente nivel de una skill» ({@link #isTreeSkill}: super_forms, arcosian_power,
+ *  - «Siguiente nivel de una skill» ({@link #isTreeSkill}: arcosian_power,
  *    ultra_instinct, ultra_ego y potential_unlock): el nivel sigue guardado en la skill y el
  *    nodo se DERIVA de ella (SkillTreeMigration), así que la rueda, FormSystem, comandos y
  *    logros siguen leyendo lo de siempre.
- *  - Nodos PROPIOS (desde F4/F5), sin skill detrás: la pasiva de raza y las formas divinas.
+ *  - Nodos PROPIOS (desde F4/F5), sin skill detrás: la pasiva de raza, las formas divinas y —desde la 0.7.0— cada peldaño de
+ *    la cadena mortal (id del nodo = id de la forma; la skill super_forms desapareció).
  *    Se guardan como nodos propios en PlayerSkillTree y los escribe SkillTree.grant.
  * God Ki es una skill de nivel 1 que NO se compra con TP (F5): la dan el maestro tras su prueba,
  * el ritual o ser una divinidad con cargo (isDivine).
@@ -110,7 +110,7 @@ public final class SkillTreeNodes {
     // ── Skills que pertenecen al árbol ───────────────────────────────────────
 
     private static final Set<String> TREE_SKILLS = Set.of(
-            SuperForms.SKILL, DivineForms.SKILL, ArcosianPowerSystem.SKILL,
+            DivineForms.SKILL, ArcosianPowerSystem.SKILL,
             SkillEffects.ULTRA_INSTINCT, SkillEffects.ULTRA_EGO, SkillEffects.POTENTIAL_UNLOCK,
             SkillEffects.NAMEK_GIANT);
 
@@ -200,7 +200,7 @@ public final class SkillTreeNodes {
         // Raza sin formas divinas (un datapack que se las quite): God Ki sigue existiendo, porque
         // abre las doctrinas, y cuelga del último peldaño de su cadena mortal.
         if (!godKiPlaced && SkillDef.get(DivineForms.SKILL) != null) {
-            List<ResourceLocation> chain = SuperForms.chain(race);
+            List<ResourceLocation> chain = FormAccess.chain(race);
             ResourceLocation last = chain.isEmpty() ? ROOT : chain.get(chain.size() - 1);
             put(out, new Node(SkillTreeMigration.NODE_GOD_KI, Kind.LEVELED, last, null, DivineForms.SKILL));
         }
@@ -305,20 +305,22 @@ public final class SkillTreeNodes {
         if (n.kind() == Kind.ROOT || n.kind() == Kind.PASSIVE) return true; // la pasiva viene con la raza
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         if (att.skillTree().owns(n.id())) return true;
-        // Oozaru y Súper Oozaru están fuera de la cadena: SuperForms.unlocked() les da true de
+        // Oozaru y Súper Oozaru están fuera de la cadena: FormAccess.unlocked() les da true de
         // oficio (depthOf <= 0). Oozaru viene con la raza (le pasa a cualquier saiyan con cola
         // bajo la luna llena): siempre poseído. Súper Oozaru se domina con SSJ1
-        // (SuperForms.readyForSuperOozaru), que es también cuando se revela su nodo.
+        // (FormAccess.readyForSuperOozaru), que es también cuando se revela su nodo.
         if (FormIds.OOZARU.equals(n.form())) return true;
-        if (FormIds.SUPER_OOZARU.equals(n.form())) return SuperForms.readyForSuperOozaru(p);
+        if (FormIds.SUPER_OOZARU.equals(n.form())) return FormAccess.readyForSuperOozaru(p);
         if (n.kind() == Kind.FORM) {
             FormDef d = FormDef.get(n.form());
             if (d == null) return false;
             // Forma divina: nodo propio; la hermana empatada (Blue/Rosé) comparte peldaño.
             if (d.divineTier() && !d.endgamePath()) return DivineForms.ownsDepth(p, att.getRace(), d.id());
             if (FormRegistry.isAddonBranch(d)) return false;   // rama de addon: solo la posee quien la compró (arriba, skillTree().owns)
+            // Peldaño mortal: nodo propio (o el de su hermana de alineamiento, que comparte peldaño).
+            if (FormAccess.depthOf(att.getRace(), d.id()) > 0) return FormAccess.ownsStep(p, d.id());
             if (SkillTreeMigration.ownedByPurchase(att.skills(), att.getRace(), d) == null) {
-                return SuperForms.unlocked(p, n.form());
+                return FormAccess.unlocked(p, n.form());
             }
         }
         return false;
@@ -371,7 +373,7 @@ public final class SkillTreeNodes {
             if (att.skills().level(DivineForms.SKILL) <= 0) return info(State.LOCKED, 0, 1);
             if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
             if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
-            return purchaseForm(att, d.tpCost());
+            return purchaseForm(att, d.tpCost(), data);
         }
 
         // Rama de addon: nodo propio e independiente (tp_cost, padre poseído, requisitos del JSON). Ver FormRegistry.isAddonBranch.
@@ -379,28 +381,21 @@ public final class SkillTreeNodes {
             if (d.parent() != null && !ownedParent(p, race, d.parent())) return info(State.LOCKED, 0, 1);
             if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
             if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
-            return purchaseForm(att, d.tpCost());
+            return purchaseForm(att, d.tpCost(), data);
         }
 
-        Boolean byPurchase = SkillTreeMigration.ownedByPurchase(att.skills(), race, d);
-        if (byPurchase == null || d.endgamePath()) {
-            // Por condición, o una forma de doctrina que llega con el nivel de su skill.
-            return info(State.CONDITION, 0, 1);
+        // Peldaño de la cadena mortal: nodo PROPIO que se compra con el tp_cost de su forma y el MIND de su JSON. La cadena
+        // es lineal porque cada nodo exige el anterior (el padre poseído).
+        if (FormAccess.depthOf(race, d.id()) > 0) {
+            if (d.parent() != null && !ownedParent(p, race, d.parent())) return info(State.LOCKED, 0, 1);
+            // Solo por una vía especial (SSJ4: el ritual se la regala; Naranja: la maestría).
+            if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
+            if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
+            return purchaseForm(att, d.tpCost(), data);
         }
-        if (d.parent() != null && !ownedParent(p, race, d.parent())) return info(State.LOCKED, 0, 1);
-        // Solo por una vía especial (SSJ4: el ritual se la regala).
-        if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
 
-        int target = SuperForms.depthOf(race, d.id()) + 1;
-        SkillDef def = SkillDef.get(SuperForms.SKILL);
-        if (def == null || target <= 1) return info(State.LOCKED, 0, 1);
-        int level = att.skills().level(SuperForms.SKILL);
-        // La cadena es lineal: solo se compra el SIGUIENTE peldaño (una hermana de alineamiento
-        // comparte peldaño, así que poseer una ya da la otra y aquí no llega).
-        if (level != target - 1) return info(State.LOCKED, 0, 1);
-        if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
-        Eval e = purchase(p, att, def, level, target, FormDrivenSkills.maxLevel(def, race));
-        return new Eval(e.state(), e.skill(), e.targetLevel(), e.cost(), e.mindDelta(), 0, 1);
+        // Por condición, o una forma de doctrina que llega con el nivel de su skill.
+        return info(State.CONDITION, 0, 1);
     }
 
     /** Comprobaciones comunes de compra del nivel {@code target} de una skill. */
@@ -428,9 +423,11 @@ public final class SkillTreeNodes {
         return new Eval(s, null, target, cost, mindDelta, level, max);
     }
 
-    private static Eval purchaseForm(PlayerStatsAttachment att, int cost) {
-        State s = att.getTP() < cost ? State.NEED_TP : State.AVAILABLE;
-        return new Eval(s, null, 1, cost, 0, 0, 1);
+    /** Compra de una forma como nodo propio: su tp_cost y el MIND del {@code mind_req} de su nodo (0 si no lo declara). */
+    private static Eval purchaseForm(PlayerStatsAttachment att, int cost, @Nullable SkillTreeData data) {
+        int mind = data == null ? 0 : data.mindReqFor(1);
+        State s = att.mindFree() < mind ? State.NEED_MIND : att.getTP() < cost ? State.NEED_TP : State.AVAILABLE;
+        return new Eval(s, null, 1, cost, mind, 0, 1);
     }
 
     private static Eval info(State s, int level, int max) {
@@ -452,7 +449,7 @@ public final class SkillTreeNodes {
         if (ROOT.equals(parent) || FormIds.BASE.equals(parent)) return true;
         Node pn = find(race, parent);
         if (pn != null) return owned(p, pn);
-        return SuperForms.unlocked(p, parent);
+        return FormAccess.unlocked(p, parent);
     }
 
     /**
@@ -478,7 +475,7 @@ public final class SkillTreeNodes {
                         SkillTreeData.displayName(parent)), ownedParent(p, race, parent)));
             }
         }
-        if (d != null && SuperForms.legendaryBlocked(p, d.id())) {
+        if (d != null && FormAccess.legendaryBlocked(p, d.id())) {
             out.add(new ReqLine(Component.translatable("skill_tree.zenkai.req.legendary_blocked"), false));
         }
         if (d != null && d.divineTier() && !d.endgamePath()) {

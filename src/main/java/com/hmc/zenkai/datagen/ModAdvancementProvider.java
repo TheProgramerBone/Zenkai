@@ -2,7 +2,6 @@ package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.registry.ModBiomes;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModDimensions;
@@ -191,13 +190,11 @@ public class ModAdvancementProvider extends AdvancementProvider {
 
             // No oculto por el mismo motivo que combat_stance: la tecla H no se adivina, y su
             // descripción tiene que poder leerse ANTES de desbloquear la primera forma.
-            // Nivel 2, NO 1: el nivel 1 de super_forms es el suelo REGALADO a cualquier raza
-            // con transformaciones (ver SuperForms javadoc) — con el criterio en 1 el logro se
-            // completaba solo con elegir raza, sin haber comprado ni transformado nunca. El
-            // nivel 2 es la primera forma de verdad comprada.
+            // Un nodo de forma poseído en el árbol (la Base no cuenta: es gratis y no es un nodo propio), así que el logro no se
+            // completa solo con elegir raza. Antes: nivel 2 de la skill super_forms (eliminada en la 0.7.0).
             AdvancementHolder transformation = child(saver, efh, chooseRace, "transformation",
                     net.minecraft.world.item.Items.GOLDEN_APPLE, AdvancementType.TASK, false,
-                    "skill", skill(SuperForms.SKILL, 2));
+                    "form", formNodes(1));
 
             // God Ki (skill tree F5): las dos vías con logro. Ocultos: son el final de la cadena
             // mortal y su gracia es descubrirlos. Frases del usuario para el del ritual.
@@ -451,8 +448,20 @@ public class ModAdvancementProvider extends AdvancementProvider {
         private static Criterion<?> stat(Optional<Long> pl, Optional<Integer> tp, Optional<Double> load,
                                          Optional<String> skill, Optional<Integer> skillLvl,
                                          Optional<Boolean> all, Optional<Boolean> allMax) {
+            return stat(pl, tp, load, skill, skillLvl, all, allMax, Optional.empty());
+        }
+
+        private static Criterion<?> stat(Optional<Long> pl, Optional<Integer> tp, Optional<Double> load,
+                                         Optional<String> skill, Optional<Integer> skillLvl,
+                                         Optional<Boolean> all, Optional<Boolean> allMax, Optional<Integer> formNodes) {
             return ZenkaiTriggers.STAT_THRESHOLD.get().createCriterion(
-                    new ZenkaiTriggers.StatThreshold.Instance(Optional.empty(), pl, tp, load, skill, skillLvl, all, allMax));
+                    new ZenkaiTriggers.StatThreshold.Instance(Optional.empty(), pl, tp, load, skill, skillLvl, all, allMax, formNodes));
+        }
+
+        /** Posee al menos {@code n} nodos de forma en el skill tree (la primera transformación comprada, desbloqueada o despertada). */
+        private static Criterion<?> formNodes(int n) {
+            return stat(Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(n));
         }
 
         private static Criterion<?> powerLevel(long v) {

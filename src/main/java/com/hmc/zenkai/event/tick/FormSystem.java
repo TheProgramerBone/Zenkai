@@ -11,9 +11,8 @@ import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.DivineForms;
-import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.skills.SkillDef;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -42,19 +41,8 @@ public final class FormSystem {
             PlayerLifeCycle.syncFormIfServer(p);
         }
 
-        // Nivel 1 de super_forms: REGALADO. Es el estado base, así que el jugador SIEMPRE tiene
-        // la habilidad y solo compra del 2 en adelante. grant() sube el suelo otorgado -> el
-        // respec no se lo quita. Aquí ya se filtró "sin raza" (RaceGateSystem) y solo corre en
-        // servidor, así que este único sitio cubre elegir raza, partidas viejas y reset completo.
-        // maxLevel > 1 -> a las razas sin transformaciones ni les aparece la habilidad.
-        if (SuperForms.maxLevel(p) > 1 && att.skills().level(SuperForms.SKILL) <= 0) {
-            att.skills().grant(SuperForms.SKILL, 1);
-            PlayerLifeCycle.syncIfServer(p);
-        }
-
-        // arcosian_power (race_innate: arcosian): igual que super_forms, el nivel 1 (tanque base de
-        // PP) es REGALADO al Arcosiano y sobrevive al respec; los niveles 2-4 solo agrandan el
-        // tanque (las formas van todas por super_forms).
+        // arcosian_power (race_innate: arcosian): el nivel 1 (tanque base de PP) es REGALADO al Arcosiano y
+        // sobrevive al respec; los niveles 2-4 solo agrandan el tanque (las formas van todas por el árbol).
         if (att.getRace() == com.hmc.zenkai.feature.Race.ARCOSIAN
                 && att.skills().level(ArcosianPowerSystem.SKILL) <= 0) {
             att.skills().grant(ArcosianPowerSystem.SKILL, 1);
@@ -68,22 +56,6 @@ public final class FormSystem {
             PlayerLifeCycle.syncIfServer(p);
         }
 
-        // Autocorrección: ninguna skill levels_from_forms debería tener MÁS nivel que su techo
-        // real (FormDrivenSkills.maxLevel).
-        // Repara solo las partidas que ya quedaran con un nivel de sobra por el bug real de
-        // ModCommands.skillGive/giveAll/skillList (comparaban SIEMPRE contra
-        // SuperForms.maxLevel, sin importar qué skill fuera — así "God Ki" podía acabar en 5/2)
-        // — ya arreglado ahí, esto solo normaliza lo que ya quedó mal guardado. setLevel() no
-        // toca el suelo otorgado, así que no desprotege nada que ya estuviera bloqueado.
-        for (SkillDef def : SkillDef.all()) {
-            if (!def.levelsFromForms()) continue;
-            int max = FormDrivenSkills.maxLevel(def, p);
-            int lvl = att.skills().level(def.id());
-            if (lvl > max) {
-                att.skills().setLevel(def.id(), max);
-                PlayerLifeCycle.syncIfServer(p);
-            }
-        }
         // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin +
         // zenkai). Va cada tick porque la maestría sube de forma continua, el kaioken puede
         // apagarse solo y el zenkai caduca por tiempo. Con esto el PL y la pantalla de stats
@@ -108,7 +80,7 @@ public final class FormSystem {
             // Forma inválida para esta raza, o desaparecida del datapack tras un /reload:
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
-            if (def == null || !def.allows(att.getRace()) || !SuperForms.usable(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
+            if (def == null || !def.allows(att.getRace()) || !FormAccess.usable(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
                 // Antes de forzar Base por completo: si lo único que cambió es que dejó de ser la
                 // hermana divina que le corresponde (isDivine se volteó mientras la llevaba
                 // puesta — ver DivineForms), pasar a la hermana correcta en vez de desvestirlo.

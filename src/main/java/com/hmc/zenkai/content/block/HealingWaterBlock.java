@@ -13,7 +13,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
@@ -72,13 +76,30 @@ public class HealingWaterBlock extends LiquidBlock {
         super(fluid, properties);
     }
 
+    /** Segundos de edad extra que gana una cría por cada intervalo bañada. */
+    private static final int BABY_GROWTH_SECONDS = 1;
+
+    /** Daño por segundo (cada 20 ticks) a los no muertos que se bañan: la curación les hace daño, como la poción de vanilla. */
+    private static final float UNDEAD_DAMAGE = 1.0F;
+
+    /** Efectos negativos que el agua curativa quita. Sin wither (es una maldición) y sin lentitud: el sistema de cargar un
+     *  cuerpo en brazos (PlayerBodyCarry) usa Slowness como mecánica y el agua la anularía. */
+    private static final java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> PURIFIED = java.util.List.of(
+            net.minecraft.world.effect.MobEffects.POISON,
+            net.minecraft.world.effect.MobEffects.CONFUSION,
+            net.minecraft.world.effect.MobEffects.BLINDNESS);
+
     /** Ticks que tarda en curarse un zombi aldeano bañado en agua curativa (1 min; vanilla tarda 2-4). */
     private static final int ZOMBIE_VILLAGER_CURE_TICKS = 1200;
 
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        if (!level.isClientSide() && entity instanceof Player player && entity.tickCount % TICK_INTERVAL == 0) {
-            healPools(player);
+        if (!level.isClientSide() && entity instanceof LivingEntity living && entity.tickCount % TICK_INTERVAL == 0) {
+            if (living instanceof Player player) healPools(player);
+            else bathe(living);
+            purify(living);
+            // Las crías se bañan y crecen más rápido: +1 s de edad cada 0,5 s, el triple de ritmo (como fertiliza los cultivos).
+            if (living instanceof AgeableMob young && young.getAge() < 0) young.ageUp(BABY_GROWTH_SECONDS);
         }
         // Cura al zombi aldeano sin la poción de debilidad ni la manzana dorada: es la misma curación
         // de vanilla, solo que más cómoda, y no cambia nada que dependa de un bioma.
@@ -112,6 +133,28 @@ public class HealingWaterBlock extends LiquidBlock {
     @Override
     protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         FluidReactions.tick(level, pos, this, FluidReactions.Family.HEALING);
+    }
+
+    /**
+     * Curación de las criaturas que NO son jugador (mascotas, animales, aldeanos): vida vanilla, al mismo ritmo que el jugador
+     * sin raza. No toca a las entidades con stats de Zenkai (su vida es un espejo de su pool: sería un segundo escritor), ni
+     * cura a los monstruos hostiles. Los no muertos reciben daño; el zombi aldeano, no, porque lo está curando el agua.
+     */
+    private static void bathe(LivingEntity living) {
+        if (com.hmc.zenkai.feature.combat.ZenkaiStats.of(living) != null) return;
+        if (living.getType().is(EntityTypeTags.UNDEAD)) {
+            if (!(living instanceof ZombieVillager) && living.tickCount % 20 == 0) {
+                living.hurt(living.damageSources().magic(), UNDEAD_DAMAGE);
+            }
+            return;
+        }
+        if (living instanceof Enemy) return;
+        living.heal(VANILLA_HEAL_PER_SECOND * (TICK_INTERVAL / 20.0F));
+    }
+
+    /** Quita veneno, náuseas y ceguera mientras la criatura está dentro. */
+    private static void purify(LivingEntity living) {
+        for (var effect : PURIFIED) living.removeEffect(effect);
     }
 
     private static void healPools(Player player) {

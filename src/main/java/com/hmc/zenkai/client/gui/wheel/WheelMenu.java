@@ -12,7 +12,7 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -142,7 +142,7 @@ public final class WheelMenu {
         List<WheelNode> divineTier = new ArrayList<>();
 
         // Recorre el ÁRBOL de verdad (FormRegistry.childrenOf, TODOS los hijos) en vez del
-        // camino único de SuperForms.chain/FormRegistry.nextFrom (que solo sigue el primer
+        // camino único de FormAccess.chain/FormRegistry.nextFrom (que solo sigue el primer
         // hijo): con hermanas equivalentes en la rama divina (ssj_blue/ssj_rose, mismo parent
         // ssj_god — ver DivineForms) el camino único se comería una de las dos en silencio, y
         // aquí SÍ hace falta ofrecer las dos para que el jugador elija cuál llevar puesta.
@@ -156,10 +156,10 @@ public final class WheelMenu {
             ResourceLocation id = queue.poll();
             if (!seen.add(id)) continue; // corta ciclos de un datapack roto
 
-            // Solo se enseña lo que ya se tiene. Con super_forms a nivel 1, un saiyan ve
+            // Solo se enseña lo que ya se tiene. Sin ningún nodo de forma comprado, un saiyan ve
             // SSJ1 y nada más: SSJ2/3/4 no existen para él hasta comprarlos. Enseñarlos en
             // gris adelantaba la progresión y llenaba la rueda de opciones muertas.
-            if (SuperForms.usable(p, id)) {
+            if (FormAccess.usable(p, id)) {
                 addTieredLeaf(raceTier, superTier, divineTier, id, selected);
             }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {
@@ -259,7 +259,7 @@ public final class WheelMenu {
     private static WheelNode potentialUnlockBranch(Player p) {
         List<WheelNode> kids = new ArrayList<>();
         ResourceLocation mystic = FormIds.POTENTIAL_UNLOCK;
-        if (FormDef.get(mystic) != null && SuperForms.unlocked(p, mystic)) {
+        if (FormDef.get(mystic) != null && FormAccess.unlocked(p, mystic)) {
             FormDef def = FormDef.get(mystic);
             ResourceLocation selected = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getSelectedForm();
             kids.add(WheelNode.leaf(WheelNode.Kind.FORM, mystic.toString(),

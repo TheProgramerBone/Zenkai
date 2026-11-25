@@ -62,11 +62,20 @@ public final class RacePassives {
     /** Descuento sobre el coste de ki. Se multiplica con el kiCostMult del datapack. */
     public static final double ARCOSIAN_KI_DISCOUNT = 0.90;
 
+    // ── Segunda línea de cada pasiva (Fase 7 de la 0.7.0): respaldo del nivel 1 de sus curvas ──
+    /** Saiyan: TP extra con cualquier gravedad ambiental (curva {@code gravity_tp}). */
+    public static final double SAIYAN_GRAVITY_TP = 0.25;
+    /** Namekiano: descuento en los cristales de los namekianos NPC (curva {@code trade_discount}). */
+    public static final double NAMEKIAN_TRADE_DISCOUNT = 0.20;
+
     // ── HUMAN: Potencial ─────────────────────────────────────────────────────
     /** Multiplicador del TP ganado entrenando. */
     public static final double HUMAN_TP_GAIN = 1.15;
     /** Multiplicador de la regeneración de estamina. */
     public static final double HUMAN_STAMINA_REGEN = 1.5;
+    /** Segunda línea de Potencial (Fase 7 de la 0.7.0): TP extra en Meditación y Target Practice, SUMADO a
+     *  {@code tp_gain} (el Humano entrena la técnica). Respaldo de la curva {@code minigame_tp}. */
+    public static final double HUMAN_MINIGAME_TP = 0.15;
 
     // ── Nivel de la pasiva (skill tree, F4) ──────────────────────────────────
     //
@@ -178,9 +187,27 @@ public final class RacePassives {
         return is(p, Race.HUMAN) ? value(p, "stamina_regen", HUMAN_STAMINA_REGEN) : 1.0;
     }
 
-    /** Multiplicador del TP ganado. Lo consulta el reparto de TP (PlayerStatsAttachment#addTrainingTP). */
-    public static double tpGainMult(Player p) {
-        return is(p, Race.HUMAN) ? 1.0 + value(p, "tp_gain", HUMAN_TP_GAIN - 1.0) : 1.0;
+    /**
+     * Multiplicador del TP ganado (lo consulta {@code TrainingHooks}). Potencial del Humano: {@code tp_gain} en todo y, en
+     * Meditación y Target Practice, la segunda línea {@code minigame_tp} SUMADA a la misma pasiva (no multiplicada): ×1,30
+     * en vez de ×1,32 a nivel 1.
+     */
+    public static double tpGainMult(Player p, com.hmc.zenkai.feature.training.TrainingCategory cat) {
+        if (!is(p, Race.HUMAN)) return 1.0;
+        boolean minigame = cat == com.hmc.zenkai.feature.training.TrainingCategory.MEDITATION
+                || cat == com.hmc.zenkai.feature.training.TrainingCategory.TARGET_PRACTICE;
+        return 1.0 + value(p, "tp_gain", HUMAN_TP_GAIN - 1.0)
+                + (minigame ? value(p, "minigame_tp", HUMAN_MINIGAME_TP) : 0.0);
+    }
+
+    /** Saiyan: multiplicador del término de gravedad del TP (1,0 para otras razas). Lo usa {@code WeightSystem}. */
+    public static double saiyanGravityTpMult(Player p) {
+        return is(p, Race.SAIYAN) ? 1.0 + value(p, "gravity_tp", SAIYAN_GRAVITY_TP) : 1.0;
+    }
+
+    /** Namekiano: fracción de descuento en los cristales de los namekianos NPC (0 para otras razas). */
+    public static double namekianTradeDiscount(Player p) {
+        return is(p, Race.NAMEKIAN) ? value(p, "trade_discount", NAMEKIAN_TRADE_DISCOUNT) : 0.0;
     }
 
     /**
@@ -224,7 +251,7 @@ public final class RacePassives {
      */
     public static float mitigateEnvironment(Player p, DamageSource source, float amount) {
         if (!is(p, Race.ARCOSIAN) || !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) return amount;
-        return amount * (1.0f - (float) ServerConfig.arcosianFireDamageReduction());
+        return amount * (1.0f - (float) value(p, "fire_reduction", ServerConfig.arcosianFireDamageReduction()));
     }
 
     /** ¿Esta raza ignora el daño y la ralentización por frío? */
@@ -232,13 +259,8 @@ public final class RacePassives {
         return is(p, Race.ARCOSIAN);
     }
 
-    /** Clave de traducción del nombre de la pasiva, para la pantalla de stats y la de razas. */
+    /** Clave de traducción del nombre de la pasiva. Sus efectos, uno por línea, salen de {@code RacePassiveText}. */
     public static String nameKey(Race race) {
         return race == null ? "" : "race.zenkai.passive." + race.name().toLowerCase();
-    }
-
-    /** Clave de traducción de la descripción. */
-    public static String descKey(Race race) {
-        return race == null ? "" : "race.zenkai.passive." + race.name().toLowerCase() + ".desc";
     }
 }

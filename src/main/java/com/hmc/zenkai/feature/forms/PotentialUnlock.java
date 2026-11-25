@@ -4,7 +4,7 @@ import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
@@ -40,27 +40,24 @@ public final class PotentialUnlock {
      * Techo de referencia de este jugador: la mejor forma COMPRADA de su raza, a maestría
      * 100, o el suelo del JSON si no tiene ninguna.
      *
-     * Se mira el nivel de super_forms y no la cadena entera a propósito: el nivel 1 es la
-     * base, así que el nivel N tiene compradas las formas 0..N-2 de la cadena.
+     * Se miran los nodos que el jugador POSEE de la cadena mortal, no la cadena entera.
      */
     public static double referenceCeiling(Player p) {
         FormDef pu = FormDef.get(FormIds.POTENTIAL_UNLOCK);
         double floor = (pu == null) ? 0.0 : pu.statPercentMastered();
         if (p == null) return floor;
 
-        Race race = SuperForms.raceOf(p);
+        Race race = FormAccess.raceOf(p);
         if (race == null) return floor;
         // Escala universal de la raza (skill tree F8, §3.2): el suelo y el tope son cifras de la
         // escala Saiyan; el techo acoplado ya sale de las formas de la propia raza.
         double scale = com.hmc.zenkai.feature.RaceStatTable.universalFormScale(race);
         floor *= scale;
 
-        List<ResourceLocation> chain = SuperForms.chain(race);
-        int owned = SuperForms.level(p) - 1;   // formas compradas por encima de la base
-
         double best = 0.0;
-        for (int i = 0; i < chain.size() && i < owned; i++) {
-            FormDef d = FormDef.get(chain.get(i));
+        for (ResourceLocation id : FormAccess.purchasableChain(race)) {
+            if (!FormAccess.ownsStep(p, id)) continue;
+            FormDef d = FormDef.get(id);
             if (d != null) best = Math.max(best, d.statPercentMastered());
         }
         // TOPE ABSOLUTO (skills.potential_unlock_max_stat_percent): sin él, un saiyan con SSB/Rosé
@@ -96,7 +93,7 @@ public final class PotentialUnlock {
 
     /**
     * ¿Sigue siendo legítimo estar en esta forma? Solo opina sobre Potential Unlock; para
-    * cualquier otra devuelve true y manda quien corresponda. Existe porque super_forms ya no
+    * cualquier otra devuelve true y manda quien corresponda. Existe porque la cadena mortal ya no
     * guarda las formas de fuera de la cadena: alguien tiene que hacerlo, y es esta clase.
     * Mira solo la HABILIDAD, no el interruptor. Apagar el interruptor estando transformado
     * cambia a qué apunta la tecla, no te expulsa de la forma; para salir está el toque corto.

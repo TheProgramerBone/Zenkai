@@ -10,7 +10,6 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.DivineForms;
 import com.hmc.zenkai.feature.skills.EndgamePaths;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.LinkedHashMap;
@@ -23,12 +22,15 @@ import java.util.Map;
  * Solo se derivan HECHOS DE COMPRA (nivel de skill alcanzado). Lo que depende de una condición
  * que puede cambiar —alineamiento (qué hermana de Majin), maestría (golden_fifth_form), el
  * ritual de SSJ4, la furia de Beast, isDivine (Blue/Rosé)— NO es un nodo poseído: sigue siendo
- * cosa de SuperForms.unlocked(), que es la fachada que ya llama el resto del código. Oozaru y Súper
+ * cosa de FormAccess.unlocked(), que es la fachada que ya llama el resto del código. Oozaru y Súper
  * Oozaru son automáticos y tampoco se compran. Por eso ownedByPurchase() devuelve null para
  * esas formas ("no se decide por compra") y el comando de verificación las salta.
  */
 public final class SkillTreeMigration {
     private SkillTreeMigration() {}
+
+    /** La skill que desapareció en la v5 (un nivel por peldaño de la cadena mortal). Solo existe aquí, para migrar partidas. */
+    private static final String LEGACY_SUPER_FORMS = "super_forms";
 
     /** Nodos con niveles que reflejan una skill heredada (ids de nodo, no de forma). */
     public static final ResourceLocation NODE_GOD_KI = node("god_ki");
@@ -59,13 +61,12 @@ public final class SkillTreeMigration {
             return null; // Beast: Místico + furia, es una condición
         }
         // Formas divinas: desde F5 son nodos PROPIOS (los compra el árbol con su tp_cost), no
-        // se derivan de ninguna skill.
+        // se derivan de ninguna skill. Igual la cadena mortal desde la 0.7.0.
         if (d.divineTier()) return null;
         // Rama que cuelga por maestría: se desbloquea por condición, no se compra.
         if (!d.masteryReqs().isEmpty()) return null;
-        int depth = SuperForms.depthOf(race, id);
-        // Nivel 1 de super_forms es la base (regalada): la forma de profundidad N pide nivel N+1.
-        return depth > 0 ? sk.level(SuperForms.SKILL) >= depth + 1 : null;
+        // Peldaños de la cadena mortal: nodos PROPIOS desde la 0.7.0 (migración v5), ya no se derivan de ninguna skill.
+        return null;
     }
 
     /** Conjunto de nodos que corresponde a este jugador según sus skills heredadas. */
@@ -131,22 +132,41 @@ public final class SkillTreeMigration {
         // formas y pasa a ser un interruptor (skill namek_giant). Quien tenía super_forms >= 3 (Base,
         // Gigante, ...) conserva el Gigante como skill y baja un nivel: Naranja pasa a ser el nivel 2.
         if (version < 3 && att.isRaceChosen() && att.getRace() == Race.NAMEKIAN) {
-            int lvl = sk.level(SuperForms.SKILL);
+            int lvl = sk.level(LEGACY_SUPER_FORMS);
             if (lvl >= 2) {
                 sk.setLevel(SkillEffects.NAMEK_GIANT, 1);
-                sk.setLevel(SuperForms.SKILL, lvl - 1);
+                sk.setLevel(LEGACY_SUPER_FORMS, lvl - 1);
             }
         }
         // v3 → v4 (0.7.0): el Súper Namekiano pasa a ser el primer peldaño de la cadena y Naranja el segundo. Quien ya tenía
         // Naranja (super_forms >= 2) la CONSERVA y recibe el Súper Namekiano: sube un nivel. Si un nivel estaba exento de MIND
         // (deseo de potencial), la exención se corre con él para no dejar la MIND libre en negativo.
         if (version < 4 && att.isRaceChosen() && att.getRace() == Race.NAMEKIAN) {
-            int lvl = sk.level(SuperForms.SKILL);
+            int lvl = sk.level(LEGACY_SUPER_FORMS);
             if (lvl >= 2) {
-                int waived = sk.mindWaivedUpTo(SuperForms.SKILL);
-                if (waived >= 2) sk.grantWaived(SuperForms.SKILL, waived + 1);
-                sk.setLevel(SuperForms.SKILL, lvl + 1);
+                int waived = sk.mindWaivedUpTo(LEGACY_SUPER_FORMS);
+                if (waived >= 2) sk.grantWaived(LEGACY_SUPER_FORMS, waived + 1);
+                sk.setLevel(LEGACY_SUPER_FORMS, lvl + 1);
             }
+        }
+        // v4 → v5 (0.7.0): la skill super_forms desaparece; cada peldaño de la cadena mortal pasa a ser un nodo PROPIO (id = id de la
+        // forma). SIN reembolso ni pérdida: el nivel N concede los N−1 primeros nodos de la cadena de su raza (el nivel 1 era la
+        // Base). La exención de MIND (despertares, deseos) se traslada nodo a nodo: exento hasta el nivel W = exentos los W−1 primeros.
+        if (version < 5) {
+            int lvl = sk.level(LEGACY_SUPER_FORMS);
+            if (att.isRaceChosen() && att.getRace() != null && lvl >= 2) {
+                var chain = FormAccess.purchasableChain(att.getRace());
+                // Cadena vacía = el datapack de formas aún no estaba cargado: no se sella la versión y se reintenta en la
+                // próxima carga, antes que borrar la skill y perder lo comprado.
+                if (chain.isEmpty()) {
+                    refresh(att);
+                    return;
+                }
+                FormAccess.grantChain(att, lvl - 1, false);
+                int waived = sk.mindWaivedUpTo(LEGACY_SUPER_FORMS);
+                for (int i = 0; i < waived - 1 && i < chain.size(); i++) att.skillTree().setMindWaived(chain.get(i), true);
+            }
+            sk.revoke(LEGACY_SUPER_FORMS);
         }
         refresh(att);
         att.skillTree().setVersion(com.hmc.zenkai.feature.player.PlayerSkillTree.VERSION);

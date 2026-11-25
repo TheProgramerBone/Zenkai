@@ -40,6 +40,7 @@ public final class MindBudget {
     public static int treeUsed(PlayerStatsAttachment att) {
         int total = 0;
         for (var e : att.skillTree().ownedNodes().entrySet()) {
+            if (att.skillTree().isMindWaived(e.getKey())) continue;   // regalado sin cobrar MIND (despertar, deseo...)
             var d = com.hmc.zenkai.feature.skilltree.SkillTreeData.get(e.getKey());
             if (d != null) total += sane(d.mindReqFor(e.getValue()));
         }

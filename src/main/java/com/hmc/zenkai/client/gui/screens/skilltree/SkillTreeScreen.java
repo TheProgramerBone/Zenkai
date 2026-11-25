@@ -17,7 +17,7 @@ import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.config.ClientConfig;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket;
 import com.hmc.zenkai.feature.skilltree.SkillTreeData;
@@ -568,7 +568,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     /** @return true si el nodo era una forma usable y se alternó su visibilidad en la rueda. */
     private boolean toggleWheelHidden(@Nullable ResourceLocation id) {
         Node n = id == null ? null : byId.get(id);
-        if (n == null || n.form() == null || mc.player == null || !SuperForms.usable(mc.player, n.form())) return false;
+        if (n == null || n.form() == null || mc.player == null || !FormAccess.usable(mc.player, n.form())) return false;
         boolean hidden = ClientConfig.toggleWheelFormHidden(n.form().toString());
         mc.player.displayClientMessage(Component.translatable(hidden ? "screen.zenkai.skill_tree.wheel_hidden"
                 : "screen.zenkai.skill_tree.wheel_shown", nameOf(n)), true);
@@ -1387,7 +1387,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         } else if (e.purchasable()) {
             lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.buy"), ZenkaiPalette.OK));
         }
-        if (n.form() != null && mc.player != null && SuperForms.usable(mc.player, n.form())) {
+        if (n.form() != null && mc.player != null && FormAccess.usable(mc.player, n.form())) {
             lines.add(new TipLine(Component.translatable(wheelHidden(n) ? "screen.zenkai.skill_tree.wheel_hint_hidden"
                     : "screen.zenkai.skill_tree.wheel_hint"), TIP_MUTED));
         }
@@ -1423,43 +1423,28 @@ public class SkillTreeScreen extends TreeCanvasScreen {
 
     private void addPassiveLines(List<TipLine> lines, Eval e) {
         Race race = att.getRace();
-        for (var seq : this.font.split(Component.translatable(RacePassives.descKey(race)), TIP_WRAP)) {
-            lines.add(new TipLine(seqToComponent(seq).copy().withStyle(s -> s.withItalic(false)), TIP_BODY));
-        }
-        lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.passive.now",
-                passiveValues(race, e.level())), TIP_BODY));
+        lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.passive.now"), TIP_BODY));
+        addPassiveEffects(lines, race, e.level(), TIP_BODY);
         if (e.level() < e.maxLevel()) {
-            lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.passive.next",
-                    passiveValues(race, e.level() + 1)), ZenkaiPalette.VALUE));
+            lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.passive.next"), ZenkaiPalette.VALUE));
+            addPassiveEffects(lines, race, e.level() + 1, ZenkaiPalette.VALUE);
         }
     }
 
-    /** Los números de la pasiva de esa raza en ese nivel, en una línea. */
-    public static Component passiveValues(Race race, int level) {
-        String key = "screen.zenkai.skill_tree.passive." + race.name().toLowerCase(Locale.ROOT);
-        return switch (race) {
-            case SAIYAN -> Component.translatable(key,
-                    pct(RacePassives.valueAt(race, "zenkai_bonus", level, RacePassives.ZENKAI_BONUS)),
-                    num(RacePassives.valueAt(race, "zenkai_duration_s", level, RacePassives.ZENKAI_DURATION / 20.0)),
-                    num(RacePassives.valueAt(race, "zenkai_cooldown_s", level, RacePassives.ZENKAI_COOLDOWN / 20.0) / 60.0));
-            case NAMEKIAN -> Component.translatable(key,
-                    num(RacePassives.valueAt(race, "regen_mult", level, RacePassives.NAMEKIAN_REGEN_MULT)),
-                    num(RacePassives.valueAt(race, "regen_ki_per_point", level, RacePassives.NAMEKIAN_REGEN_KI_COST)));
-            case MAJIN -> Component.translatable(key,
-                    pct(RacePassives.valueAt(race, "phys_reduction", level, RacePassives.MAJIN_PHYSICAL_REDUCTION)),
-                    num(RacePassives.valueAt(race, "regen_per_second", level, RacePassives.MAJIN_PASSIVE_REGEN) * 100.0));
-            case ARCOSIAN -> Component.translatable(key,
-                    pct(RacePassives.valueAt(race, "ki_discount", level, 1.0 - RacePassives.ARCOSIAN_KI_DISCOUNT)));
-            case HUMAN -> Component.translatable(key,
-                    pct(RacePassives.valueAt(race, "tp_gain", level, RacePassives.HUMAN_TP_GAIN - 1.0)),
-                    num(RacePassives.valueAt(race, "stamina_regen", level, RacePassives.HUMAN_STAMINA_REGEN)));
-        };
+    /** Un efecto por línea (texto de {@code RacePassiveText}), partido al ancho del tooltip. */
+    private void addPassiveEffects(List<TipLine> lines, Race race, int level, int color) {
+        for (Component effect : com.hmc.zenkai.client.gui.RacePassiveText.lines(race, level)) {
+            for (var seq : this.font.split(effect, TIP_WRAP)) {
+                lines.add(new TipLine(seqToComponent(seq), color));
+            }
+        }
     }
 
-    private static String pct(double frac) { return Math.round(frac * 1000.0) / 10.0 + "%"; }
-
-    private static String num(double v) {
-        return v == Math.floor(v) ? String.valueOf((long) v) : String.format(Locale.ROOT, "%.2f", v).replaceAll("0+$", "");
+    /** Pinta el icono de la pasiva de la raza (16 px de GUI, celda de 32 texeles a 1:1) para otras pantallas,
+     *  p. ej. el selector de raza. No pinta nada si la raza aún no tiene celda. */
+    public static void drawRacePassiveIcon(GuiGraphics g, Race race, int x, int y) {
+        int idx = SkillTreeArt.passiveIconIndex(race);
+        if (idx >= 0) SkillTreeArt.skillIcon(g, idx, x, y, 1f);
     }
 
     /** God Ki sin conseguir: las tres vías (§5) y en cuál está el jugador. */

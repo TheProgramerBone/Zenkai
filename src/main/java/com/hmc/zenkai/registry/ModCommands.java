@@ -346,12 +346,14 @@ public class ModCommands {
                 .then(Commands.literal("debug")
                         // /zenkai debug rage fire|down|reset|status|pet: pruebas de Rage Forms en un solo jugador.
                         .then(com.hmc.zenkai.registry.commands.RageDebugCommands.node())
+                        // /zenkai debug fluid [ticks]: lo que el servidor sabe del jugador dentro de un fluido (atasco en fosos de agua curativa).
+                        .then(com.hmc.zenkai.registry.commands.FluidDebugCommands.node())
                         // /zenkai debug imbue <attr> <n> | clear: imbuye la pieza de la mano (Fase 5a, sin máquina aún).
                         .then(com.hmc.zenkai.feature.armor.ImbueDebugCommands.node())
                         .then(Commands.literal("entity")
                                 .executes(DebugCommands::debugEntity))
                         // Skill tree de transformaciones (F1): verify (por defecto) compara el espejo
-                        // de nodos con SuperForms.unlocked(); nodes los lista; refresh lo recalcula.
+                        // de nodos con FormAccess.unlocked(); nodes los lista; refresh lo recalcula.
                         .then(Commands.literal("tree")
                                 .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::verify)
                                 .then(Commands.literal("verify")

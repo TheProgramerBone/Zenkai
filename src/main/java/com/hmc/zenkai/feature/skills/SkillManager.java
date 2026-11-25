@@ -100,7 +100,6 @@ public final class SkillManager {
                             GsonHelper.getAsBoolean(o, "purchasable", true),
                             List.copyOf(masters),
                             Collections.unmodifiableMap(values),
-                            GsonHelper.getAsBoolean(o, "levels_from_forms", false),
                             GsonHelper.getAsBoolean(o, "race_innate", false));
                     if (out.put(id, def) != null) {
                         LOGGER.warn("[Zenkai] Skill duplicada '{}': dos namespaces definen el mismo path (gana {}).", id, file);

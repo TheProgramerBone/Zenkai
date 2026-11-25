@@ -147,7 +147,8 @@ public final class ZenkaiTriggers {
                                Optional<String> skill,
                                Optional<Integer> skillLevel,
                                Optional<Boolean> allSkills,
-                               Optional<Boolean> allSkillsMax) implements SimpleInstance {
+                               Optional<Boolean> allSkillsMax,
+                               Optional<Integer> formNodes) implements SimpleInstance {
 
             public static final Codec<Instance> CODEC = RecordCodecBuilder.create(i -> i.group(
                     EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player),
@@ -157,7 +158,8 @@ public final class ZenkaiTriggers {
                     Codec.STRING.optionalFieldOf("skill").forGetter(Instance::skill),
                     Codec.INT.optionalFieldOf("skill_level").forGetter(Instance::skillLevel),
                     Codec.BOOL.optionalFieldOf("all_skills").forGetter(Instance::allSkills),
-                    Codec.BOOL.optionalFieldOf("all_skills_max").forGetter(Instance::allSkillsMax)
+                    Codec.BOOL.optionalFieldOf("all_skills_max").forGetter(Instance::allSkillsMax),
+                    Codec.INT.optionalFieldOf("form_nodes").forGetter(Instance::formNodes)
             ).apply(i, Instance::new));
 
             boolean matches(ServerPlayer sp) {
@@ -174,6 +176,16 @@ public final class ZenkaiTriggers {
                 if (skill.isPresent()) {
                     int need = skillLevel.orElse(1);
                     if (att.skills().level(skill.get()) < need) return false;
+                }
+
+                // Nodos de FORMA poseídos en el árbol (los peldaños de la cadena mortal, las divinas, las ramas de addon): lo que antes
+                // era el nivel de super_forms. La base es gratis y no es un nodo propio, así que no cuenta.
+                if (formNodes.isPresent()) {
+                    int n = 0;
+                    for (var id : att.skillTree().ownedNodes().keySet()) {
+                        if (com.hmc.zenkai.feature.forms.FormDef.get(id) != null) n++;
+                    }
+                    if (n < formNodes.get()) return false;
                 }
 
                 if (allSkills.orElse(false) && !hasAll(att, false)) return false;

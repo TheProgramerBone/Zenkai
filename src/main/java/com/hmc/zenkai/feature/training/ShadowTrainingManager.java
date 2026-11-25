@@ -10,7 +10,7 @@ import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.resources.ResourceLocation;
@@ -171,7 +171,7 @@ public final class ShadowTrainingManager {
     static long simulatedPowerLevel(ServerPlayer sp, PlayerStatsAttachment att,
                                      ResourceLocation simulatedFormId) {
         ResourceLocation formId = (simulatedFormId != null
-                && (FormIds.BASE.equals(simulatedFormId) || SuperForms.usable(sp, simulatedFormId)))
+                && (FormIds.BASE.equals(simulatedFormId) || FormAccess.usable(sp, simulatedFormId)))
                 ? simulatedFormId : FormIds.BASE;
         PlayerFormAttachment formAtt = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double mastery = formAtt.getFormMastery(formId);

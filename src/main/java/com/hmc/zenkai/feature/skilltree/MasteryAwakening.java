@@ -4,7 +4,6 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +17,7 @@ import java.util.List;
  * {@code "acquisition": ["mastery"]} más su lista {@code "requirements"}; aquí no hay ningún número.
  * <p>
  * Solo actúa sobre el SIGUIENTE peldaño de la cadena comprable (nunca saltos) y lo concede como cualquier forma regalada:
- * nivel de {@code super_forms} con {@code grantWaived} (permanente y sin cobrar MIND). No transforma al jugador.
+ * nodo de la cadena mortal sin cobrar MIND (SkillTree.grantNode con waived). No transforma al jugador.
  */
 public final class MasteryAwakening {
     private MasteryAwakening() {}
@@ -30,17 +29,17 @@ public final class MasteryAwakening {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!att.isRaceChosen()) return null;
         Race race = att.getRace();
-        int level = att.skills().level(SuperForms.SKILL);
-        List<ResourceLocation> chain = SuperForms.chain(race);
-        int idx = level - 1;   // nivel 1 = Base: el siguiente peldaño es el primero de la cadena
-        if (level < 1 || idx >= chain.size()) return null;
-        ResourceLocation next = chain.get(idx);
-        if (SuperForms.requiredLevel(race, next) != level + 1) return null;   // fuera de la cadena comprable (divina)
+        // El siguiente peldaño de la cadena mortal que aún no posee (los peldaños se compran en orden).
+        ResourceLocation next = null;
+        for (ResourceLocation id : FormAccess.purchasableChain(race)) {
+            if (!att.skillTree().owns(id)) { next = id; break; }
+        }
+        if (next == null) return null;   // la cadena mortal entera ya es suya
         FormDef def = FormDef.get(next);
         SkillTreeData data = SkillTreeData.get(next);
         if (def == null || data == null || !data.acquisition().contains(VIA) || data.requirements().isEmpty()) return null;
         for (SkillTreeRequirement r : data.requirements()) if (!r.test(sp)) return null;
-        att.skills().grantWaived(SuperForms.SKILL, level + 1);
+        SkillTree.grantNode(att, next, true);
         return next;
     }
 

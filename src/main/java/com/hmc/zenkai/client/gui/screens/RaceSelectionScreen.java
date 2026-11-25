@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.CommonPanel;
+import com.hmc.zenkai.client.gui.RacePassiveText;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.feature.race.RacePassives;
@@ -77,7 +78,6 @@ public class RaceSelectionScreen extends Screen {
     private static final float PREVIEW_SIZE_RATIO = 0.43f;
     private static final int   PREVIEW_SIZE_MIN = 30, PREVIEW_SIZE_MAX = 40;
     private static final int MAX_RACE_DESC_LINES    = 2;
-    private static final int MAX_PASSIVE_DESC_LINES = 3;
 
     /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
     private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL;
@@ -223,12 +223,9 @@ public class RaceSelectionScreen extends Screen {
         // máximos de siempre) — de ahí sale cuánto alto reserva el bloque de texto, en vez de
         // un TEXT_BLOCK_H fijo pensado para el peor caso (2+3 líneas).
         int nDescLines    = Math.min(wrapText(Component.translatable("screen.zenkai.race." + key + ".desc").getString(), mc.font, descW).length, MAX_RACE_DESC_LINES);
-        int nPassiveLines = Math.min(wrapText(Component.translatable(RacePassives.descKey(r)).getString(), mc.font, descW).length, MAX_PASSIVE_DESC_LINES);
-        // 34 = label raza(12) + separador(4+1+5) + label pasiva(12); +8 de margen arriba/abajo.
-        // Reproduce EXACTO el TEXT_BLOCK_H=92 viejo cuando nDesc=2 y nPassive=3.
-        // +10: la línea con los NÚMEROS de la pasiva a nivel 1 (skill tree F4, los mismos que
-        // enseña el nodo de pasiva del árbol).
-        int textBlockH = 42 + (nDescLines + nPassiveLines) * 10 + 10;
+        // Bloque de texto: etiqueta de la raza (12) + descripción + separador (10) + etiqueta de pasivas (12) + fila
+        // de iconos (16) + márgenes. Las pasivas ya no llevan texto debajo: solo iconos, con el detalle en el tooltip.
+        int textBlockH = 56 + nDescLines * 10;
 
         int boxTop    = pt + div2Y + 6;
         int boxBottom = pt + IN_Y2 - textBlockH;
@@ -257,18 +254,31 @@ public class RaceSelectionScreen extends Screen {
         y += 4;
         g.fill(descX, y, descX + descW, y + 1, ZenkaiPalette.SEPARATOR);
         y += 5;
-        g.drawString(mc.font,
-                Component.translatable("screen.zenkai.race.passive_label",
-                        Component.translatable(RacePassives.nameKey(r))),
+        g.drawString(mc.font, Component.translatable("screen.zenkai.race.passives_label"),
                 descX, y, COLOR_SECTION, false);
         y += 12;
-        y = drawWrapped(g, mc.font, Component.translatable(RacePassives.descKey(r)).getString(),
-                descX, y, descW, MAX_PASSIVE_DESC_LINES);
-        g.drawString(mc.font, PanelText.fit(mc.font,
-                        com.hmc.zenkai.client.gui.screens.skilltree.SkillTreeScreen.passiveValues(r, 1), descW),
-                descX, y, ZenkaiPalette.VALUE_ON_PANEL, false);
+        // Una fila de iconos de pasiva (16 px, celda de skill_icons.png): el texto vive solo en el tooltip, para que
+        // cada efecto salga una vez y se puedan añadir más pasivas sin tocar el diseño.
+        RacePassiveText.Passive hovered = null;
+        int iconX = descX;
+        for (RacePassiveText.Passive p : RacePassiveText.passives(r, 1)) {
+            boolean hov = mouseX >= iconX && mouseX < iconX + 16 && mouseY >= y && mouseY < y + 16;
+            com.hmc.zenkai.client.gui.screens.skilltree.SkillTreeScreen.drawRacePassiveIcon(g, p.iconRace(), iconX, y);
+            if (hov) {
+                g.renderOutline(iconX - 1, y - 1, 18, 18, ZenkaiPalette.BORDER_IN);
+                hovered = p;
+            }
+            iconX += 20;
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
+        // Tooltip al final, por encima de todo, y partido por TooltipText (regla de tooltips del mod).
+        if (hovered != null) {
+            java.util.List<Component> tip = new java.util.ArrayList<>();
+            tip.add(hovered.name().copy().withStyle(net.minecraft.ChatFormatting.GOLD));
+            for (Component line : hovered.lines()) tip.add(line.copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+            com.hmc.zenkai.client.gui.TooltipText.render(g, mc.font, tip, mouseX, mouseY);
+        }
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}

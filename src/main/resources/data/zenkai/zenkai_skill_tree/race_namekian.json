@@ -6,6 +6,7 @@
   "mind_req": [0, 8, 14, 22],
   "values": {
     "regen_mult": [3.0, 3.5, 4.0, 5.0],
-    "regen_ki_per_point": [1.5, 1.4, 1.25, 1.0]
+    "regen_ki_per_point": [1.5, 1.4, 1.25, 1.0],
+    "trade_discount": [0.20, 0.25, 0.30, 0.35]
   }
 }

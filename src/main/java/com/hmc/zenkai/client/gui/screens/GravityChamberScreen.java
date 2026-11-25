@@ -148,7 +148,8 @@ public class GravityChamberScreen extends TechPanelScreen<GravityChamberMenu> {
                 ? "screen.zenkai.gravity_chamber.view_gravity" : "screen.zenkai.gravity_chamber.view_drones"));
         modeButton.visible = droneView;
         roundButton.visible = droneView;
-        modeButton.active = !menu.roundRunning();
+        modeButton.active = !menu.roundRunning() && !(minecraft != null && minecraft.level != null
+                && minecraft.level.getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL);
         difficultyButton.visible = droneView;
         difficultyButton.active = !menu.roundRunning();
         difficultyButton.setMessage(Component.translatable("screen.zenkai.gravity_chamber.difficulty",

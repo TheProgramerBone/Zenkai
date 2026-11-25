@@ -60,7 +60,7 @@ public final class FormRegistry {
     /**
      * ¿Es una RAMA DE ADDON? Forma mortal de un namespace que no es el del mod, sin {@code mastery_reqs}, colgada de otra
      * forma. Se compra como NODO PROPIO e independiente (tp_cost, padre poseído) y NUNCA entra en la cadena lineal de
-     * {@code super_forms}. Motivo (2026-11-02): con dos datapacks de dos autores que cuelgan formas del mismo padre (p. ej.
+     * mortal (FormAccess). Motivo (2026-11-02): con dos datapacks de dos autores que cuelgan formas del mismo padre (p. ej.
      * «SSJ5» y «SSJ4 Full Power» de SSJ4), la cadena elegía una por orden de carga y la otra caía en «depth 0 → desbloqueada
      * para todos». Así cada una es hermana independiente y la poseen o no por separado. Las divinas se independizan en
      * {@code DivineForms} (grupo de empate por namespace); las de maestría (mastery_reqs) siguen desbloqueándose por condición.
@@ -114,7 +114,7 @@ public final class FormRegistry {
     }
 
     /**
-     * Siguiente forma en la cadena "mortal" (la que compra super_forms). Con varias ramas elige de
+     * Siguiente forma en la cadena "mortal" (la que se compra en el árbol). Con varias ramas elige de
      * forma DETERMINISTA (antes ganaba el orden de carga del datapack): primero los hijos que no
      * son divinos, ni de endgame, ni exigen maestría de otras formas (esos cuelgan como ramas);
      * entre ellos, una hermana de alineamiento GOOD antes que una EVIL. Solo si no queda ninguno
@@ -172,7 +172,7 @@ public final class FormRegistry {
 
     /** Cadena completa de formas de una raza, en orden (índice 0 = la primera). Nunca null.
      *  Es la FUENTE DE VERDAD de "cuántas transformaciones tiene esta raza": la habilidad
-     *  super_forms deriva de aquí su nivel máximo y el coste de cada nivel. */
+     *  FormAccess deriva de aquí qué nodos tiene la cadena mortal (el coste sale del tp_cost de cada forma). */
     public static List<ResourceLocation> chainFor(Race race) {
         if (race == null) return List.of();
         List<ResourceLocation> out = new ArrayList<>();

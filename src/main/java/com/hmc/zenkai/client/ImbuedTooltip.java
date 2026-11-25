@@ -33,6 +33,11 @@ public final class ImbuedTooltip {
         if (inf != null) {
             lines.add(at++, Component.translatable("tooltip.zenkai.ki_infusion",
                     Component.translatable(inf.langKey()).withStyle(s -> s.withColor(inf.argb() & 0xFFFFFF))));
+            // La infusión manda sobre el tipo automático (decisión 2026-11-22): infundir en Normal puede BAJAR el Ki que
+            // pide imbuir, y sin esta línea el jugador no sabría por qué la pieza pide otro fluido.
+            lines.add(at++, Component.translatable("tooltip.zenkai.ki_infusion.imbue_needs",
+                    Component.translatable(inf.langKey()).withStyle(s -> s.withColor(inf.argb() & 0xFFFFFF)))
+                    .withStyle(ChatFormatting.GRAY));
         }
         ImbuedAttributes imb = e.getItemStack().get(ModDataComponents.IMBUED.get());
         if (imb == null || imb.isEmpty()) return;

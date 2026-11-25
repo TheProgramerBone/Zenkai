@@ -9,7 +9,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.rage.AwakeningProtection;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -34,7 +34,7 @@ public final class AwakeningProtectionGameTests {
         ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         att.setRace(Race.SAIYAN);
-        att.skills().grantAdmin(SuperForms.SKILL, 2);   // SSJ1 poseída por compra
+        FormAccess.grantChain(att, 1, false);   // SSJ1 poseída por compra
         return sp;
     }
 

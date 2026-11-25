@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -20,12 +20,12 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * Deseo de DESPERTAR EL POTENCIAL (2026-11-15, idea del usuario). Shenlong sube {@code ki_control} unos pocos niveles (el tope de
  * poder liberable, {@link SkillEffects#maxPowerPercent}; {@code ServerConfig.awakenPotentialKiControlLevels}, 3 por defecto: darlo completo de
  * golpe se vio excesivo) y, a los Namekianos, les regala además su primera transformación
- * (Súper Namekiano, nivel 2 de {@code super_forms}; es una SEGUNDA vía: también se compra con TP) junto con el indicio de que
+ * (Súper Namekiano, nodo propio del árbol; es una SEGUNDA vía: también se compra con TP) junto con el indicio de que
  * existe un poder superior. Al Namekiano que YA la tenía (0.7.0), el deseo le da además algo de MAESTRÍA de esa forma
  * ({@code awaken_potential_wish.namek_super_mastery_percent}) y REVELA en el árbol su nodo oculto, Naranja
  * ({@code PlayerStateFlags.namekOrangeHinted}); Naranja nunca se regala: despierta por maestría (ver MasteryAwakening).
  * <p>
- * Los niveles se conceden con {@code grantWaived}: permanentes (suben el suelo, no se pueden olvidar ni reembolsar) y sin cobrar
+ * El nodo y los niveles se conceden sin cobrar TP (el nivel de Ki Control con {@code grantWaived}: permanente, no se puede olvidar ni reembolsar) y sin cobrar
  * MIND, igual que un despertar de Rage Forms. Nunca baja un nivel que el jugador ya tenga. Si no le daría nada, el servidor lo
  * rechaza SIN gastar el deseo (mismo criterio que {@code WishLegendaryPayload}). Toda la validación es del servidor.
  */
@@ -36,9 +36,8 @@ public record WishPotentialPayload() implements CustomPacketPayload {
             StreamCodec.unit(new WishPotentialPayload());
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
-    /** Nivel de {@code super_forms} que equivale a tener la primera forma (Súper Namekiano): profundidad 1 + el nivel base. */
-    public static final int NAMEK_FIRST_FORM_LEVEL = 2;
     public static final ResourceLocation NAMEK_SUPER = ResourceLocation.fromNamespaceAndPath("zenkai", "namek_super");
+    public static final ResourceLocation NAMEK_ORANGE = ResourceLocation.fromNamespaceAndPath("zenkai", "namek_orange");
 
     /** Qué le dio el deseo, para elegir el mensaje. */
     public enum Outcome { NOTHING, GRANTED, NAMEK_FIRST_FORM, NAMEK_REVEAL }
@@ -53,10 +52,10 @@ public record WishPotentialPayload() implements CustomPacketPayload {
     public static boolean isComplete(PlayerStatsAttachment att) {
         if (att.skills().level(SkillEffects.KI_CONTROL) < kiControlMax()) return false;
         if (att.getRace() != Race.NAMEKIAN) return true;
-        int forms = att.skills().level(SuperForms.SKILL);
         // Al Namekiano le queda algo mientras no tenga su primera forma o, teniéndola, no haya visto aún el poder de más allá
-        // (si ya posee Naranja, nivel 3, no hay nada que revelar).
-        return forms > NAMEK_FIRST_FORM_LEVEL || (forms == NAMEK_FIRST_FORM_LEVEL && att.flags().isNamekOrangeHinted());
+        // (si ya posee Naranja, no hay nada que revelar).
+        if (att.skillTree().owns(NAMEK_ORANGE)) return true;
+        return att.skillTree().owns(NAMEK_SUPER) && att.flags().isNamekOrangeHinted();
     }
 
     /** Concede el deseo. Devuelve false (sin tocar nada) si ya estaba completo. Cada deseo suma niveles; el tope es el máximo de la skill. */
@@ -74,12 +73,11 @@ public record WishPotentialPayload() implements CustomPacketPayload {
         int target = Math.min(kiControlMax(), cur + ServerConfig.awakenPotentialKiControlLevels());
         if (target > cur) att.skills().grantWaived(SkillEffects.KI_CONTROL, target);
         if (att.getRace() != Race.NAMEKIAN) return Outcome.GRANTED;
-        int level = att.skills().level(SuperForms.SKILL);
-        if (level < NAMEK_FIRST_FORM_LEVEL) {
-            att.skills().grantWaived(SuperForms.SKILL, NAMEK_FIRST_FORM_LEVEL);
+        if (!att.skillTree().owns(NAMEK_SUPER)) {
+            com.hmc.zenkai.feature.skilltree.SkillTree.grantNode(att, NAMEK_SUPER, true);
             return Outcome.NAMEK_FIRST_FORM;
         }
-        if (level == NAMEK_FIRST_FORM_LEVEL && !att.flags().isNamekOrangeHinted()) {
+        if (!att.skillTree().owns(NAMEK_ORANGE) && !att.flags().isNamekOrangeHinted()) {
             att.flags().setNamekOrangeHinted(true);
             float pct = (float) ServerConfig.awakenPotentialNamekMastery();
             // Puntos de maestría tal cual (sin pasar por mastery_gain): el porcentaje del deseo es el de la config.

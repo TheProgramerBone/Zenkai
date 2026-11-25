@@ -202,8 +202,7 @@ public class CombatZenkaiHooks {
     }
 
     /**
-     * Lava, fuego (la etiqueta vanilla IS_FIRE cubre in_fire/on_fire/lava/hot_floor) y
-     * ahogamiento: la fuente NO tiene entidad atacante. Ni STR (no hay quién pegue) ni DEF (está
+     * Lava, fuego (la etiqueta vanilla IS_FIRE cubre in_fire/on_fire/lava/hot_floor), ahogamiento, veneno, wither y hambre: la fuente NO tiene entidad atacante. Ni STR (no hay quién pegue) ni DEF (está
      * calibrada para un rival cuyo golpe también escala con Power Level) tienen nada que hacer
      * ahí — un chorro FIJO de daño vanilla (4 de lava, 2 de ahogamiento, por medio segundo)
      * quedaba aplastado a nada contra la DEF de cualquier personaje con algo de progresión.
@@ -211,7 +210,10 @@ public class CombatZenkaiHooks {
      */
     private static boolean isEnvironmentalHazard(DamageSource src) {
         return src.getEntity() == null
-                && (src.is(DamageTypeTags.IS_FIRE) || src.is(DamageTypes.DROWN));
+                && (src.is(DamageTypeTags.IS_FIRE) || src.is(DamageTypes.DROWN)
+                // Veneno (magic), Wither y Hambre: daño plano de 1 que contra la DEF y un body grande quedaba en 1 de body fijo
+                // (medido 2026-11-25); como ambiental escala como % de la vida vanilla, igual que el fuego.
+                || src.is(DamageTypes.MAGIC) || src.is(DamageTypes.WITHER) || src.is(DamageTypes.STARVE));
     }
 
     // =====================================================================
@@ -301,8 +303,10 @@ public class CombatZenkaiHooks {
             return (float) (strDamage * falloff);
         }
 
-        // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
-        return (float) strDamage;
+        // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2). Debilidad y Fuerza del mob
+        // (PotionDamageEffects) lo escalan igual que al jugador.
+        return (float) (strDamage * com.hmc.zenkai.feature.combat.PotionDamageEffects.meleeFactor(
+                e.getSource().getEntity() instanceof LivingEntity le ? le : null));
     }
 
     /**
@@ -318,7 +322,10 @@ public class CombatZenkaiHooks {
                                            double originalVanillaDamage) {
         boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
                 && CombatModeServerState.isActive(atkSp.getUUID());
-        if (!zenkaiMelee) return vanillaDmg;
+        // Debilidad y Fuerza (PotionDamageEffects): multiplicador explícito sobre el golpe; el recorte vanilla del atributo se
+        // cancela aparte para que el puño no quede en 0 y el golpe llegue hasta aquí.
+        float potionF = (float) com.hmc.zenkai.feature.combat.PotionDamageEffects.meleeFactor(attacker);
+        if (!zenkaiMelee) return vanillaDmg * potionF;
 
         // Crítico vanilla (salto+caída, x1.5 por defecto): capturado en CriticalHitEvent, que
         // dispara DENTRO de Player.attack() antes que este evento — ver onCriticalHit. Sin esto,
@@ -327,7 +334,7 @@ public class CombatZenkaiHooks {
         float critMult = consumeCritMultiplier(attacker);
 
         if (atkStats.getStamina() <= 0) {
-            return (float) (KiInfusion.attackDamageOf(attacker) * critMult);
+            return (float) (KiInfusion.attackDamageOf(attacker) * critMult * potionF);
         }
 
         float scale = consumeAttackScale(attacker);
@@ -371,7 +378,7 @@ public class CombatZenkaiHooks {
         // El crítico multiplica el golpe COMPLETO (base de arma + bonus de ki), igual que en
         // vanilla multiplica el float final antes de hurt() — no solo la parte de STR.
         MELEE_REF.put(attacker.getUUID(), strDamage * chargeF);
-        double total = (base + bonus) * critMult;
+        double total = (base + bonus) * critMult * potionF;
         // Combo ANTES del Black Flash (orden fijado en ComboTracker). Un golpe sin cargar (scale bajo) no
         // cuenta: abanicar el aire no debe alimentar la cadena.
         if (attacker instanceof ServerPlayer comboSp && scale >= 0.5f) {

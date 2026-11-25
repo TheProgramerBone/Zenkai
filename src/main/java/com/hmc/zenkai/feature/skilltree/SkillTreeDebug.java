@@ -3,7 +3,6 @@ package com.hmc.zenkai.feature.skilltree;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
@@ -22,7 +21,7 @@ import java.util.List;
 public final class SkillTreeDebug {
     private SkillTreeDebug() {}
 
-    /** Compara, para cada forma que se decide por compra, SuperForms.unlocked() (lo que ve el
+    /** Compara, para cada forma que se decide por compra, FormAccess.unlocked() (lo que ve el
      *  juego) con el nodo poseído. Si usable pero NO poseído: la migración se dejó algo. */
     public static int verify(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer sp = ctx.getSource().getPlayerOrException();
@@ -37,7 +36,7 @@ public final class SkillTreeDebug {
             // Las formas divinas son nodos propios desde F5: también se comprueban.
             if (byPurchase == null && !(d.divineTier() && !d.endgamePath())) continue;
             checked++;
-            boolean usable = SuperForms.unlocked(sp, d.id());
+            boolean usable = FormAccess.unlocked(sp, d.id());
             boolean owned = att.skillTree().owns(d.id());
             if (usable && !owned) errors.add(d.id().getPath());
             else if (owned && !usable) info.add(d.id().getPath());

@@ -1,6 +1,16 @@
 {
   "node": "zenkai:ssj4",
   "secret": true,
-  "reveal": [{"type": "flag", "flag": "ssj4_ritual"}],
-  "acquisition": ["ritual"]
+  "reveal": [
+    {
+      "type": "flag",
+      "flag": "ssj4_ritual"
+    }
+  ],
+  "acquisition": [
+    "ritual"
+  ],
+  "mind_req": [
+    22
+  ]
 }

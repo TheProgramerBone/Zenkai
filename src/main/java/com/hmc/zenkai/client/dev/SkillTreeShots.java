@@ -329,9 +329,9 @@ public final class SkillTreeShots {
                 var node = com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.SAIYAN, rl);
                 String state = node == null ? "SIN-NODO" : com.hmc.zenkai.feature.skilltree.SkillTreeNodes.evaluate(sp, node).state().name();
                 sb.append("\n   ").append(id).append(": owned=").append(a.skillTree().owns(rl))
-                        .append(" unlocked=").append(com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, rl))
+                        .append(" unlocked=").append(com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, rl))
                         .append(" estado=").append(state)
-                        .append(" enCadena=").append(com.hmc.zenkai.feature.skills.SuperForms.depthOf(Race.SAIYAN, rl) > 0);
+                        .append(" enCadena=").append(com.hmc.zenkai.feature.skilltree.FormAccess.depthOf(Race.SAIYAN, rl) > 0);
             }
             for (String base : new String[]{"zenkai:classic", "zenkai_dmz:goku", "zenkai_dmz:vegeta"}) {
                 for (String id : new String[]{"zenkai:ssj3", "zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6",
@@ -354,8 +354,10 @@ public final class SkillTreeShots {
             var visLog = com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(sp);
             sb.append("\n   estilo de pelo guardado=").append(visLog.getHairStyleId()).append(" existe=")
                     .append(com.hmc.zenkai.feature.race.hair.HairCatalog.get(visLog.getHairStyle()) != null);
-            sb.append("\n   super_forms nivel=").append(a.skills().level("super_forms"))
-                    .append(" max=").append(com.hmc.zenkai.feature.skills.SuperForms.maxLevel(Race.SAIYAN));
+            sb.append("\n   peldaños mortales poseídos=");
+            for (var id : com.hmc.zenkai.feature.skilltree.FormAccess.purchasableChain(Race.SAIYAN)) {
+                if (a.skillTree().owns(id)) sb.append(id).append(' ');
+            }
             Zenkai.LOGGER.info(sb.toString());
         });
     }
@@ -802,33 +804,33 @@ public final class SkillTreeShots {
                 Zenkai.LOGGER.info("[TREESHOTS] legendary cadena saiyan={}",
                         com.hmc.zenkai.feature.forms.FormRegistry.chainFor(Race.SAIYAN));
                 Zenkai.LOGGER.info("[TREESHOTS] legendary SIN flag: ssj1={} verde={} max={} nodoVisible={}",
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ1),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, G),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, M),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ1),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, G),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, M),
                         com.hmc.zenkai.feature.skilltree.SkillTreeNodes.revealed(sp,
                                 com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.SAIYAN, G)));
                 att.setLegendary(true);
                 Zenkai.LOGGER.info("[TREESHOTS] legendary CON flag: verde={} max={} (max debe ser false: sin maestría) nodoVisible={}",
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, G),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, M),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, G),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, M),
                         com.hmc.zenkai.feature.skilltree.SkillTreeNodes.revealed(sp,
                                 com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.SAIYAN, G)));
-                var SU = com.hmc.zenkai.feature.skills.SuperForms.class;
+                var SU = com.hmc.zenkai.feature.skilltree.FormAccess.class;
                 var I = com.hmc.zenkai.feature.forms.FormIds.IKARI;
                 var S2 = com.hmc.zenkai.feature.forms.FormIds.SSJ2;
                 var S3 = com.hmc.zenkai.feature.forms.FormIds.SSJ3;
                 Zenkai.LOGGER.info("[TREESHOTS] legendary BLOQUEO: ikari usable={} ssj2 unlocked={} usable={} (debe ser true/false) ssj3 unlocked={} usable={} (true/false) ssj4 unlocked={}",
-                        com.hmc.zenkai.feature.skills.SuperForms.usable(sp, I),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, S2), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S2),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, S3), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S3),
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ4));
+                        com.hmc.zenkai.feature.skilltree.FormAccess.usable(sp, I),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, S2), com.hmc.zenkai.feature.skilltree.FormAccess.usable(sp, S2),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, S3), com.hmc.zenkai.feature.skilltree.FormAccess.usable(sp, S3),
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ4));
                 att.setLegendary(false);
                 Zenkai.LOGGER.info("[TREESHOTS] legendary SIN flag: ikari usable={} ssj2 usable={} (debe ser false/true)",
-                        com.hmc.zenkai.feature.skills.SuperForms.usable(sp, I), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S2));
+                        com.hmc.zenkai.feature.skilltree.FormAccess.usable(sp, I), com.hmc.zenkai.feature.skilltree.FormAccess.usable(sp, S2));
                 att.setLegendary(true);
                 sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).addFormMastery(G, 250f);
                 Zenkai.LOGGER.info("[TREESHOTS] legendary verde al 100%: max={} (debe ser true)",
-                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, M));
+                        com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(sp, M));
                 sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).setFormId(sp, G);
                 PlayerLifeCycle.sync(sp);
                 PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
@@ -997,7 +999,7 @@ public final class SkillTreeShots {
         com.hmc.zenkai.config.ClientConfig.resetSeenForDev();
     }
 
-    /** Pone raza y progreso en el servidor integrado: árbol limpio, super_forms, ritual, audiencia, God Ki. */
+    /** Pone raza y progreso en el servidor integrado: árbol limpio, peldaños de la cadena (nivel antiguo), ritual, audiencia, God Ki. */
     private static void setup(Minecraft mc, Race race, int superForms, boolean ritual, boolean audience,
                               boolean godKi, java.util.function.Consumer<net.minecraft.server.level.ServerPlayer> extra) {
         mc.setScreen(null);
@@ -1010,7 +1012,7 @@ public final class SkillTreeShots {
             att.setRaceChosen(true);
             att.skills().clear();
             att.skillTree().clear();
-            att.skills().setLevel("super_forms", superForms);
+            com.hmc.zenkai.feature.skilltree.FormAccess.grantChain(att, superForms - 1, false);   // «superForms» = nivel antiguo (1 = solo la Base)
             if (godKi) att.skills().setLevel("god_ki", 1);
             att.setHasSsj4Ritual(ritual);
             att.setReachedSuperOozaru(ritual);

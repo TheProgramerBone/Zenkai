@@ -9,7 +9,6 @@ import com.hmc.zenkai.feature.master.MasterService;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.training.ShadowTrainingManager;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.ChatFormatting;
@@ -70,7 +69,7 @@ public final class GodKi {
         if (gk == null) return false;
         if (gk.parent() == null || SkillTreeNodes.ROOT.equals(gk.parent())) return true;
         SkillTreeNodes.Node parent = SkillTreeNodes.find(att.getRace(), gk.parent());
-        return parent != null ? SkillTreeNodes.owned(p, parent) : SuperForms.unlocked(p, gk.parent());
+        return parent != null ? SkillTreeNodes.owned(p, parent) : FormAccess.unlocked(p, gk.parent());
     }
 
     /** Forma mortal de la que cuelga lo divino (la que simula la Sombra de la prueba). */
@@ -349,7 +348,7 @@ public final class GodKi {
         grantGodKi(sp, SkillTree.Via.RITUAL);
         PlayerFormAttachment form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         ResourceLocation resolved = com.hmc.zenkai.feature.skills.DivineForms.resolveForPlayer(sp, first);
-        if (SuperForms.usable(sp, resolved)) form.setFormId(sp, resolved);
+        if (FormAccess.usable(sp, resolved)) form.setFormId(sp, resolved);
         flash(sp.serverLevel(), sp.position().add(0, sp.getBbHeight() * 0.55, 0), isEvil(sp));
         sp.serverLevel().playSound(null, sp.blockPosition(), SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1f, 0.8f);
         ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.GOD_KI_RITUAL);

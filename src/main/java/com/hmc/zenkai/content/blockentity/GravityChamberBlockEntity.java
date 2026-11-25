@@ -273,9 +273,14 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
         syncToClient();
     }
 
+    /** El mundo está en Pacífico: no hay modo agresivo de drones. */
+    public boolean isPeaceful() {
+        return level != null && level.getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL;
+    }
+
     /** Cambia el modo de la próxima ronda (no durante una ronda). */
     public void toggleDroneMode() {
-        if (droneRound.running()) return;
+        if (droneRound.running() || isPeaceful()) return;
         aggressiveMode = !aggressiveMode;
         setChanged();
     }
@@ -287,7 +292,9 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
             if (sp.getUUID().equals(droneRound.owner())) droneRound.cancel(sl);
             return;
         }
-        String err = droneRound.start(sl, sp, aggressiveMode, droneDifficulty);
+        // En Pacífico vanilla pone a 0 el daño de los mobs antes de nuestro evento, así que los disparos de los
+        // drones no harían nada: la ronda agresiva queda deshabilitada y se juega en pasivo.
+        String err = droneRound.start(sl, sp, aggressiveMode && !isPeaceful(), droneDifficulty);
         if (err != null) sp.displayClientMessage(Component.translatable(err).withStyle(net.minecraft.ChatFormatting.RED), true);
     }
 
@@ -625,7 +632,7 @@ public class GravityChamberBlockEntity extends BlockEntity implements MenuProvid
                 case GravityChamberMenu.D_PORTS -> ports.size();
                 case GravityChamberMenu.D_ENABLED -> enabled ? 1 : 0;
                 case GravityChamberMenu.D_MAX_DRONES -> maxDrones();
-                case GravityChamberMenu.D_DRONE_MODE -> aggressiveMode ? 1 : 0;
+                case GravityChamberMenu.D_DRONE_MODE -> aggressiveMode && !isPeaceful() ? 1 : 0;
                 case GravityChamberMenu.D_ROUND_RUNNING -> droneRound.running() ? 1 : 0;
                 case GravityChamberMenu.D_ROUND_LEFT -> level == null ? 0 : droneRound.secondsLeft(level.getGameTime());
                 case GravityChamberMenu.D_ROUND_DONE -> droneRound.doneCount();

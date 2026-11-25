@@ -13,7 +13,7 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -87,10 +87,10 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
             // Formas fuera de la escalera normal (oozaru/super_oozaru: kind divine, parent
             // null, activadas por su propio sistema) declaran wheel_selectable=false. Sin este
             // candado, isAllowed()+unlocked() (unlocked() da true de oficio en cualquier forma
-            // que no esté en la cadena de super_forms) las dejarían pasar aunque la rueda del
+            // que no tenga nodo en el árbol) las dejarían pasar aunque la rueda del
             // cliente nunca las enseñe.
             if (!def.wheelSelectable()) return false;
-            if (!SuperForms.usable(sp, target)) return false;
+            if (!FormAccess.usable(sp, target)) return false;
         }
         if (target.equals(fm.getSelectedForm())) return false;
 

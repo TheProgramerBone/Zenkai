@@ -134,7 +134,7 @@ public final class ScreenShots {
             att.setRace(race);
             att.setRaceChosen(true);
             att.skills().clear();
-            att.skills().setLevel("super_forms", 3);
+            com.hmc.zenkai.feature.skilltree.FormAccess.grantChain(att, 2, false);
             att.skills().setLevel("ki_sense", 3);
             att.skills().setLevel("fly", 2);
             att.skills().setLevel("run", 4);

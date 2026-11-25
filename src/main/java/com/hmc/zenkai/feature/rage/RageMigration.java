@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -38,7 +38,7 @@ public final class RageMigration {
             Race race = att.getRace();
             for (FormDef d : FormDef.all()) {
                 if (FormIds.BASE.equals(d.id()) || !FormRegistry.isAllowed(race, d.id())) continue;
-                if (SuperForms.unlocked(p, d.id())) att.flags().markLongCinematicSeen(d.id().toString());
+                if (FormAccess.unlocked(p, d.id())) att.flags().markLongCinematicSeen(d.id().toString());
             }
             PlayerFormAttachment forms = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
             if (!FormIds.BASE.equals(forms.getFormId())) att.flags().markLongCinematicSeen(forms.getFormId().toString());

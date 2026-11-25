@@ -851,7 +851,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     Component.translatable(RacePassives.nameKey(att.getRace()))
                             .withStyle(net.minecraft.ChatFormatting.BOLD),
                     Component.empty(), ZenkaiPalette.MAXED,
-                    Component.translatable(RacePassives.descKey(att.getRace()))));
+                    com.hmc.zenkai.client.gui.RacePassiveText.joined(att.getRace(),
+                            com.hmc.zenkai.feature.race.RacePassives.level(mc.player))));
             if (RacePassiveSystem.zenkaiActive(mc.player)) {
                 out.add(val("screen.zenkai.stats_screen.zenkai_short",
                         RacePassiveSystem.zenkaiSecondsLeft(mc.player) + "s", ZenkaiPalette.VALUE));

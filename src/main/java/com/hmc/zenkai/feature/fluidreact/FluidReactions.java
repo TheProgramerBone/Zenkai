@@ -94,6 +94,13 @@ public final class FluidReactions {
         add(b, Blocks.WET_SPONGE, Blocks.SPONGE, 5, any);
         add(b, Blocks.MOSSY_COBBLESTONE, Blocks.COBBLESTONE, 5, any);
         add(b, Blocks.MOSSY_STONE_BRICKS, Blocks.STONE_BRICKS, 5, any);
+        // Y las variantes musgosas de escaleras, losas y muros vuelven a su versión limpia (el agua hirviente lo deteriora).
+        add(b, Blocks.MOSSY_COBBLESTONE_STAIRS, Blocks.COBBLESTONE_STAIRS, 5, any);
+        add(b, Blocks.MOSSY_COBBLESTONE_SLAB, Blocks.COBBLESTONE_SLAB, 5, any);
+        add(b, Blocks.MOSSY_COBBLESTONE_WALL, Blocks.COBBLESTONE_WALL, 5, any);
+        add(b, Blocks.MOSSY_STONE_BRICK_STAIRS, Blocks.STONE_BRICK_STAIRS, 5, any);
+        add(b, Blocks.MOSSY_STONE_BRICK_SLAB, Blocks.STONE_BRICK_SLAB, 5, any);
+        add(b, Blocks.MOSSY_STONE_BRICK_WALL, Blocks.STONE_BRICK_WALL, 5, any);
         add(b, Blocks.STONE_BRICKS, Blocks.CRACKED_STONE_BRICKS, 5, any);
         add(b, Blocks.DEEPSLATE_BRICKS, Blocks.CRACKED_DEEPSLATE_BRICKS, 5, any);
         add(b, Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 5, any);
@@ -109,11 +116,24 @@ public final class FluidReactions {
         // ── AGUA CURATIVA: restaura y fertiliza ──
         Map<Block, List<Rule>> h = t.get(Family.HEALING);
         add(h, Blocks.DIRT, Blocks.GRASS_BLOCK, 20, d -> d != Direction.DOWN);
-        add(h, Blocks.DIRT, Blocks.MUD, 5, d -> d == Direction.DOWN);   // tierra SUMERGIDA (el fluido está encima)
+        // Tierra SUMERGIDA (el fluido está encima) → barro COMPACTO, no barro: el barro tiene colisión de 14/16, el jugador queda
+        // hundido y su bloque de pies pasa a ser el barro, sin fluido. NeoForge solo activa la natación de un fluido propio si el
+        // bloque de los pies contiene ese fluido (con agua vanilla basta isInWater), así que el Espacio dejaba de subir y quedabas
+        // atascado en el fondo (reportado 2026-11-25, foso de 1x1 y cualquier poza con fondo de tierra).
+        add(h, Blocks.DIRT, Blocks.PACKED_MUD, 5, d -> d == Direction.DOWN);
         add(h, Blocks.COARSE_DIRT, Blocks.DIRT, 10, any);
         add(h, Blocks.ROOTED_DIRT, Blocks.DIRT, 10, any);
         add(h, Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, 15, any);
         add(h, Blocks.STONE_BRICKS, Blocks.MOSSY_STONE_BRICKS, 15, any);
+        // Variantes musgosas completas (escaleras, losas y muros): las propiedades se heredan en tick().
+        add(h, Blocks.COBBLESTONE_STAIRS, Blocks.MOSSY_COBBLESTONE_STAIRS, 15, any);
+        add(h, Blocks.COBBLESTONE_SLAB, Blocks.MOSSY_COBBLESTONE_SLAB, 15, any);
+        add(h, Blocks.COBBLESTONE_WALL, Blocks.MOSSY_COBBLESTONE_WALL, 15, any);
+        add(h, Blocks.STONE_BRICK_STAIRS, Blocks.MOSSY_STONE_BRICK_STAIRS, 15, any);
+        add(h, Blocks.STONE_BRICK_SLAB, Blocks.MOSSY_STONE_BRICK_SLAB, 15, any);
+        add(h, Blocks.STONE_BRICK_WALL, Blocks.MOSSY_STONE_BRICK_WALL, 15, any);
+        // El camino de tierra se restaura a hierba (misma línea que tierra → hierba).
+        add(h, Blocks.DIRT_PATH, Blocks.GRASS_BLOCK, 20, any);
         add(h, Blocks.CRACKED_STONE_BRICKS, Blocks.STONE_BRICKS, 15, any);
         add(h, Blocks.CRACKED_DEEPSLATE_BRICKS, Blocks.DEEPSLATE_BRICKS, 15, any);
         add(h, Blocks.CRACKED_DEEPSLATE_TILES, Blocks.DEEPSLATE_TILES, 15, any);
@@ -129,6 +149,7 @@ public final class FluidReactions {
             double cobble = switch (f) { case KI_SUPER -> 4; case KI_LEGENDARY -> 2; default -> 8; };
             add(k, Blocks.COBBLESTONE, Blocks.GRAVEL, cobble, any);
             add(k, Blocks.MUD, Blocks.CLAY, f == Family.KI_DIVINE ? 5 : 10, any);
+            add(k, Blocks.PACKED_MUD, Blocks.CLAY, f == Family.KI_DIVINE ? 5 : 10, any);   // el barro compacto que deja el agua curativa
         }
         Map<Block, List<Rule>> ks = t.get(Family.KI_SUPER);
         Map<Block, List<Rule>> kl = t.get(Family.KI_LEGENDARY);
@@ -161,6 +182,19 @@ public final class FluidReactions {
         m.computeIfAbsent(from, k -> new ArrayList<>()).add(new Rule(to.defaultBlockState(), seconds, side));
     }
 
+    /** El resultado hereda las propiedades del bloque original que comparta (orientación, mitad, tipo de losa, agua), para que
+     *  escaleras, losas y muros conserven su forma al transformarse. */
+    private static BlockState withSameProperties(BlockState from, BlockState to) {
+        for (var prop : from.getProperties()) {
+            if (to.hasProperty(prop)) to = copy(from, to, prop);
+        }
+        return to;
+    }
+
+    private static <T extends Comparable<T>> BlockState copy(BlockState from, BlockState to, net.minecraft.world.level.block.state.properties.Property<T> prop) {
+        return to.setValue(prop, from.getValue(prop));
+    }
+
     // ───────────────────────────── mecánica ─────────────────────────────
 
     /** Despierta el bloque de fluido si no tenía ya un tic pendiente. Solo servidor. */
@@ -187,7 +221,7 @@ public final class FluidReactions {
                 busy = true;
                 double p = r.seconds() <= 1 ? 1.0 : 1.0 / r.seconds();
                 if (level.random.nextDouble() < p) {
-                    level.setBlock(np, r.to(), Block.UPDATE_ALL);
+                    level.setBlock(np, withSameProperties(level.getBlockState(np), r.to()), Block.UPDATE_ALL);
                     puff(level, np, family);
                     converted = true;
                     break;

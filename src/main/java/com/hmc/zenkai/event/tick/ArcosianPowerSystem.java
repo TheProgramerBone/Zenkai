@@ -47,7 +47,7 @@ public final class ArcosianPowerSystem {
         double max = def == null ? 0.0 : def.value("pp_max", lvl, 0.0);
         // Arcosian God, «Tanque divino»: tener la forma DESBLOQUEADA agranda el tanque (se carga en formas bajas, así que no
         // basta con llevarla puesta).
-        if (max > 0.0 && com.hmc.zenkai.feature.skills.SuperForms.unlocked(p, FormIds.ARCOSIAN_GOD)) {
+        if (max > 0.0 && com.hmc.zenkai.feature.skilltree.FormAccess.unlocked(p, FormIds.ARCOSIAN_GOD)) {
             max *= ServerConfig.arcosianGodPpCapacityMult();
         }
         return max;

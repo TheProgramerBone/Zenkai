@@ -9,7 +9,6 @@ import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
-import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -188,18 +187,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             int bought = skills.boughtLevels(id);
             if (bought <= 0) continue;
 
-            if (def.levelsFromForms()) {
-                // Coste por nivel derivado de las formas: hay que sumar nivel a nivel. Con
-                // def.tpCost() (que aquí es 0) el respec se quedaría con el TP invertido.
-                // FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
-                int top = skills.level(id);
-                for (int lvl = top - bought + 1; lvl <= top; lvl++) {
-                    int c = FormDrivenSkills.tpCostForLevel(def, getRace(), lvl);
-                    if (c != Integer.MAX_VALUE) skillRefund += c;
-                }
-            } else {
-                skillRefund += def.tpCost() * bought;
-            }
+            skillRefund += def.tpCost() * bought;
         }
         skills.clearBought(com.hmc.zenkai.feature.skilltree.SkillTreeNodes::isTreeSkill);
         raceStats.respec();

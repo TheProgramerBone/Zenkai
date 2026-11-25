@@ -1,10 +1,9 @@
 {
   "parent": "zenkai:choose_race",
   "criteria": {
-    "skill": {
+    "form": {
       "conditions": {
-        "skill": "super_forms",
-        "skill_level": 2
+        "form_nodes": 1
       },
       "trigger": "zenkai:stat_threshold"
     }
@@ -23,7 +22,7 @@
   },
   "requirements": [
     [
-      "skill"
+      "form"
     ]
   ],
   "sends_telemetry_event": true

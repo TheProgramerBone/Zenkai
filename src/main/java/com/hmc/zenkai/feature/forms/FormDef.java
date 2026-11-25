@@ -50,14 +50,14 @@ import java.util.Map;
  * wheelSelectable (default true): si es false, WheelSelectPacket.selectForm() rechaza esta forma
  * aunque un cliente modificado la pida por id — server-authoritative, igual que el candado de
  * tipo de técnica documentado en CLAUDE.md. Pensado para formas "cadena" (kind divine, parent
- * null) que no viven en la escalera normal de super_forms y se activan por su propio sistema en
+ * null) que no viven en la cadena mortal del árbol y se activan por su propio sistema en
  * vez de por la rueda/tecla H (hoy: oozaru/super_oozaru, ver OozaruSystem). Sin este candado, la
  * rueda ya no las enseña (FormRegistry.chainFor no las alcanza), pero nada impedía a un cliente
  * modificado seleccionarlas igualmente por packet.
  *
  * divineTier (default false): marca un peldaño de energía divina (hoy: human_god/namek_god/
- * majin_god, ssj_god/ssj_blue/ssj_rose) — su acceso NO sale de super_forms sino de la skill
- * "god_ki" (ver feature.skills.DivineForms/SuperForms), aunque siga viviendo en la misma
+ * majin_god, ssj_god/ssj_blue/ssj_rose) — su acceso NO sale de la cadena mortal sino de la skill
+ * "god_ki" (ver feature.skills.DivineForms/FormAccess), aunque siga viviendo en la misma
  * cadena parent/hijo que el resto para efectos de la rueda y la maestría. Dos formas con el
  * MISMO parent y ambas divineTier son hermanas EQUIVALENTES a la misma profundidad divina
  * (ssj_blue/ssj_rose): el jugador elige cuál llevar puesta, no hay que comprarlas por separado.
@@ -104,11 +104,11 @@ import java.util.Map;
  * endgamePath (default false): marca los peldaños de las 3 rutas de endgame universales. Sustituye
  * al antiguo {@code divine_tier: true} de esas 5 formas, que las hacía contar como "rama divina
  * propia" de cada raza (empates en DivineForms.resolveTie, maxLevel(ARCOSIAN) != 0). Su acceso lo
- * decide EndgamePaths, nunca god_ki/super_forms.
+ * decide EndgamePaths, nunca god_ki ni la cadena mortal.
  *
  * alignmentBranch (default NONE): ver {@link AlignBranch}.
  * masteryReqs (default vacío): maestría MÍNIMA (0-100) que el jugador debe tener en OTRAS formas
- * para desbloquear ESTA (ver SuperForms.unlocked). Es el único vínculo entre ramas hermanas: la
+ * para desbloquear ESTA (ver FormAccess.unlocked). Es el único vínculo entre ramas hermanas: la
  * herencia por parent no exige haber dominado nada (golden_fifth_form cuelga de fifth_form, pero
  * exige fifth 100% + golden_form 50%).
  *
@@ -160,7 +160,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      * Bifurcación por alineamiento entre hermanas MORTALES (mismo parent, ambas con valor distinto
      * de NONE): el jugador con alineamiento >= 0 usa la GOOD, el de alineamiento negativo la EVIL,
      * sin elegir (mismo espíritu que ssj_blue/ssj_rose por isDivine, pero para formas no
-     * divinas: ver SuperForms.resolveSibling). Hoy: majin_harmony / majin_pure_chaos.
+     * divinas: ver FormAccess.resolveSibling). Hoy: majin_harmony / majin_pure_chaos.
      */
     public enum AlignBranch {
         NONE, GOOD, EVIL;

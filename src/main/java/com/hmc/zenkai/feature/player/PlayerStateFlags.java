@@ -64,9 +64,9 @@ public class PlayerStateFlags {
     /**
      * Completó el ritual de Oozaru al menos una vez (Oozaru -> Super Oozaru -> SSJ4, ver
      * OozaruSystem/PlayerFormAttachment). Super Oozaru se controla con SSJ1
-     * (SuperForms.readyForSuperOozaru) y el salto a SSJ4 pide SSJ3 (readyForSsj4Ritual); SSJ4
+     * (FormAccess.readyForSuperOozaru) y el salto a SSJ4 pide SSJ3 (readyForSsj4Ritual); SSJ4
      * no queda utilizable/visible en la rueda ni en el árbol hasta completarlo una vez — ver
-     * SuperForms.unlocked(SSJ4). Persistente: no hay que repetir el ritual cada partida ni
+     * FormAccess.unlocked(SSJ4). Persistente: no hay que repetir el ritual cada partida ni
      * cada respec, solo re-comprar el nivel si se pierde por respec.
      */
     private boolean hasSsj4Ritual = false;

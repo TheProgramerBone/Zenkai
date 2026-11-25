@@ -112,14 +112,14 @@ addon ya tiene nodo sin escribir nada más. El JSON del árbol solo AÑADE cosas
 
 Banderas disponibles en `flag`: `ssj4_ritual`, `reached_super_oozaru`, `beast_fury`, `divine`,
 `legendary`, `immortal`, `god_ki_audience`, `tail`, `namek_orange_hinted` (una desconocida da false).
-`"acquisition": ["mastery"]` en un peldaño de la cadena de `super_forms` (como `zenkai:namek_orange`) hace que NO se compre:
+`"acquisition": ["mastery"]` en un peldaño de la cadena mortal (como `zenkai:namek_orange`) hace que NO se compre:
 despierta solo cuando el jugador posee el peldaño anterior y cumple sus `requirements`. La pista se lee de
-`skill_tree.<ns>.<ruta>.hint` (o de la clave que diga `"hint"`). Las formas baneadas en
+`skill_tree.<ns>.<ruta>.hint` (o de la clave que diga `"hint"`). Un peldaño mortal puede declarar `"mind_req": [N]` en su nodo: la MIND que ocupa (la que decía el `mind_req` de la skill `super_forms`, ya eliminada). Las formas baneadas en
 `banned_forms.json` no tienen nodo. Un archivo roto se ignora con un error en el log.
 
 **Ramas de addon (varios datapacks, mismo padre).** Una forma de TU namespace (no `zenkai`) que cuelga de otra y no tiene
 `mastery_reqs` se compra como **nodo propio e independiente**: paga su `tp_cost`, exige tener el padre y los requisitos del
-JSON, y NUNCA entra en la cadena lineal de `super_forms`. Dos datapacks de autores distintos pueden colgar formas del mismo
+JSON, y NUNCA entra en la cadena lineal mortal. Dos datapacks de autores distintos pueden colgar formas del mismo
 padre (p. ej. «SSJ5» y «SSJ4 Full Power» de SSJ4): son hermanas, se poseen por separado y no se excluyen. Una forma colgada de
 OTRA de tu pack (SSJ6 de SSJ5) forma su propia cadena. Las formas con `divine_tier` de un addon igual: su grupo de empate es
 su namespace, así que no empatan con la pareja Blue/Rosé del mod (pero cuelgan de Blue: un jugador Rosé no las ve). Nombres:

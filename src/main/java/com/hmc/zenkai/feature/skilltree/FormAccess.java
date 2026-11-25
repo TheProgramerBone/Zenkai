@@ -1,6 +1,9 @@
-package com.hmc.zenkai.feature.skills;
+package com.hmc.zenkai.feature.skilltree;
 
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.skills.DivineForms;
+import com.hmc.zenkai.feature.skills.EndgamePaths;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
@@ -18,25 +21,19 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Habilidad "super_forms": desbloquea las transformaciones de TU raza, una por nivel.
- * Nada de esto está en el JSON de la skill, y es a propósito: el nivel máximo y el coste de
- * cada nivel se DERIVAN de la cadena de formas del datapack. Consecuencias:
- *  - Un saiyan ve 5 niveles (1 + 4 formas) y un arcosiano 6 (1 + 5). Nadie compra un nivel
- *    que no le da nada, que era justo el problema de tener un max_level fijo.
- *  - El coste de cada nivel es el tp_cost de la forma que desbloquea: los números viven en
- *    UN sitio (el JSON de la forma) y no pueden desincronizarse.
- *  - Añadir una forma al datapack alarga la habilidad sola, sin tocar Java ni la skill.
- * Mapa de niveles:
- *   nivel 1 -> BASE. REGALADO (0 TP): se otorga al elegir raza y sobrevive al respec, así que
- *              el jugador SIEMPRE tiene la habilidad. No desbloquea ninguna transformación.
- *   nivel 2 -> 1ª forma · nivel 3 -> 2ª forma · ... · nivel N -> forma N-1.
- * La API base va por Race (no por Player) porque el respec la necesita desde el attachment,
- * que no tiene referencia al jugador.
+ * Acceso a las transformaciones de TU raza: qué formas posee y puede usar el jugador. Antes era la skill
+ * {@code super_forms} (un nivel por peldaño); desde la 0.7.0 (migración v5 del árbol) cada peldaño de la cadena mortal
+ * es un NODO PROPIO del skill tree (id del nodo = id de la forma, como las divinas y las ramas de addon) y esa compra es
+ * la fuente de verdad. Lo que sigue DERIVÁNDOSE de los datos es la cadena y el coste:
+ *  - La cadena mortal (purchasableChain) sale de los {@code parent} del datapack, cortada en el primer peldaño divine_tier.
+ *  - El coste de cada nodo es el {@code tp_cost} de su forma: los números viven en UN sitio. El MIND que ocupa va en el
+ *    {@code mind_req} del JSON de su nodo ({@code zenkai_skill_tree/<forma>.json}).
+ *  - Añadir una forma al datapack alarga la cadena sola.
+ * Misma API que tenía FormAccess (unlocked, usable, unlockedChain, depthOf, resolveSibling, legendaryBlocked...), sin nivel
+ * ni máximo ni coste por nivel.
  */
-public final class SuperForms {
-    private SuperForms() {}
-
-    public static final String SKILL = "super_forms";
+public final class FormAccess {
+    private FormAccess() {}
 
     // ── API por raza ─────────────────────────────────────────────────────────
 
@@ -46,12 +43,11 @@ public final class SuperForms {
     }
 
     /**
-     * Cadena "comprable" con TP normal de super_forms: la cadena completa cortada en el
-     * primer peldaño divine_tier (ver DivineForms) — a partir de ahí, esa rama ya no la cobra
-     * ni la cuenta esta skill, sino "god_ki". Sin esto, la última forma de Humano/Namekiano/
-     * Majin (y las tres del Saiyan) seguirían comprándose como un rango más de super_forms.
+     * Cadena mortal (la que se compra con TP normal en el árbol): la cadena completa cortada en el
+     * primer peldaño divine_tier (ver DivineForms) — a partir de ahí, esa rama es de "god_ki" y se
+     * compra como nodo divino.
      */
-    private static List<ResourceLocation> purchasableChain(Race race) {
+    public static List<ResourceLocation> purchasableChain(Race race) {
         List<ResourceLocation> out = new java.util.ArrayList<>();
         for (ResourceLocation id : chain(race)) {
             FormDef d = FormDef.get(id);
@@ -61,27 +57,7 @@ public final class SuperForms {
         return out;
     }
 
-    /** Niveles que la habilidad puede llegar a tener para esa raza (1 + nº de formas
-     *  "mortales", sin contar la rama divina). */
-    public static int maxLevel(Race race) {
-        return 1 + purchasableChain(race).size();
-    }
-
-    /**
-     * Coste en TP de comprar ese nivel. El nivel 1 es gratis (es la base); del 2 en adelante,
-     * el tp_cost de la forma que desbloquea. MAX_VALUE si ese nivel no existe para esta raza,
-     * de modo que nunca sea comprable ni reembolsable.
-     */
-    public static int tpCostForLevel(Race race, int level) {
-        if (level <= 1) return 0;
-        List<ResourceLocation> c = purchasableChain(race);
-        int i = level - 2;
-        if (i >= c.size()) return Integer.MAX_VALUE;
-        FormDef fd = FormDef.get(c.get(i));
-        return fd == null ? Integer.MAX_VALUE : fd.tpCost();
-    }
-
-    /** Posición (1-based) de una forma en la cadena COMPRABLE con super_forms. 0 si no pertenece
+    /** Posición (1-based) de una forma en la cadena comprable (mortal). 0 si no pertenece
      *  (ni las ramas por maestría). */
     public static int depthOf(Race race, ResourceLocation form) {
         if (race == null || form == null || FormIds.BASE.equals(form)) return 0;
@@ -149,62 +125,74 @@ public final class SuperForms {
     }
 
     /**
-     * Nivel de super_forms que hace falta tener ANTES de poder empezar una rama divina: el de su
-     * antepasado mortal más cercano (human_god cuelga de human_ultra: nivel 3, sin exigir la
-     * cima mortal indomitable; ssj_god cuelga de ssj4: el máximo de siempre). Antes era siempre
-     * maxLevel, lo que obligaba a agotar una cadena mortal aunque la divina fuera una rama
-     * paralela a su final.
+     * ¿Posee el jugador el antepasado mortal más cercano de esta forma divina? (human_god cuelga de human_ultra: basta con
+     * él, sin exigir la cima mortal indomitable; ssj_god cuelga de ssj3.) Sin antepasado mortal en la cadena comprable se
+     * exige la cadena entera. Antes era un nivel de super_forms ({@code mortalLevelNeededForDivine}).
      */
-    public static int mortalLevelNeededForDivine(Race race, ResourceLocation divineForm) {
+    public static boolean mortalAncestorOwned(Player p, ResourceLocation divineForm) {
+        Race race = raceOf(p);
         FormDef d = FormDef.get(divineForm);
         ResourceLocation parent = d == null ? null : d.parent();
         while (parent != null) {
             FormDef pd = FormDef.get(parent);
             if (pd == null) break;
             if (!pd.divineTier()) {
-                int lvl = requiredLevel(race, parent);
-                return lvl == Integer.MAX_VALUE ? maxLevel(race) : lvl;
+                if (depthOf(race, parent) > 0) return ownsStep(p, parent);
+                break;
             }
             parent = pd.parent();
         }
-        return maxLevel(race);
+        for (ResourceLocation id : purchasableChain(race)) if (!ownsStep(p, id)) return false;
+        return true;
     }
 
-    /** Nivel de habilidad necesario para usar esa forma (profundidad + 1, por el nivel base). */
-    public static int requiredLevel(Race race, ResourceLocation form) {
-        int d = depthOf(race, form);
-        return d <= 0 ? Integer.MAX_VALUE : d + 1;
+    /**
+     * ¿Posee el jugador el PELDAÑO mortal de esta forma? Su nodo, o el de una hermana de alineamiento (majin_harmony /
+     * majin_pure_chaos comparten peldaño: comprada una, el peldaño es suyo y {@link #unlocked} decide cuál puede usar).
+     */
+    public static boolean ownsStep(Player p, ResourceLocation form) {
+        var tree = PlayerStatsAttachment.get(p).skillTree();
+        if (tree.owns(form)) return true;
+        FormDef d = FormDef.get(form);
+        if (d == null || d.alignmentBranch() == FormDef.AlignBranch.NONE || d.parent() == null) return false;
+        for (ResourceLocation sib : FormRegistry.childrenOf(d.parent())) {
+            FormDef sd = FormDef.get(sib);
+            if (sd != null && sd.alignmentBranch() != FormDef.AlignBranch.NONE && tree.owns(sib)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Concede los primeros {@code steps} peldaños de la cadena mortal de la raza del jugador SIN cobrar TP (comandos, pruebas,
+     * migración). {@code waived}: sin ocupar MIND (despertares y migración de una exención antigua). Devuelve cuántos nodos
+     * nuevos concedió. No sincroniza: lo hace quien llama.
+     */
+    public static int grantChain(PlayerStatsAttachment att, int steps, boolean waived) {
+        List<ResourceLocation> chain = purchasableChain(att.getRace());
+        int n = 0;
+        for (int i = 0; i < steps && i < chain.size(); i++) {
+            if (!att.skillTree().owns(chain.get(i))) n++;
+            att.skillTree().setOwned(chain.get(i), 1);
+            if (waived) att.skillTree().setMindWaived(chain.get(i), true);
+        }
+        return n;
     }
 
     // ── API por jugador ──────────────────────────────────────────────────────
-
-    /** Nivel actual. 0 solo si aún no se le ha otorgado el nivel base. */
-    public static int level(Player p) {
-        return SkillEffects.level(p, SKILL);
-    }
 
     public static Race raceOf(Player p) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
         return att.getRace();
     }
 
-    public static int maxLevel(Player p) {
-        return maxLevel(raceOf(p));
-    }
-
-    public static int tpCostForLevel(Player p, int level) {
-        return tpCostForLevel(raceOf(p), level);
-    }
-
     /**
      * ¿Este jugador tiene desbloqueada esa forma? BASE siempre sí.
-     * SSJ4 es la ÚNICA excepción de "solo el nivel importa": además de comprar su nivel con TP
+     * SSJ4 es la ÚNICA excepción de "solo el nodo importa": además de poseer su nodo
      * hace falta haber completado una vez el ritual de Oozaru (readyForSuperOozaru y
      * readyForSsj4Ritual), y la forma no queda desbloqueada/visible en la rueda hasta entonces (ver
      * PlayerStatsAttachment.hasSsj4Ritual, marcado por PlayerFormAttachment tras el hold
-     * Super Oozaru -> SSJ4). El nivel comprado sigue haciendo falta aparte: si se pierde por
-     * respec, hay que volver a comprarlo aunque el ritual ya esté hecho — no hay que repetir
-     * el ritual, solo el pago.
+     * Super Oozaru -> SSJ4). El nodo sigue haciendo falta aparte: aunque el ritual ya esté hecho
+     * (flag persistente), sin el nodo no hay forma.
      */
     public static boolean unlocked(Player p, ResourceLocation form) {
         if (form == null || FormIds.BASE.equals(form)) return true;
@@ -243,7 +231,7 @@ public final class SuperForms {
         }
         if (def != null && !form.equals(resolveSibling(p, form))) return false;
         if (FormIds.SSJ4.equals(form) && !PlayerStatsAttachment.get(p).hasSsj4Ritual()) return false;
-        return level(p) >= requiredLevel(race, form);
+        return ownsStep(p, form);
     }
 
     /**

@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindReq,
                        boolean purchasable, List<String> masters, Map<String, List<Double>> values,
-                       boolean levelsFromForms, boolean raceInnate) {
+                       boolean raceInnate) {
 
     private static volatile Map<String, SkillDef> REGISTRY = Map.of();
 
@@ -94,7 +94,6 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     buf.writeVarInt(e.getValue().size());
                     for (double d : e.getValue()) buf.writeDouble(d);
                 }
-                buf.writeBoolean(def.levelsFromForms());
                 buf.writeBoolean(def.raceInnate());
             },
             buf -> {
@@ -117,10 +116,9 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     for (int j = 0; j < ln; j++) curve.add(buf.readDouble());
                     vals.put(k, List.copyOf(curve));
                 }
-                boolean lff = buf.readBoolean();
                 boolean innate = buf.readBoolean();
                 return new SkillDef(id, tp, max, List.copyOf(mind), purch,
                         List.copyOf(masters),
-                        Collections.unmodifiableMap(vals), lff, innate);
+                        Collections.unmodifiableMap(vals), innate);
             });
 }

@@ -330,4 +330,59 @@ public final class KiInfusionGameTests {
                 "Gasta 2 lingotes");
         helper.succeed();
     }
+
+    /**
+     * Cargar una infusora o una estación guardadas con OTRO número de ranuras (antes de la 5c y antes del rework del
+     * 2026-11-23, 2026-11-25): vuelven al tamaño actual y lo que no encaja (sobra por el final o no vale en su ranura
+     * de mejora) se SUELTA al mundo en el primer tick, sin perderse ni contar como otra mejora.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void oldInfuserLayoutSpillsMisfits(GameTestHelper helper) {
+        helper.setBlock(POS, ModBlocks.KI_INFUSER.get());
+        KiInfuserBlockEntity be = (KiInfuserBlockEntity) helper.getBlockEntity(POS);
+        var reg = helper.getLevel().registryAccess();
+        int oldSize = KiInfuserBlockEntity.SLOTS + 3;
+        var old = new net.neoforged.neoforge.items.ItemStackHandler(oldSize);
+        old.setStackInSlot(KiInfuserBlockEntity.SLOT_INPUT, ingot(null, 3));            // encaja: se queda
+        old.setStackInSlot(0, new ItemStack(Items.DIAMOND, 2));                          // no es mejora: se aparta
+        old.setStackInSlot(oldSize - 1, new ItemStack(Items.GOLD_INGOT, 5));             // sobra por el final: se aparta
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        tag.put("Items", old.serializeNBT(reg));
+        tag.putInt("UpgradeLayout", 3);   // el desplazamiento de capas viejas ya lo cubre otro test
+        be.loadWithComponents(tag, reg);
+        helper.assertTrue(be.items().getSlots() == KiInfuserBlockEntity.SLOTS, "Debe cargar con las ranuras actuales");
+        helper.assertTrue(be.items().getStackInSlot(KiInfuserBlockEntity.SLOT_INPUT).getCount() == 3, "Lo que encaja se queda");
+        helper.assertTrue(be.items().getStackInSlot(0).isEmpty(), "Un diamante no se queda en una ranura de mejora");
+        BlockPos abs = helper.absolutePos(POS);
+        KiInfuserBlockEntity.serverTick(helper.getLevel(), abs, helper.getLevel().getBlockState(abs), be);
+        var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(abs).inflate(2));
+        helper.assertTrue(drops.stream().anyMatch(e -> e.getItem().is(Items.DIAMOND) && e.getItem().getCount() == 2),
+                "El diamante debe caer al mundo");
+        helper.assertTrue(drops.stream().anyMatch(e -> e.getItem().is(Items.GOLD_INGOT) && e.getItem().getCount() == 5),
+                "Lo que sobraba por el final debe caer al mundo");
+        helper.succeed();
+    }
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void oldStationLayoutSpillsMisfits(GameTestHelper helper) {
+        ImbuingStationBlockEntity be = station(helper);
+        var reg = helper.getLevel().registryAccess();
+        int oldSize = ImbuingStationBlockEntity.SLOTS + 3;
+        var old = new net.neoforged.neoforge.items.ItemStackHandler(oldSize);
+        old.setStackInSlot(0, new ItemStack(Items.DIAMOND, 2));
+        old.setStackInSlot(oldSize - 1, new ItemStack(Items.GOLD_INGOT, 5));
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        tag.put("Items", old.serializeNBT(reg));
+        tag.putInt("UpgradeLayout", 3);
+        be.loadWithComponents(tag, reg);
+        helper.assertTrue(be.items().getSlots() == ImbuingStationBlockEntity.SLOTS, "Debe cargar con las ranuras actuales");
+        helper.assertTrue(be.items().getStackInSlot(0).isEmpty(), "Un diamante no se queda en una ranura de mejora");
+        be.dropContents(helper.getLevel(), helper.absolutePos(POS));
+        var drops = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                new net.minecraft.world.phys.AABB(helper.absolutePos(POS)).inflate(2));
+        helper.assertTrue(drops.stream().anyMatch(e -> e.getItem().is(Items.GOLD_INGOT) && e.getItem().getCount() == 5),
+                "Lo que sobraba por el final debe caer al mundo");
+        helper.succeed();
+    }
 }

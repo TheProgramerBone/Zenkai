@@ -5,7 +5,7 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.DivineForms;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.feature.skilltree.GodKi;
 import com.hmc.zenkai.feature.skilltree.SkillTree;
 import com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket;
@@ -29,14 +29,14 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class DivineFormAccessGameTests {
     private DivineFormAccessGameTests() {}
 
-    /** Jugador de la raza con toda su cadena mortal comprada (super_forms al máximo) y alineamiento neutro. */
+    /** Jugador de la raza con toda su cadena mortal comprada (toda la cadena de nodos) y alineamiento neutro. */
     private static ServerPlayer mortalPeak(GameTestHelper helper, Race race) {
         ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         att.setRace(race);
         att.setAlignment(50);
         att.setAttribute(com.hmc.zenkai.feature.ZenkaiAttributes.MIND, 1000);   // MIND suficiente para lo que ocupa la cadena
-        att.skills().grantAdmin(SuperForms.SKILL, SuperForms.maxLevel(race));
+        FormAccess.grantChain(att, Integer.MAX_VALUE, false);
         return sp;
     }
 
@@ -45,11 +45,11 @@ public final class DivineFormAccessGameTests {
         return "race=" + race + " forma=" + first
                 + " nodo=" + (node == null ? "NO EXISTE" : "padre=" + node.parent())
                 + " mortalChainReady=" + GodKi.mortalChainReady(sp)
-                + " superLevel=" + SuperForms.level(sp) + "/" + SuperForms.maxLevel(race)
-                + " nivelMortalNecesario=" + SuperForms.mortalLevelNeededForDivine(race, first)
+                + " cadenaMortal=" + FormAccess.purchasableChain(race)
+                + " antepasadoMortalPoseido=" + FormAccess.mortalAncestorOwned(sp, first)
                 + " godKi=" + SkillTree.hasGodKi(sp)
                 + " posee=" + SkillTree.owns(sp, first)
-                + " unlocked=" + SuperForms.unlocked(sp, first) + " usable=" + SuperForms.usable(sp, first);
+                + " unlocked=" + FormAccess.unlocked(sp, first) + " usable=" + FormAccess.usable(sp, first);
     }
 
     /**
@@ -73,9 +73,9 @@ public final class DivineFormAccessGameTests {
         boolean keyShouldReach = race == Race.NAMEKIAN || race == Race.SAIYAN;
         helper.assertTrue(reached || !keyShouldReach, "Tecla de transformar: no llega a " + first + ". Camino: " + path + ". " + describe(sp, race, first));
         var def = FormRegistry.get(first);
-        helper.assertTrue(FormRegistry.isAllowed(race, first) && def.wheelSelectable() && SuperForms.usable(sp, first),
+        helper.assertTrue(FormRegistry.isAllowed(race, first) && def.wheelSelectable() && FormAccess.usable(sp, first),
                 "Rueda: no deja elegir " + first + " (permitida=" + FormRegistry.isAllowed(race, first)
-                        + " wheelSelectable=" + def.wheelSelectable() + " usable=" + SuperForms.usable(sp, first) + ")");
+                        + " wheelSelectable=" + def.wheelSelectable() + " usable=" + FormAccess.usable(sp, first) + ")");
     }
 
     private static void ritualPath(GameTestHelper helper, Race race) {
@@ -90,7 +90,7 @@ public final class DivineFormAccessGameTests {
         helper.assertTrue(done[0] || SkillTree.owns(sp, first), "Ritual: no se pudo completar. " + describe(sp, race, first));
         helper.assertTrue(SkillTree.owns(sp, first) && SkillTree.hasGodKi(sp),
                 "Ritual: no concede forma + God Ki. " + describe(sp, race, first));
-        helper.assertTrue(SuperForms.usable(sp, first), "Ritual: la forma no queda usable. " + describe(sp, race, first));
+        helper.assertTrue(FormAccess.usable(sp, first), "Ritual: la forma no queda usable. " + describe(sp, race, first));
         keyAndWheelReach(helper, sp, race, first);
     }
 
@@ -109,7 +109,7 @@ public final class DivineFormAccessGameTests {
         ZenkaiGameTestHelpers.invokeHandler(() ->
                 SkillTreeBuyPacket.handle(new SkillTreeBuyPacket(first), ZenkaiGameTestHelpers.fakeCtx(sp)));
         helper.assertTrue(SkillTree.owns(sp, first), "Compra: tras pagar no queda poseída. tp=" + att.getTP() + " coste=" + eval.cost() + " ownNode=" + eval.ownNode() + " mindFree=" + att.mindFree() + ". " + describe(sp, race, first));
-        helper.assertTrue(SuperForms.usable(sp, first), "Compra: la forma no queda usable. " + describe(sp, race, first));
+        helper.assertTrue(FormAccess.usable(sp, first), "Compra: la forma no queda usable. " + describe(sp, race, first));
         helper.assertTrue(DivineForms.unlocked(sp, first), "Compra: DivineForms.unlocked es false. " + describe(sp, race, first));
         keyAndWheelReach(helper, sp, race, first);
     }
@@ -126,7 +126,7 @@ public final class DivineFormAccessGameTests {
                 "El Gigante no se pudo encender");
         ResourceLocation first = SkillTreeNodes.firstDivineForm(Race.NAMEKIAN);
         ZenkaiGameTestHelpers.invokeHandler(() -> GodKi.debugCompleteRitual(sp));
-        helper.assertTrue(SkillTree.owns(sp, first) && SuperForms.usable(sp, first),
+        helper.assertTrue(SkillTree.owns(sp, first) && FormAccess.usable(sp, first),
                 "Con el Gigante encendido el ritual no deja namek_god usable. " + describe(sp, Race.NAMEKIAN, first));
         keyAndWheelReach(helper, sp, Race.NAMEKIAN, first);
         helper.succeed();

@@ -1,5 +1,5 @@
 {
-  "_comment": "Formas BANEADAS: no se cargan (no salen en la rueda, ni en la cadena de super_forms, ni se pueden usar) hasta que tengan modelo. Borra una linea de \"banned\" para activarla. Banear una forma banea tambien las que cuelgan de ella (parent). Un datapack puede sobrescribir este archivo (data/zenkai/banned_forms.json) con {\"banned\": []} para desbanear todo sin tocar el mod.",
+  "_comment": "Formas BANEADAS: no se cargan (no hay nodo para ellas en el árbol, ni salen en la rueda, ni se pueden usar) hasta que tengan modelo. Borra una linea de \"banned\" para activarla. Banear una forma banea tambien las que cuelgan de ella (parent). Un datapack puede sobrescribir este archivo (data/zenkai/banned_forms.json) con {\"banned\": []} para desbanear todo sin tocar el mod.",
   "banned": [
     "zenkai:fifth_form",
     "zenkai:golden_fifth_form",

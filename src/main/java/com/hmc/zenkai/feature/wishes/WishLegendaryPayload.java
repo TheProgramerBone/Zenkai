@@ -15,7 +15,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * Deseo de ser LEGENDARIO (todas las razas). Marca {@code isLegendary}, que revela y habilita la línea del Super
- * Saiyan Legendario (ssj_green / ssj_green_max) o la forma Legendaria de la raza (ver SuperForms.unlocked). Irreversible, como la inmortalidad. La
+ * Saiyan Legendario (ssj_green / ssj_green_max) o la forma Legendaria de la raza (ver FormAccess.unlocked). Irreversible, como la inmortalidad. La
  * validación es TODA del servidor: la pantalla solo esconde la opción a quien no puede pedirla.
  */
 public record WishLegendaryPayload() implements CustomPacketPayload {

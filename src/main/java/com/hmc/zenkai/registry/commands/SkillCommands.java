@@ -41,9 +41,7 @@ public final class SkillCommands {
         }
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
-        // Mismo techo que SkillBuyPacket y giveAll: con levels_from_forms manda la cadena de
-        // formas de SU raza, no el max_level del JSON — y FormDrivenSkills es quien sabe si esa
-        // cadena es la de super_forms o la de god_ki (u otra futura), no siempre la primera.
+        // Mismo techo que SkillBuyPacket y giveAll (FormDrivenSkills: las skills exclusivas de una raza).
         int max = FormDrivenSkills.maxLevel(def, sp);
         if (max <= 0) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] '" + id
@@ -94,12 +92,8 @@ public final class SkillCommands {
      * compradas: sobreviven al respec y no consumen TP — pero solo el nivel 1 de cada una
      * queda protegido de olvidarse por la X de SkillsScreen, el resto se puede bajar con
      * normalidad. Ver PlayerSkills.grantAdmin().
-     * OJO con levels_from_forms: su techo real NO es def.maxLevel(), sino la cadena de
-     * formas de SU raza (misma regla que SkillBuyPacket, vía FormDrivenSkills — que además
-     * decide CUÁL cadena, super_forms o god_ki). Sin este mínimo, un humano acabaría con
-     * niveles de super_forms que no existen para él, o cualquier raza con niveles de god_ki
-     * que no existen para ella (ver el bug real: god_ki quedó en 5/2 porque esta función
-     * comparaba SIEMPRE contra SuperForms.maxLevel, sin importar qué skill fuera).
+     * OJO: el techo real puede no ser def.maxLevel() (skills exclusivas de una raza, como el Gigante
+     * Namekiano): misma regla que SkillBuyPacket, vía FormDrivenSkills.
      */
     public static int skillGiveAll(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         if (SkillDef.all().isEmpty()) {
@@ -139,8 +133,7 @@ public final class SkillCommands {
             int max = FormDrivenSkills.maxLevel(def, sp);
             int lvl = att.skills().level(def.id());
             String extra = (def.hasMaster() ? " §8master:" + String.join(",", def.masters()) : "")
-                    + (def.purchasable() ? "" : " §8[no comprable]")
-                    + (def.levelsFromForms() ? " §8[formas]" : "");
+                    + (def.purchasable() ? "" : " §8[no comprable]");
             ctx.getSource().sendSuccess(() -> Component.literal(
                     String.format("§7- §f%s §7%d/%d §8· §7%d TP%s",
                             def.id(), lvl, max, def.tpCost(), extra)), false);

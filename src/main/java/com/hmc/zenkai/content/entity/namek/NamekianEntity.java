@@ -4,6 +4,8 @@ import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ModVillagerTrades;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.feature.alignment.AlignmentFearGoals;
+import com.hmc.zenkai.feature.race.RacePassives;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -73,11 +75,28 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         if (!this.level().isClientSide && !this.isTrading() && !this.isBaby()) {
+            applyRaceDiscount(player);
             this.setTradingPlayer(player);
             this.openTradingScreen(player, this.getDisplayName(), 1);
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    /**
+     * Segunda línea de la pasiva Regeneración, eje «Mundo» (Fase 7; curva {@code trade_discount}): sus congéneres le cobran menos cristales. Las ofertas
+     * se comparten entre jugadores, así que el descuento se fija en CADA apertura (también a 0 para quien
+     * no es Namekiano) con el descuento especial de {@link MerchantOffer}. Solo afecta al coste en
+     * cristales (no a lo que el jugador vende) y vanilla nunca baja el precio de 1.
+     */
+    private void applyRaceDiscount(Player player) {
+        double discount = RacePassives.namekianTradeDiscount(player);
+        for (MerchantOffer offer : this.getOffers()) {
+            offer.setSpecialPriceDiff(0);
+            if (discount <= 0 || !offer.getBaseCostA().is(ModItems.NAMEK_CRYSTAL.get())) continue;
+            int off = (int) Math.round(offer.getBaseCostA().getCount() * discount);
+            offer.setSpecialPriceDiff(-off);
+        }
     }
 
     @Override

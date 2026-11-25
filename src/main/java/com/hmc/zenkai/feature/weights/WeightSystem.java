@@ -266,7 +266,20 @@ public final class WeightSystem {
     public static double gravityTpFactor(Player p, double load) {
         if (p == null || isOverloaded(load)) return 1.0;
         double g = GravityFields.chamberG(p);
-        return g > 1.0 ? 1.0 + ServerConfig.gravityChamberTpPerLn() * Math.log(g) : 1.0;
+        double factor = g > 1.0 ? 1.0 + ServerConfig.gravityChamberTpPerLn() * Math.log(g) : 1.0;
+        return factor * saiyanGravityBonus(p);
+    }
+
+    /**
+     * Aporte del Saiyan al eje «Entrenamiento» (Fase 7 de la 0.7.0, decidido por el usuario): más TP con
+     * CUALQUIER gravedad ambiental (cámara, HTC o Kaiosama), no con pesas sueltas. Multiplica el término
+     * de g, así que en HTC/Kaiosama (donde ese término es 1) vale justo el bono. Los sitios son
+     * entrenamiento gratuito ya calibrado: el bono es pequeño a propósito. Es la segunda línea de la pasiva Zenkai
+     * (curva {@code gravity_tp}, sube con su nivel). Cifra a afinar jugando.
+     */
+    public static double saiyanGravityBonus(Player p) {
+        if (gravityMultiplier(p) <= 1.0) return 1.0;
+        return com.hmc.zenkai.feature.race.RacePassives.saiyanGravityTpMult(p);
     }
 
     /** Multiplicador TOTAL de TP de un jugador: carga (pesas + gravedad) × término de gravedad de cámara. */

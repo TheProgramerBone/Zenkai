@@ -4,6 +4,7 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
@@ -33,7 +34,7 @@ import java.util.List;
  * (ServerConfig.ssjBlueRoseShareMastery) — es la MISMA progresión vista con otro nombre, no dos
  * logros independientes.
  *
- * Por qué NO se apoya en FormRegistry.chainFor/SuperForms.chain para nada de esto: esos dos son
+ * Por qué NO se apoya en FormRegistry.chainFor/FormAccess.chain para nada de esto: esos dos son
  * un CAMINO ÚNICO (FormRegistry.nextFrom devuelve solo el primer hijo cuando una forma tiene
  * varios), y aquí hace falta enumerar y comparar TODAS las hermanas de una profundidad. Esta
  * clase calcula la profundidad de cada forma subiendo por su propio parent mientras siga siendo
@@ -104,7 +105,7 @@ public final class DivineForms {
      * `form`. Si `form` no es divine_tier, o no tiene hermanas, se devuelve tal cual.
      */
     public static ResourceLocation resolveForPlayer(Player p, ResourceLocation form) {
-        Race race = SuperForms.raceOf(p);
+        Race race = FormAccess.raceOf(p);
         int depth = depthOf(race, form);
         if (depth <= 0) return form;
         ResourceLocation resolved = resolveTie(race, depth, p, form.getNamespace());
@@ -133,7 +134,7 @@ public final class DivineForms {
         return max;
     }
 
-    public static int maxLevel(Player p) { return maxLevel(SuperForms.raceOf(p)); }
+    public static int maxLevel(Player p) { return maxLevel(FormAccess.raceOf(p)); }
 
     /**
      * Coste en TP de la forma divina de esa profundidad: el tp_cost de CUALQUIER forma divina en
@@ -171,22 +172,22 @@ public final class DivineForms {
 
     /**
      * ¿Desbloqueada esta forma divina para este jugador? Exige el peldaño mortal del que cuelga
-     * (SuperForms), God Ki, y el nodo de ese peldaño divino comprado en el árbol — Y, si tiene hermanas,
+     * (FormAccess), God Ki, y el nodo de ese peldaño divino comprado en el árbol — Y, si tiene hermanas,
      * ser la que resuelve para él (ver resolveTie): con isDivine puesto, Blue deja de estar
      * "unlocked" para él aunque tenga de sobra el nivel de god_ki, porque para él esa forma ya
      * no existe — lo que existe en su lugar es Rosé.
      */
     public static boolean unlocked(Player p, ResourceLocation form) {
-        Race race = SuperForms.raceOf(p);
+        Race race = FormAccess.raceOf(p);
         int depth = depthOf(race, form);
         if (depth <= 0) return false;
-        if (SuperForms.level(p) < SuperForms.mortalLevelNeededForDivine(race, form)) return false;
+        if (!FormAccess.mortalAncestorOwned(p, form)) return false;
         if (SkillEffects.level(p, SKILL) <= 0) return false;
         if (!ownsDepth(p, race, form)) return false;
         // Forma divina de un addon: además exige que su padre esté desbloqueado (en las del mod lo garantiza la compra por peldaño).
         FormDef fd = FormDef.get(form);
         if (fd != null && fd.parent() != null && !com.hmc.zenkai.Zenkai.MOD_ID.equals(form.getNamespace())
-                && !SuperForms.unlocked(p, fd.parent())) return false;
+                && !FormAccess.unlocked(p, fd.parent())) return false;
         return form.equals(resolveTie(race, depth, p, form.getNamespace()));
     }
 }

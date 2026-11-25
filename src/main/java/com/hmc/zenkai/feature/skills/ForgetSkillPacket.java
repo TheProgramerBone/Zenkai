@@ -48,14 +48,11 @@ public record ForgetSkillPacket(String skillId) implements CustomPacketPayload {
             if (!att.isRaceChosen()) return;
 
             // lower() valida nivel y suelo de maestro, y devuelve el nivel que ha quitado.
-            // El reembolso se calcula con ESE nivel y no con el nuevo: con levels_from_forms
-            // cada escalón cuesta distinto, y devolver el precio del nivel de abajo sería
-            // regalar o robar TP en cada operación.
+            // El reembolso se calcula con ESE nivel y no con el nuevo (FormDrivenSkills.tpCostForLevel).
             int removed = att.skills().lower(def.id());
             if (removed <= 0) return;
 
-            // Misma sobrecarga que SkillBuyPacket (def + jugador), así el reembolso coincide con
-            // lo que costó la compra. FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
+            // Misma sobrecarga que SkillBuyPacket (def + jugador), así el reembolso coincide con lo que costó la compra.
             int refund = FormDrivenSkills.tpCostForLevel(def, sp, removed);
 
             // MAX_VALUE significa "ese nivel no tiene coste real definido" (p. ej. un nivel de

@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skilltree.FormAccess;
 import com.hmc.zenkai.feature.skilltree.SkillTree;
 import com.hmc.zenkai.feature.skilltree.SkillTreeNodes;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -140,8 +140,8 @@ public final class RageSystem {
         for (RageAwakening a : matching) {
             // Sangre legendaria: SSJ2 y SSJ3 no se pueden LLEVAR puestas. Sin este salto, la muerte de un aliado le despertaba a un
             // Legendario un SSJ2 que no puede usar (o sumaba maestría a uno comprado); ahora el hecho sigue hacia su propia línea.
-            if (SuperForms.legendaryBlocked(sp, a.form())) continue;
-            if (SuperForms.unlocked(sp, a.form())) {
+            if (FormAccess.legendaryBlocked(sp, a.form())) continue;
+            if (FormAccess.unlocked(sp, a.form())) {
                 // Ya la tiene: candidata a PROGRESS, salvo que su maestría esté al tope. Antes un hecho que no sumaba NADA (todas las
                 // formas del acontecimiento al 100 %) se devolvía como PROGRESS y gastaba igualmente el enfriamiento de 30 min,
                 // bloqueando después un despertar de verdad. Ahora, sin nada que sumar, queda RECORDED y el enfriamiento intacto.
@@ -149,7 +149,7 @@ public final class RageSystem {
                 continue;
             }
             ResourceLocation parent = parentOf(a.form());
-            if (parent != null && !FormIds.BASE.equals(parent) && !SuperForms.unlocked(sp, parent)) continue;   // sin saltos
+            if (parent != null && !FormIds.BASE.equals(parent) && !FormAccess.unlocked(sp, parent)) continue;   // sin saltos
 
             // Candidata: siguiente forma válida. Una entrada solo de progreso no desbloquea nada.
             if (!a.awakens()) continue;
@@ -184,7 +184,7 @@ public final class RageSystem {
     }
 
     private static int depth(Race race, ResourceLocation form) {
-        int d = SuperForms.depthOf(race, form);
+        int d = FormAccess.depthOf(race, form);
         return d <= 0 ? Integer.MAX_VALUE : d;
     }
 
@@ -219,18 +219,20 @@ public final class RageSystem {
                                   Trace trace, RageTrigger trigger) {
         ResourceLocation form = a.form();
         Race race = att.getRace();
-        int depth = SuperForms.depthOf(race, form);
+        int depth = FormAccess.depthOf(race, form);
         if (FormIds.BEAST.equals(form)) {
             att.setBeastFury(true);                                  // Beast no es un nivel ni un nodo: es un flag
         } else if (depth > 0) {
-            att.skills().grantWaived(SuperForms.SKILL, depth + 1);   // cadena mortal: nivel de super_forms, sin cobrar MIND
+            // Cadena mortal: nodo propio sin cobrar MIND. «Sin saltos» ya está garantizado arriba (el padre es suyo); se concede solo
+            // ESTE peldaño (con el nivel de la skill se regalaba también todo lo anterior, que ya poseía).
+            SkillTree.grantNode(att, form, true);
         } else if (SkillTreeNodes.find(race, form) != null) {
             SkillTree.grant(sp, form, 1, SkillTree.Via.EVENT);        // nodo propio (divinas, ramas)
         } else {
             LOGGER.warn("[Zenkai] Despertar de {} sin mecanismo de posesión conocido: se ignora", form);
             return false;
         }
-        if (!SuperForms.unlocked(sp, form)) {
+        if (!FormAccess.unlocked(sp, form)) {
             LOGGER.warn("[Zenkai] {} concedida pero sigue sin estar desbloqueada (requisitos propios sin cumplir)", form);
             return false;
         }
