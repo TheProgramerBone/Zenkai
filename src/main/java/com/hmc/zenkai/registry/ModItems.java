@@ -23,9 +23,15 @@ import java.util.function.Supplier;
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Zenkai.MOD_ID);
 
+    /** Senzu: de 16 en 16 desde el 2026-11-26 (antes 64), para que la bolsa de senzu tenga sentido (hasta 64 dentro). */
     public static final DeferredItem<Item> SENZU_BEAN = ITEMS.registerItem("senzu_bean",
             SenzuBean::new,
-            new SenzuBean.Properties());
+            new SenzuBean.Properties().stacksTo(16));
+
+    /** Bolsa de senzu (2026-11-26): guarda hasta 64 senzu como un bundle; clic derecho come una. Ver SenzuBagItem. */
+    public static final DeferredItem<Item> SENZU_BAG = ITEMS.registerItem("senzu_bag",
+            com.hmc.zenkai.content.item.SenzuBagItem::new,
+            new Item.Properties().stacksTo(1));
 
     public static final DeferredItem<Item> DRAGON_BALL_RADAR = ITEMS.registerItem("dragon_ball_radar",
             DragonRadarItem::new,

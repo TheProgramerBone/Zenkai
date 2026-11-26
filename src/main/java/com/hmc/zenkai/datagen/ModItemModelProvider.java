@@ -25,6 +25,7 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         basicItem(ModItems.SENZU_BEAN.get());
+        // senzu_bag: modelo con overrides por llenado, lo escribe tools/gen_senzu_bag.py.
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.SCISSORS.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());

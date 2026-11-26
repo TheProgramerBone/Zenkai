@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:item/senzu_bag"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "zenkai:fill": 1.0
+      },
+      "model": "zenkai:item/senzu_bag_low"
+    },
+    {
+      "predicate": {
+        "zenkai:fill": 2.0
+      },
+      "model": "zenkai:item/senzu_bag_half"
+    },
+    {
+      "predicate": {
+        "zenkai:fill": 3.0
+      },
+      "model": "zenkai:item/senzu_bag_full"
+    }
+  ]
+}

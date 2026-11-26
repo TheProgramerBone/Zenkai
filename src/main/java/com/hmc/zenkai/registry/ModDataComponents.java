@@ -166,6 +166,13 @@ public final class ModDataComponents {
                     .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC)
                     .build());
 
+    /** Senzu guardadas en la bolsa de senzu (0..64). Ausente = vacía. */
+    public static final Supplier<DataComponentType<Integer>> SENZU_COUNT =
+            COMPONENTS.register("senzu_count", () -> DataComponentType.<Integer>builder()
+                    .persistent(com.mojang.serialization.Codec.intRange(0, com.hmc.zenkai.content.item.SenzuBagItem.CAPACITY))
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT)
+                    .build());
+
     /** Vínculos del control remoto de cápsulas: dueño, lista y seleccionada. Ver CapsuleRemoteLinks. */
     public static final Supplier<DataComponentType<com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks>> CAPSULE_REMOTE =
             COMPONENTS.register("capsule_remote", () -> DataComponentType.<com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks>builder()

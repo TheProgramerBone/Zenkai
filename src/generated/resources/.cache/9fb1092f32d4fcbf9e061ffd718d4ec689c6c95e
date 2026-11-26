@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-26T11:28:36.5658882	Recipes
+// 1.21.1	2026-11-26T12:34:52.7026067	Recipes
 2c28b7630937de9cb1eb9e8be7946e92624dc599 data/minecraft/advancement/recipes/misc/gunpowder.json
 e4f948f390365f84ebbb5f48ea8492234d9d147b data/minecraft/recipe/gunpowder.json
 35fcf343d1718408855c2a7524fbde94ce69ec14 data/zenkai/advancement/recipes/building_blocks/ajisa_planks.json
@@ -489,6 +489,7 @@ a94a74555b05f21c5236755cbb4ae95c78c40365 data/zenkai/advancement/recipes/tools/c
 1f3e158ef75945ca0b568e38da9f55dd034f738e data/zenkai/advancement/recipes/tools/capsule_remote.json
 76ad5c7e8118779b51cce5f6d87c4465f54d43e9 data/zenkai/advancement/recipes/tools/scissors.json
 c14be46a54bba544e5325b52adccd8933cab9871 data/zenkai/advancement/recipes/tools/scouter.json
+2073ce5e17633ce5da471446acb4e521e47a9809 data/zenkai/advancement/recipes/tools/senzu_bag.json
 0aa6dbc707deacf7a81acb603344816c29486db7 data/zenkai/recipe/advanced_circuit.json
 cf49a8c02f647711f31a9afdd22b4ec9dfbe8cfb data/zenkai/recipe/ajisa_button.json
 d8ab62a8f6cac8db9fef20facd94e98f14a48465 data/zenkai/recipe/ajisa_door.json
@@ -844,6 +845,7 @@ d6e270c613bee3d1c3c4b5e5aa1c0a4cd6d51b90 data/zenkai/recipe/sacred_stone_stairs.
 8069093361572736e67e4654185c6f38c477e9f5 data/zenkai/recipe/scouter.json
 807546b8ed05bbf59128fc04b0f503fac5255779 data/zenkai/recipe/scouter_bench.json
 e64f4d05c79c82b1fda37ac7664bdb4a18f3d0fd data/zenkai/recipe/scouter_radar_upgrade.json
+9457a5476fe477d6a139a0c3b733d4c7e1ea3be6 data/zenkai/recipe/senzu_bag.json
 38fbfd458210f600b1568c9d906ef76f2e89dee4 data/zenkai/recipe/smooth_hfil_cinder_sandstone_from_smelting_hfil_cinder_sandstone.json
 7173ddb8f0f14da488113f3e81f557b66851321b data/zenkai/recipe/smooth_hfil_cinder_sandstone_slab.json
 767e086a05c150b33dee50bf5d7cc3dab5ba6b3f data/zenkai/recipe/smooth_hfil_cinder_sandstone_slab_from_smooth_hfil_cinder_sandstone_stonecutting.json

@@ -178,6 +178,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_DIAMOND.get(), Tags.Items.GEMS_DIAMOND);
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_KATCHIN.get(), itemtag("c:ingots/katchin"));
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_NETHERITE.get(), Tags.Items.INGOTS_NETHERITE);
+        // Bolsa de senzu (decisión del usuario 2026-11-26): como el bundle, cuero y cordel; sin senzu en la receta, que solo
+        // las da Korin.
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.SENZU_BAG.get(), 1)
+                .pattern(" S ").pattern("L L").pattern(" L ")
+                .define('S', Tags.Items.STRINGS)
+                .define('L', Tags.Items.LEATHERS)
+                .unlockedBy("has_senzu", has(ModItems.SENZU_BEAN.get())).save(recipeOutput);
         // Control remoto de cápsulas (decisión del usuario 2026-11-25): katchin + el chip de FE (circuito avanzado, como
         // el dron) + perla de ender, que es lo que da el alcance a distancia.
         ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.CAPSULE_REMOTE.get(), 1)

@@ -119,6 +119,10 @@
 
   "--- ITEMS ---": "--- OBJETOS ---",
   "item.zenkai.senzu_bean": "Semilla del Ermitaño",
+  "item.zenkai.senzu_bag": "Bolsa de senzu",
+  "item.zenkai.senzu_bag.count": "Senzu: %s / %s",
+  "item.zenkai.senzu_bag.desc": "Clic derecho: comer una (o dársela a un aliado). En el inventario, clic derecho para meter o sacar senzu, como un saco",
+  "message.zenkai.senzu_bag.empty": "La bolsa está vacía",
   "item.zenkai.dragon_ball_radar": "Radar del Dragón",
   "item.zenkai.scissors": "Tijeras",
   "item.zenkai.scissors.tooltip": "Clic derecho: cambiar de peinado",

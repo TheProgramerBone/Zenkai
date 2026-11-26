@@ -119,6 +119,10 @@
 
   "--- ITEMS ---": "--- ITEMS ---",
   "item.zenkai.senzu_bean": "Senzu Bean",
+  "item.zenkai.senzu_bag": "Senzu Bag",
+  "item.zenkai.senzu_bag.count": "Senzu: %s / %s",
+  "item.zenkai.senzu_bag.desc": "Right-click: eat one (or give it to an ally). In the inventory, right-click to put senzu in or take them out, like a bundle",
+  "message.zenkai.senzu_bag.empty": "The bag is empty",
   "item.zenkai.dragon_ball_radar": "Dragon Ball Radar",
   "item.zenkai.scissors": "Scissors",
   "item.zenkai.scissors.tooltip": "Right-click: change your hairstyle",

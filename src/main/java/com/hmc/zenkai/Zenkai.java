@@ -319,6 +319,11 @@ public class Zenkai {
                     ResourceLocation.fromNamespaceAndPath(MOD_ID, "wear"),
                     (stack, lvl, ent, seed) -> com.hmc.zenkai.content.item.TrainingDroneItem.wearStage(stack));
 
+            // Bolsa de senzu: 4 iconos según lo llena que esté (0..3).
+            ItemProperties.register(ModItems.SENZU_BAG.get(),
+                    ResourceLocation.fromNamespaceAndPath(MOD_ID, "fill"),
+                    (stack, lvl, ent, seed) -> com.hmc.zenkai.content.item.SenzuBagItem.fillStage(stack));
+
             // Cápsulas Hoi-Poi: 0 vacía, 1 llena (botón encendido en el icono).
             for (var tier : com.hmc.zenkai.feature.capsule.CapsuleTier.values()) {
                 ItemProperties.register(ModItems.capsule(tier),
