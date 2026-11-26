@@ -53,14 +53,29 @@ public final class ArmorSets {
     /** Gi de Piccolo, morado con fajín azul (Picokoro2.png): el básico Namek. */
     public static final Def PICCOLO_GI = new Def(id("piccolo_gi"), Clase.ROPA, SIN_CASCO);
 
+    /** Gi clásico de Goku, naranja con camiseta azul y kanji (Goku1.png). Loot. */
+    public static final Def GOKU_GI = new Def(id("goku_gi"), Clase.ROPA, SIN_CASCO);
+    /** Gi de Goku de Super, sin camiseta y con el símbolo de Whis (Goku2.png). Loot. */
+    public static final Def GOKU_SUPER_GI = new Def(id("goku_super_gi"), Clase.ROPA, SIN_CASCO);
+    /** Ropa de Yardrat de Goku: chaleco blanco, hombreras doradas, bufanda y fajín lavanda (Goku3.png). El básico Goku, por receta. */
+    public static final Def GOKU_YARDRAT_GI = new Def(id("goku_yardrat_gi"), Clase.ROPA, SIN_CASCO);
+    /**
+     * Final de Z (Goku4.png con paleta propia): turquesa, faja blanca, muñequeras naranjas, pantalón verde y vendas
+     * naranjas. Loot. Misma geometría y dibujo que {@link #GOKU_GT_GI}; solo cambia la paleta (usuario 2026-11-25: la hoja
+     * mezclaba los dos atuendos).
+     */
+    public static final Def GOKU_EOZ_GI = new Def(id("goku_eoz_gi"), Clase.ROPA, SIN_CASCO);
+    /** Final de GT: azul, faja blanca, muñequeras rosas, pantalón amarillo y vendas blancas. Loot. */
+    public static final Def GOKU_GT_GI = new Def(id("goku_gt_gi"), Clase.ROPA, SIN_CASCO);
+
     /** Todos los sets, en el orden del creativo. */
-    public static final List<Def> ALL = List.of(SAIYAN_ARMOR, PICCOLO_GI);
+    public static final List<Def> ALL = List.of(SAIYAN_ARMOR, PICCOLO_GI, GOKU_GI, GOKU_SUPER_GI, GOKU_YARDRAT_GI, GOKU_EOZ_GI, GOKU_GT_GI);
 
     /**
-     * Los que salen por receta (papel + tintes); el resto, de loot (decisión del usuario 2026-11-25: Saiyan, Piccolo 2 y Goku 3,
-     * este último todavía sin modelo).
+     * Los que salen por receta (papel + tintes); el resto, de loot (decisión del usuario 2026-11-25: Saiyan, Piccolo 2 y
+     * Goku 3 = {@link #GOKU_YARDRAT_GI}).
      */
-    public static final List<ResourceLocation> BASIC = List.of(SAIYAN_ARMOR.id(), PICCOLO_GI.id());
+    public static final List<ResourceLocation> BASIC = List.of(SAIYAN_ARMOR.id(), PICCOLO_GI.id(), GOKU_YARDRAT_GI.id());
 
     private static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path); }
 

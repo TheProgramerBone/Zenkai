@@ -156,6 +156,23 @@ public final class ModDataComponents {
                     .networkSynchronized(com.hmc.zenkai.feature.capsule.CapsuleContent.STREAM_CODEC)
                     .build());
 
+    /**
+     * Id de vínculo de una cápsula (vacía o llena) para el control remoto: lo pone el control la primera vez que la vincula
+     * y viaja con el stack por captura y pegado, así el control la reconoce aunque haya subido o bajado un bloque.
+     */
+    public static final Supplier<DataComponentType<java.util.UUID>> CAPSULE_LINK =
+            COMPONENTS.register("capsule_link", () -> DataComponentType.<java.util.UUID>builder()
+                    .persistent(net.minecraft.core.UUIDUtil.CODEC)
+                    .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC)
+                    .build());
+
+    /** Vínculos del control remoto de cápsulas: dueño, lista y seleccionada. Ver CapsuleRemoteLinks. */
+    public static final Supplier<DataComponentType<com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks>> CAPSULE_REMOTE =
+            COMPONENTS.register("capsule_remote", () -> DataComponentType.<com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks>builder()
+                    .persistent(com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks.CODEC)
+                    .networkSynchronized(com.hmc.zenkai.feature.capsule.CapsuleRemoteLinks.STREAM_CODEC)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-24T01:26:44.9541618	Recipes
+// 1.21.1	2026-11-26T11:28:36.5658882	Recipes
 2c28b7630937de9cb1eb9e8be7946e92624dc599 data/minecraft/advancement/recipes/misc/gunpowder.json
 e4f948f390365f84ebbb5f48ea8492234d9d147b data/minecraft/recipe/gunpowder.json
 35fcf343d1718408855c2a7524fbde94ce69ec14 data/zenkai/advancement/recipes/building_blocks/ajisa_planks.json
@@ -486,6 +486,7 @@ e5198b532df7200f79398d3d3dc593accaad682e data/zenkai/advancement/recipes/misc/tr
 a94a74555b05f21c5236755cbb4ae95c78c40365 data/zenkai/advancement/recipes/tools/capsule_iron.json
 75128178cc875de66f65ed66dceead2963627d34 data/zenkai/advancement/recipes/tools/capsule_katchin.json
 2c4c3e0602144d50ba4ac2a78daa7371299ed031 data/zenkai/advancement/recipes/tools/capsule_netherite.json
+1f3e158ef75945ca0b568e38da9f55dd034f738e data/zenkai/advancement/recipes/tools/capsule_remote.json
 76ad5c7e8118779b51cce5f6d87c4465f54d43e9 data/zenkai/advancement/recipes/tools/scissors.json
 c14be46a54bba544e5325b52adccd8933cab9871 data/zenkai/advancement/recipes/tools/scouter.json
 0aa6dbc707deacf7a81acb603344816c29486db7 data/zenkai/recipe/advanced_circuit.json
@@ -508,6 +509,7 @@ ba4f764b6d128c68f84c741dd49885b5e84dc045 data/zenkai/recipe/armor_fabricator.jso
 55b5f20d09279e61e65a788f10d275b9ba06ed2a data/zenkai/recipe/capsule_iron.json
 34c3cdf4f89f3619ccbbff610831ed9ad8c293c1 data/zenkai/recipe/capsule_katchin.json
 0cdecdd1a905cdcaf0af0e2fee7a43a48b59f371 data/zenkai/recipe/capsule_netherite.json
+44f8a8c0df86fa7e35fa7c24cdea6086f4107bac data/zenkai/recipe/capsule_remote.json
 ca3c73a4c831bc1d570c359570ef0a3b0bcaa60f data/zenkai/recipe/coal_from_blasting_hfil_cinder_coal_ore.json
 47b8c12217808745aae107021d65d830ede31889 data/zenkai/recipe/coal_from_blasting_hfil_pale_coal_ore.json
 9855ec93b00329209ef6407719ce12bfb737d34b data/zenkai/recipe/coal_from_blasting_hfil_scorched_coal_ore.json

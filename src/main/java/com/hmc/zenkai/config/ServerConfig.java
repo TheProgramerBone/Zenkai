@@ -1356,6 +1356,9 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue CAPSULE_PASTE_BLOCKS_PER_TICK =
             BUILDER.comment("Hoi-Poi capsules: blocks placed per server tick when a capsule is released. Big capsules are spread over several ticks so the server does not stall.")
                     .defineInRange("capsules.paste_blocks_per_tick", 512, 16, 100000);
+    public static final ModConfigSpec.IntValue CAPSULE_REMOTE_RANGE =
+            BUILDER.comment("Hoi-Poi capsules: maximum distance (blocks, same dimension) at which the Capsule Remote opens or packs a linked capsule. It never loads chunks: the capsule's chunk must already be loaded.")
+                    .defineInRange("capsules.remote_range", 64, 4, 512);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -1940,6 +1943,14 @@ public class ServerConfig {
             // Config aún sin cargar (arranque, gametests muy tempranos): el valor por defecto.
         }
         return fallback[Math.max(0, Math.min(fallback.length - 1, tierIndex))];
+    }
+
+    public static int capsuleRemoteRange() {
+        try {
+            return CAPSULE_REMOTE_RANGE.get();
+        } catch (IllegalStateException e) {
+            return 64;
+        }
     }
 
     public static int capsulePasteBlocksPerTick() {

@@ -119,6 +119,10 @@ public class CapsuleItem extends Item {
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext ctx,
                                 @NotNull List<Component> tip, @NotNull TooltipFlag flag) {
+        // Vinculada a un control: conserva su id para siempre (por eso no se apila con las nuevas hasta desvincularla).
+        if (stack.has(ModDataComponents.CAPSULE_LINK.get())) {
+            tip.add(Component.translatable("item.zenkai.capsule.linked").withStyle(ChatFormatting.DARK_AQUA));
+        }
         CapsuleContent c = content(stack);
         if (c == null) {
             int side = tier.side();

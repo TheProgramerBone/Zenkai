@@ -178,6 +178,14 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_DIAMOND.get(), Tags.Items.GEMS_DIAMOND);
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_KATCHIN.get(), itemtag("c:ingots/katchin"));
         capsuleRecipe(recipeOutput, ModItems.CAPSULE_NETHERITE.get(), Tags.Items.INGOTS_NETHERITE);
+        // Control remoto de cápsulas (decisión del usuario 2026-11-25): katchin + el chip de FE (circuito avanzado, como
+        // el dron) + perla de ender, que es lo que da el alcance a distancia.
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.CAPSULE_REMOTE.get(), 1)
+                .pattern(" P ").pattern("KCK").pattern(" K ")
+                .define('P', Tags.Items.ENDER_PEARLS)
+                .define('K', ModItems.KATCHIN_INGOT)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .unlockedBy("has_capsule_copper", has(ModItems.CAPSULE_COPPER.get())).save(recipeOutput);
 
         // Transporte (provisional, como el resto de la 0.7.0): cables y tuberías salen de seis en seis.
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ENERGY_CABLE.get(), 6)

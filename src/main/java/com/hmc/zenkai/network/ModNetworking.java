@@ -849,5 +849,14 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.capsule.CapsuleArmPayload.TYPE,
                 com.hmc.zenkai.feature.capsule.CapsuleArmPayload.STREAM_CODEC,
                 com.hmc.zenkai.feature.capsule.CapsuleArmPayload::handle);
+        // Nombre de la cápsula (campo de la cabecera de su pantalla) y Shift + rueda del control remoto.
+        registrar.playToServer(
+                com.hmc.zenkai.feature.capsule.CapsuleRenamePayload.TYPE,
+                com.hmc.zenkai.feature.capsule.CapsuleRenamePayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.capsule.CapsuleRenamePayload::handle);
+        registrar.playToServer(
+                com.hmc.zenkai.feature.capsule.CapsuleRemoteCyclePayload.TYPE,
+                com.hmc.zenkai.feature.capsule.CapsuleRemoteCyclePayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.capsule.CapsuleRemoteCyclePayload::handle);
     }
 }

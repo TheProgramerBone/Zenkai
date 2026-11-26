@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:goku_yardrat_gi",
+  "piece": "leggings",
+  "material": {
+    "tag": "zenkai:katchin_cloths"
+  },
+  "count": 7,
+  "energy": 35000,
+  "time": 175,
+  "result": {
+    "id": "zenkai:goku_yardrat_gi_leggings"
+  }
+}

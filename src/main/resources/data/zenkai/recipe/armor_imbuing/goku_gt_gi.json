@@ -1,0 +1,15 @@
+{
+  "type": "zenkai:armor_imbuing",
+  "piece": [
+    {
+      "item": "zenkai:goku_gt_gi_chestplate"
+    },
+    {
+      "item": "zenkai:goku_gt_gi_leggings"
+    },
+    {
+      "item": "zenkai:goku_gt_gi_boots"
+    }
+  ],
+  "ki": "base"
+}

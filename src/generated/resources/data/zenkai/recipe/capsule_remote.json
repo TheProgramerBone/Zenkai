@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "zenkai:advanced_circuit"
+    },
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "P": {
+      "tag": "c:ender_pearls"
+    }
+  },
+  "pattern": [
+    " P ",
+    "KCK",
+    " K "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:capsule_remote"
+  }
+}

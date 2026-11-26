@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:goku_super_gi",
+  "piece": "boots",
+  "material": {
+    "tag": "zenkai:katchin_cloths"
+  },
+  "count": 4,
+  "energy": 20000,
+  "time": 100,
+  "result": {
+    "id": "zenkai:goku_super_gi_boots"
+  }
+}

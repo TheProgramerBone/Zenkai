@@ -129,6 +129,10 @@ public class ModItems {
     public static final DeferredItem<Item> CAPSULE_KATCHIN = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.KATCHIN, Rarity.RARE);
     public static final DeferredItem<Item> CAPSULE_NETHERITE = capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier.NETHERITE, Rarity.EPIC);
 
+    /** Control remoto de cápsulas (pedido 2026-11-25): vincula hasta 8 cápsulas colocadas y las abre o recoge a distancia. */
+    public static final DeferredItem<Item> CAPSULE_REMOTE = ITEMS.registerItem("capsule_remote",
+            com.hmc.zenkai.content.item.CapsuleRemoteItem::new, new Item.Properties().rarity(Rarity.UNCOMMON));
+
     private static DeferredItem<Item> capsuleItem(com.hmc.zenkai.feature.capsule.CapsuleTier tier, Rarity rarity) {
         Item.Properties props = new Item.Properties().rarity(rarity);
         if (tier == com.hmc.zenkai.feature.capsule.CapsuleTier.NETHERITE) props.fireResistant();

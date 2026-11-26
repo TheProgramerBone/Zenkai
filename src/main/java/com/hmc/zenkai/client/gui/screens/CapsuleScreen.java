@@ -8,6 +8,7 @@ import com.hmc.zenkai.client.gui.buttons.TechButton;
 import com.hmc.zenkai.client.gui.widgets.CapsulePreview;
 import com.hmc.zenkai.content.block.CapsuleBlock;
 import com.hmc.zenkai.feature.capsule.CapsuleArmPayload;
+import com.hmc.zenkai.feature.capsule.CapsuleRenamePayload;
 import com.hmc.zenkai.feature.capsule.CapsuleTier;
 import com.hmc.zenkai.feature.capsule.OpenCapsuleScreenPayload;
 import com.hmc.zenkai.util.ZenkaiNumbers;
@@ -35,6 +36,9 @@ import java.util.List;
  *   bandeja, izquierda       resumen (zona, bloques, mobs, espacio) y barra de ocupación;
  *   bandeja, derecha         Guardar / Cerrar y lo que se queda en el mundo (tooltip con la lista);
  *   bandeja, abajo           la nota de lo que pasa al pulsar Guardar (o por qué no se puede).
+ *
+ * NOMBRE (2026-11-25, para distinguir cápsulas en el control remoto): campo a la derecha de la placa del título, con el
+ * mismo dibujo de placa; se manda al servidor al cerrar la pantalla (o al Guardar) si cambió. Vale igual el yunque.
  *
  * El RESUMEN lo calcula el servidor al abrir ({@link OpenCapsuleScreenPayload}; el cliente no ve dentro de los cofres).
  * El visor sale del mundo del cliente y es solo una vista previa. Cada cifra por {@link ZenkaiNumbers}.
@@ -69,6 +73,11 @@ public class CapsuleScreen extends Screen {
     private final CapsulePreview preview;
     private int leftPos, topPos;
     private TechButton saveButton;
+    private net.minecraft.client.gui.components.EditBox nameBox;
+    /** Placa del campo de nombre (local): de NAME_X0 a la columna simétrica del borde de la placa del título. */
+    private int nameX0;
+    private static final int NAME_X1 = 256 - 1 - TechHeader.PLATE_X, NAME_GAP = 6;
+    private boolean renameSent;
 
     public CapsuleScreen(OpenCapsuleScreenPayload data) {
         super(Component.translatable("item.zenkai.capsule_" + CapsuleTier.byOrdinal(data.tier()).id()));
@@ -90,14 +99,41 @@ public class CapsuleScreen extends Screen {
         saveButton = addRenderableWidget(new TechButton(leftPos + BTN_X, topPos + SAVE_Y, BTN_W, BTN_H,
                 Component.translatable("screen.zenkai.capsule.save"), TechButton.Kind.PRIMARY, this::save));
         saveButton.active = canSave();
+
+        nameX0 = TechHeader.plateRight(font, TechHeader.styled(title)) + 1 + NAME_GAP;
+        String typed = nameBox != null ? nameBox.getValue() : data.name();
+        nameBox = new net.minecraft.client.gui.components.EditBox(font, leftPos + nameX0 + 4, topPos + TechHeader.TITLE_Y,
+                NAME_X1 - nameX0 - 6, 9, Component.translatable("screen.zenkai.capsule.name"));
+        nameBox.setBordered(false);
+        nameBox.setMaxLength(CapsuleRenamePayload.MAX_LENGTH);
+        nameBox.setTextColor(ZenkaiTechPalette.TITLE);
+        nameBox.setHint(Component.translatable("screen.zenkai.capsule.name_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        nameBox.setValue(typed);
+        addRenderableWidget(nameBox);
         addRenderableWidget(new TechButton(leftPos + BTN_X, topPos + CLOSE_Y, BTN_W, BTN_H,
                 Component.translatable("gui.cancel"), TechButton.Kind.SECONDARY, this::onClose));
     }
 
     private void save() {
         if (!canSave()) return;
+        sendRename();
         PacketDistributor.sendToServer(new CapsuleArmPayload(data.pos()));
         onClose();
+    }
+
+    /** Manda el nombre si cambió (una sola vez: Guardar y el cierre pasan los dos por aquí). */
+    private void sendRename() {
+        if (renameSent || nameBox == null) return;
+        String v = nameBox.getValue().strip();
+        if (v.equals(data.name().strip())) return;
+        renameSent = true;
+        PacketDistributor.sendToServer(new CapsuleRenamePayload(data.pos(), v));
+    }
+
+    @Override
+    public void removed() {
+        sendRename();
+        super.removed();
     }
 
     @Override
@@ -177,6 +213,12 @@ public class CapsuleScreen extends Screen {
         RenderSystem.enableBlend();
         g.setColor(1f, 1f, 1f, 1f);
         g.blit(BG, leftPos, topPos, 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
+        // Placa del nombre, aquí y no en renderContent: tiene que quedar DEBAJO del EditBox, que se dibuja con los widgets.
+        // Colores de la placa del título (TechHeader); con el foco, el relleno sube al tono de las líneas de barrido.
+        int x0 = leftPos + nameX0, x1 = leftPos + NAME_X1;
+        int y0 = topPos + TechHeader.PLATE_Y, y1 = topPos + TechHeader.PLATE_Y + TechHeader.PLATE_H - 1;
+        g.fill(x0, y0, x1 + 1, y1 + 1, 0xFF0A0C10);
+        g.fill(x0 + 1, y0 + 1, x1, y1, nameBox != null && nameBox.isFocused() ? 0xFF1A202C : 0xFF12161E);
     }
 
     @Override

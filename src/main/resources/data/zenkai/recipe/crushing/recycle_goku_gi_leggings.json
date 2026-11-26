@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:goku_gi_leggings"
+  },
+  "time": 175,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_thread",
+      "count": 11
+    },
+    {
+      "id": "zenkai:katchin_thread",
+      "chance": 0.2
+    }
+  ],
+  "infusion_aware": true
+}

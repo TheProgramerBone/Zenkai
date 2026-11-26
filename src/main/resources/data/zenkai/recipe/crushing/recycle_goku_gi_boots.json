@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:goku_gi_boots"
+  },
+  "time": 100,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_thread",
+      "count": 6
+    },
+    {
+      "id": "zenkai:katchin_thread",
+      "chance": 0.4
+    }
+  ],
+  "infusion_aware": true
+}

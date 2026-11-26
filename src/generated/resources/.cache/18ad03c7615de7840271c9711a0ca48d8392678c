@@ -1,4 +1,4 @@
-// 1.21.1	2026-11-25T12:54:03.7342138	Item Models: zenkai
+// 1.21.1	2026-11-25T18:16:14.8251351	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -66,6 +66,21 @@ b9266967f9e42e12efe38b8ac902fe76362c545e assets/zenkai/models/item/energy_batter
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 33043557c76d646b7b6f8f6fe360dbc05c9e8c5b assets/zenkai/models/item/energy_crystal_dust.json
 b3483a3b592995f3901669b8a260cde0e5b6a537 assets/zenkai/models/item/energy_generator.json
+f981ab1b8f475ec55dcd67ddca9cd8878fcfac2a assets/zenkai/models/item/goku_eoz_gi_boots.json
+9316b9a32cf4ca18855d835d209bc98d80a4152c assets/zenkai/models/item/goku_eoz_gi_chestplate.json
+abe1492e97079c02f2894dd4a499a729280c3778 assets/zenkai/models/item/goku_eoz_gi_leggings.json
+dc4ad1a0aa7d35acfadf1fcfaf297c8fdd9e4a88 assets/zenkai/models/item/goku_gi_boots.json
+300cb2672d7cebe7514d6245a19301eeb5bd2298 assets/zenkai/models/item/goku_gi_chestplate.json
+010f0e6a1946d52f5d8cad49b8a5f4709218ebdf assets/zenkai/models/item/goku_gi_leggings.json
+edb46d2d4bd7979abdfada64600caf1232a5cce0 assets/zenkai/models/item/goku_gt_gi_boots.json
+03592d1c851511b49d32b20011d85b3bf32fea80 assets/zenkai/models/item/goku_gt_gi_chestplate.json
+a0a1967e9aaad7a226d08b6c114786c950a6d59f assets/zenkai/models/item/goku_gt_gi_leggings.json
+0f1f2c2fff937fc4569143d4c96da2e88a3179f8 assets/zenkai/models/item/goku_super_gi_boots.json
+553c3ef4bab0511797db14130d0ae4e18b3e14ab assets/zenkai/models/item/goku_super_gi_chestplate.json
+dae305bfbbbde5931664aef84792cc70f0294229 assets/zenkai/models/item/goku_super_gi_leggings.json
+eabacbf35febf719eb9db8e1e32ad61d30256677 assets/zenkai/models/item/goku_yardrat_gi_boots.json
+ba9cdd207b3d2d10194c23f1a510adf37db81512 assets/zenkai/models/item/goku_yardrat_gi_chestplate.json
+59c7a45d8f372e7fc4fd15f7b5f4a8d91615aab5 assets/zenkai/models/item/goku_yardrat_gi_leggings.json
 dbe81986b9bc53dd8f74f9a790d01a1b31251cbc assets/zenkai/models/item/gravity_chamber.json
 2c012dc6aaf41ed831ffcb9b40eb3b4e38aeeec1 assets/zenkai/models/item/gravity_upgrade_copper.json
 32d42b820bd0b72db6c9df53110d4a695e160e5a assets/zenkai/models/item/gravity_upgrade_diamond.json

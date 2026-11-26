@@ -62,9 +62,20 @@ public final class CapsuleRelease {
      */
     public static Outcome release(ServerLevel level, BlockPos anchor, CapsuleContent content, Player actor,
                                   @Nullable BlockPos ignore) {
+        return release(level, anchor, content, actor, ignore, net.minecraft.world.level.block.Rotation.NONE, null);
+    }
+
+    /**
+     * Igual, con {@code onFinish} al terminar el pegado (también si se termina de golpe al apagar el servidor). Lo usa el
+     * control remoto para volver a poner la cápsula vacía encima del suelo pegado, que solo existe al final.
+     */
+    public static Outcome release(ServerLevel level, BlockPos anchor, CapsuleContent content, Player actor,
+                                  @Nullable BlockPos ignore, net.minecraft.world.level.block.Rotation rotation,
+                                  @Nullable Runnable onFinish) {
         CompoundTag tag = CapsuleStorage.read(level.getServer(), content.id());
         if (tag == null) return Outcome.MISSING;
-        CapsuleData data = CapsuleData.load(tag, level);
+        // Girada ANTES de comprobar nada: obstrucción, claims y pegado ven ya la casa como quedará (CapsuleData.rotated).
+        CapsuleData data = CapsuleData.load(tag, level).rotated(rotation);
         BlockPos min = CapsuleZone.pasteMin(anchor, data.radius);
         AABB box = CapsuleZone.box(min, data.radius);
         for (PasteJob j : JOBS) {
@@ -81,7 +92,7 @@ public final class CapsuleRelease {
             var ev = NeoForge.EVENT_BUS.post(new BlockEvent.EntityPlaceEvent(snap, level.getBlockState(t.below()), actor));
             if (ev.isCanceled()) return Outcome.PROTECTED;
         }
-        JOBS.add(new PasteJob(level, data, min, box, content.id()));
+        JOBS.add(new PasteJob(level, data, min, box, content.id(), onFinish));
         CapsuleCapture.effects(level, min, data.radius);
         return Outcome.OK;
     }
@@ -133,13 +144,15 @@ public final class CapsuleRelease {
         final BlockPos min;
         final AABB box;
         final UUID id;
+        @Nullable final Runnable onFinish;
         final Set<BlockPos> placed = new HashSet<>();
         /** Lo mismo que {@link #placed}, en orden, para recorrerlo por lotes en la fase de actualizaciones. */
         final List<BlockPos> placedList = new ArrayList<>();
         int phase;   // 0 bloques, 1 actualizaciones, 2 entidades
         int cursor;
 
-        PasteJob(ServerLevel level, CapsuleData data, BlockPos min, AABB box, UUID id) {
+        PasteJob(ServerLevel level, CapsuleData data, BlockPos min, AABB box, UUID id, @Nullable Runnable onFinish) {
+            this.onFinish = onFinish;
             this.level = level;
             this.data = data;
             this.min = min;
@@ -170,6 +183,7 @@ public final class CapsuleRelease {
             }
             spawnEntities();
             CapsuleStorage.delete(level.getServer(), id);
+            if (onFinish != null) onFinish.run();
             return true;
         }
 

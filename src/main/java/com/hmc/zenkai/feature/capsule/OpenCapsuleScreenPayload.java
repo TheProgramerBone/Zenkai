@@ -9,10 +9,11 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * S2C: abre la pantalla de una cápsula colocada con el resumen que calculó el SERVIDOR ({@link CapsuleScan}: el cliente no
- * ve el contenido de los cofres, así que no sabría si uno lleva otra cápsula dentro).
+ * ve el contenido de los cofres, así que no sabría si uno lleva otra cápsula dentro). {@code name}: el nombre que ya
+ * tiene la cápsula, para el campo de la cabecera.
  */
 public record OpenCapsuleScreenPayload(BlockPos pos, int tier, int radius, int blocks, int mobs, int mobVolume,
-                                       int skipped, int budget) implements CustomPacketPayload {
+                                       int skipped, int budget, String name) implements CustomPacketPayload {
 
     public static final Type<OpenCapsuleScreenPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "open_capsule_screen"));
@@ -28,11 +29,12 @@ public record OpenCapsuleScreenPayload(BlockPos pos, int tier, int radius, int b
                 f.writeVarInt(p.mobVolume);
                 f.writeVarInt(p.skipped);
                 f.writeVarInt(p.budget);
+                f.writeUtf(p.name, CapsuleRenamePayload.MAX_LENGTH);
             },
             buf -> {
                 FriendlyByteBuf f = new FriendlyByteBuf(buf);
                 return new OpenCapsuleScreenPayload(f.readBlockPos(), f.readVarInt(), f.readVarInt(), f.readVarInt(),
-                        f.readVarInt(), f.readVarInt(), f.readVarInt(), f.readVarInt());
+                        f.readVarInt(), f.readVarInt(), f.readVarInt(), f.readVarInt(), f.readUtf(CapsuleRenamePayload.MAX_LENGTH));
             });
 
     @Override

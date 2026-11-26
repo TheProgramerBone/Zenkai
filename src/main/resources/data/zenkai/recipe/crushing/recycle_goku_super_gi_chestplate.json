@@ -1,0 +1,19 @@
+{
+  "type": "zenkai:crushing",
+  "ingredient": {
+    "item": "zenkai:goku_super_gi_chestplate"
+  },
+  "time": 200,
+  "energy": 6000,
+  "results": [
+    {
+      "id": "zenkai:katchin_thread",
+      "count": 12
+    },
+    {
+      "id": "zenkai:katchin_thread",
+      "chance": 0.8
+    }
+  ],
+  "infusion_aware": true
+}

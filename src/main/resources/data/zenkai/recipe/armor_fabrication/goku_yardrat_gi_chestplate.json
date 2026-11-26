@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:armor_fabrication",
+  "pattern": "zenkai:goku_yardrat_gi",
+  "piece": "chestplate",
+  "material": {
+    "tag": "zenkai:katchin_cloths"
+  },
+  "count": 8,
+  "energy": 40000,
+  "time": 200,
+  "result": {
+    "id": "zenkai:goku_yardrat_gi_chestplate"
+  }
+}
